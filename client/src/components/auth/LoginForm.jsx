@@ -7,6 +7,8 @@ import {
   Github,
   Mail,
   Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
@@ -19,6 +21,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { isDark } = useTheme();
@@ -75,12 +78,31 @@ export default function LoginForm() {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-500 ${
+      className={`min-h-screen transition-all duration-700 relative overflow-hidden ${
         isDark
           ? "bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900"
           : "bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400"
       } flex items-center justify-center p-4 sm:p-6 md:p-8`}
     >
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className={`absolute top-1/4 left-1/4 w-64 h-64 ${
+            isDark ? "bg-purple-500" : "bg-white"
+          } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob`}
+        ></div>
+        <div
+          className={`absolute top-1/3 right-1/4 w-64 h-64 ${
+            isDark ? "bg-pink-500" : "bg-yellow-200"
+          } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000`}
+        ></div>
+        <div
+          className={`absolute bottom-1/4 left-1/3 w-64 h-64 ${
+            isDark ? "bg-blue-500" : "bg-pink-200"
+          } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000`}
+        ></div>
+      </div>
+
       {/* Theme Toggle */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <ThemeToggle />
@@ -91,7 +113,7 @@ export default function LoginForm() {
         <div
           className={`hidden lg:flex lg:flex-1 flex-col ${
             isDark ? "text-white" : "text-white"
-          } space-y-8`}
+          } space-y-8 animate-fade-in-left`}
         >
           <div className="space-y-4">
             <div
@@ -99,16 +121,16 @@ export default function LoginForm() {
                 isDark ? "bg-white/10" : "bg-white/20"
               } backdrop-blur-md px-6 py-3 rounded-full border ${
                 isDark ? "border-white/20" : "border-white/30"
-              } shadow-xl`}
+              } shadow-xl hover:scale-105 transition-transform duration-300`}
             >
-              <MessageSquare className="w-8 h-8" />
+              <MessageSquare className="w-8 h-8 animate-pulse" />
               <span className="text-2xl font-bold">ChatConnect</span>
             </div>
-            <h1 className="text-5xl font-bold leading-tight">
+            <h1 className="text-5xl font-bold leading-tight animate-fade-in">
               Connect, Collaborate,
               <br />
               <span
-                className={`${isDark ? "text-purple-300" : "text-blue-100"}`}
+                className={`${isDark ? "text-purple-300" : "text-blue-100"} inline-block hover:scale-105 transition-transform`}
               >
                 Communicate
               </span>
@@ -128,10 +150,10 @@ export default function LoginForm() {
                 isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white/20 border-white/30"
-              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 transition-all shadow-xl`}
+              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
             >
               <div className="flex items-start gap-4">
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-xl shadow-lg">
+                <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
@@ -151,10 +173,10 @@ export default function LoginForm() {
                 isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white/20 border-white/30"
-              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 transition-all shadow-xl`}
+              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
             >
               <div className="flex items-start gap-4">
-                <div className="bg-gradient-to-br from-pink-500 to-pink-600 p-3 rounded-xl shadow-lg">
+                <div className="bg-gradient-to-br from-pink-500 to-pink-600 p-3 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
                   <Video className="w-6 h-6" />
                 </div>
                 <div>
@@ -174,10 +196,10 @@ export default function LoginForm() {
                 isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white/20 border-white/30"
-              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 transition-all shadow-xl`}
+              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
             >
               <div className="flex items-start gap-4">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
@@ -195,13 +217,13 @@ export default function LoginForm() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="w-full lg:flex-1 lg:max-w-md">
+        <div className="w-full lg:flex-1 lg:max-w-md animate-fade-in-right">
           {/* Mobile Logo */}
           <div className="text-center mb-6 lg:hidden">
             <div
               className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 ${
                 isDark ? "bg-gray-800" : "bg-white"
-              } rounded-2xl shadow-xl mb-3`}
+              } rounded-2xl shadow-xl mb-3 hover:scale-110 transition-transform duration-300`}
             >
               <MessageSquare
                 className={`w-8 h-8 sm:w-10 sm:h-10 ${isDark ? "text-purple-400" : "text-purple-600"}`}
@@ -218,15 +240,15 @@ export default function LoginForm() {
 
             {/* Mobile Features */}
             <div className="flex items-center justify-center gap-3 sm:gap-6 text-white text-xs sm:text-sm">
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 hover:scale-110 transition-transform">
                 <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>AI</span>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 hover:scale-110 transition-transform">
                 <Video className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Video</span>
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 hover:scale-110 transition-transform">
                 <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Groups</span>
               </div>
@@ -239,7 +261,7 @@ export default function LoginForm() {
               isDark
                 ? "bg-gray-800/90 border-gray-700/50"
                 : "bg-white/95 border-white/50"
-            } backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border transition-colors duration-500`}
+            } backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border transition-all duration-500 hover:shadow-3xl`}
           >
             <h2
               className={`text-xl sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"} mb-4 sm:mb-6 text-center`}
@@ -249,22 +271,22 @@ export default function LoginForm() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg animate-shake">
                 <p className="text-red-500 text-sm">{error}</p>
               </div>
             )}
 
             {/* Email/Password Inputs */}
             <div className="space-y-3 sm:space-y-4">
-              <div>
+              <div className="group">
                 <label
-                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
+                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2 transition-colors`}
                 >
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"} group-focus-within:text-purple-500 transition-colors`}
                   />
                   <input
                     type="email"
@@ -276,49 +298,60 @@ export default function LoginForm() {
                       isDark
                         ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                         : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                   />
                 </div>
               </div>
 
-              <div>
+              <div className="group">
                 <label
-                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
+                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2 transition-colors`}
                 >
                   Password
                 </label>
                 <div className="relative">
                   <Lock
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"} group-focus-within:text-purple-500 transition-colors`}
                   />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="••••••••"
-                    className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+                    className={`w-full pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base ${
                       isDark
                         ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                         : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-600"} transition-colors`}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                    ) : (
+                      <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs sm:text-sm">
-                <label className="flex items-center cursor-pointer">
+                <label className="flex items-center cursor-pointer group">
                   <input
                     type="checkbox"
-                    className="mr-1.5 sm:mr-2 rounded w-3.5 h-3.5 sm:w-4 sm:h-4"
+                    className="mr-1.5 sm:mr-2 rounded w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 focus:ring-purple-500 focus:ring-2 transition-all cursor-pointer"
                   />
-                  <span className={isDark ? "text-gray-300" : "text-gray-600"}>
+                  <span className={`${isDark ? "text-gray-300 group-hover:text-white" : "text-gray-600 group-hover:text-gray-800"} transition-colors`}>
                     Remember me
                   </span>
                 </label>
                 <button
                   type="button"
-                  className={`${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"} font-medium`}
+                  className={`${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"} font-medium hover:underline transition-all`}
                 >
                   Forgot?
                 </button>
@@ -327,9 +360,34 @@ export default function LoginForm() {
               <button
                 onClick={handleEmailAuth}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-purple-700 hover:to-pink-700 hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                {loading ? "Signing In..." : "Sign In"}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg
+                      className="animate-spin h-5 w-5"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Signing In...
+                  </span>
+                ) : (
+                  "Sign In"
+                )}
               </button>
             </div>
 
@@ -357,9 +415,9 @@ export default function LoginForm() {
                 isDark
                   ? "bg-gray-700 hover:bg-gray-600"
                   : "bg-gray-900 hover:bg-gray-800"
-              } text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              } text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group`}
             >
-              <Github className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Github className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform" />
               Continue with GitHub
             </button>
 
@@ -370,7 +428,7 @@ export default function LoginForm() {
               Don't have an account?{" "}
               <Link
                 to="/registration"
-                className={`${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"} font-semibold`}
+                className={`${isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-700"} font-semibold hover:underline transition-all`}
               >
                 Sign Up
               </Link>
@@ -378,8 +436,10 @@ export default function LoginForm() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-white text-xs mt-4 sm:mt-6 opacity-80 px-4">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+          <p className="text-center text-white text-xs mt-4 sm:mt-6 opacity-80 px-4 hover:opacity-100 transition-opacity">
+            By continuing, you agree to our{" "}
+            <a href="#" className="underline hover:text-purple-300 transition-colors">Terms of Service</a> and{" "}
+            <a href="#" className="underline hover:text-purple-300 transition-colors">Privacy Policy</a>
           </p>
         </div>
       </div>

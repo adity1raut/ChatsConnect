@@ -38,13 +38,13 @@ const sendOTP = async (email, otp, name) => {
 // Step 1: Request OTP
 export const requestOTP = async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, username, password, name } = req.body;
 
     // Validation
-    if (!email || !username || !password) {
+    if (!email || !username || !password || !name) {
       return res.status(400).json({ 
         success: false, 
-        message: "Email, username, and password are required" 
+        message: "All fields are required (name, username, email, password)" 
       });
     }
 
@@ -54,6 +54,15 @@ export const requestOTP = async (req, res) => {
       return res.status(400).json({ 
         success: false, 
         message: "Please provide a valid email address" 
+      });
+    }
+
+    // Validate username format
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Username must be 3-20 characters (letters, numbers, underscore only)" 
       });
     }
 
@@ -85,11 +94,11 @@ export const requestOTP = async (req, res) => {
       });
     }
 
-    // Validate username
-    if (username.length < 3) {
+    // Validate name
+    if (name.trim().length < 2) {
       return res.status(400).json({ 
         success: false, 
-        message: "Username must be at least 3 characters long" 
+        message: "Name must be at least 2 characters long" 
       });
     }
 
@@ -99,13 +108,16 @@ export const requestOTP = async (req, res) => {
     // Store OTP with user data (expires in 10 minutes)
     otpStore.set(email, {
       otp,
-      username,
+      name: name.trim(),
+      username: username.toLowerCase().trim(),
       password,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
 
     // Send OTP via email
-    await sendOTP(email, otp, username);
+    await sendOTP(email, otp, name);
+
+    console.log(`OTP sent to ${email}: ${otp}`); // For development - remove in production
 
     res.status(200).json({ 
       success: true, 
@@ -160,17 +172,30 @@ export const verifyOTPAndRegister = async (req, res) => {
       });
     }
 
+    // Check if user was created in the meantime
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username: storedData.username }] 
+    });
+
+    if (existingUser) {
+      otpStore.delete(email);
+      return res.status(400).json({ 
+        success: false, 
+        message: "User already exists with this email or username" 
+      });
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(storedData.password, 10);
 
     // Generate default avatar (using UI Avatars)
-    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedData.username)}&background=8b5cf6&color=fff&size=200`;
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedData.name)}&background=8b5cf6&color=fff&size=200`;
 
     // Create user
     const newUser = await User.create({
-      name: storedData.username,
+      name: storedData.name,
       username: storedData.username,
-      email,
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
       authProvider: "LOCAL",
       avatar: defaultAvatar,
@@ -249,7 +274,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email }).select("+password +refreshToken");
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password +refreshToken");
 
     if (!user) {
       return res.status(401).json({ 
@@ -344,8 +369,10 @@ export const githubCallback = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // Save refresh token
+    // Update user status
     user.refreshToken = refreshToken;
+    user.isOnline = true;
+    user.lastSeen = new Date();
     await user.save();
 
     // Redirect to frontend with tokens
@@ -422,6 +449,56 @@ export const refreshToken = async (req, res) => {
     res.status(401).json({ 
       success: false, 
       message: "Invalid or expired refresh token" 
+    });
+  }
+};
+
+// Resend OTP (optional - for better UX)
+export const resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email is required" 
+      });
+    }
+
+    // Get stored data
+    const storedData = otpStore.get(email);
+
+    if (!storedData) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No registration in progress for this email" 
+      });
+    }
+
+    // Generate new OTP
+    const otp = generateOTP();
+    
+    // Update stored data with new OTP and expiry
+    otpStore.set(email, {
+      ...storedData,
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
+    // Send new OTP via email
+    await sendOTP(email, otp, storedData.name);
+
+    console.log(`New OTP sent to ${email}: ${otp}`); // For development - remove in production
+
+    res.status(200).json({ 
+      success: true, 
+      message: "New OTP sent to your email" 
+    });
+  } catch (error) {
+    console.error("Error in resendOTP:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to resend OTP. Please try again." 
     });
   }
 };
