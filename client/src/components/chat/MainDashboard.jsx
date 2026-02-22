@@ -1,7 +1,7 @@
 import React from "react";
 import { MessageSquare, Video, Users, Settings, Bot } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-
+import ThemeToggle from "../common/ThemeToggle";
 export default function MainDashboard({
   stats,
   recentActivity,
@@ -20,6 +20,10 @@ export default function MainDashboard({
           : "bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400"
       }`}
     >
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <div className="mb-8">

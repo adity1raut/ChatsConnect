@@ -8,52 +8,144 @@ import {
   Mail,
   Lock,
   User,
+  KeyRound,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../common/ThemeToggle";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function RegistrationForm() {
+  const [step, setStep] = useState(1); // 1: Registration, 2: OTP Verification
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const { isDark } = useTheme();
+  const navigate = useNavigate();
 
-  const handleSignUp = () => {
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+  const handleSignUp = async () => {
+    setError("");
+    setSuccess("");
+
+    // Validation
+    if (!name || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields");
       return;
     }
 
-    if (!name || !email || !password) {
-      alert("Please fill in all fields");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
       return;
     }
 
     setLoading(true);
 
-    setTimeout(() => {
-      console.log("Sign up with email:", email);
-      alert("Account created successfully! (Demo)");
+    try {
+      const response = await axios.post(`${API_URL}/auth/request-otp`, {
+        email,
+        username: name,
+        password,
+      });
+
+      if (response.data.success) {
+        setSuccess("OTP sent to your email! Please check your inbox.");
+        setStep(2); // Move to OTP verification step
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to send OTP. Please try again."
+      );
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/verify-otp`, {
+        email,
+        otp,
+      });
+
+      if (response.data.success) {
+        // Store tokens in localStorage
+        localStorage.setItem("accessToken", response.data.accessToken);
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        setSuccess("Account created successfully! Redirecting...");
+
+        // Redirect to dashboard or home after 1.5 seconds
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Invalid OTP. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/request-otp`, {
+        email,
+        username: name,
+        password,
+      });
+
+      if (response.data.success) {
+        setSuccess("New OTP sent to your email!");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGithubAuth = () => {
     setLoading(true);
-
-    setTimeout(() => {
-      console.log("GitHub authentication initiated");
-      alert("GitHub signup successful! (Demo)");
-      setLoading(false);
-    }, 1500);
+    // Implement GitHub OAuth flow
+    window.location.href = `${API_URL}/auth/github`;
   };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handleSignUp();
+      if (step === 1) {
+        handleSignUp();
+      } else {
+        handleVerifyOTP();
+      }
     }
   };
 
@@ -73,7 +165,9 @@ export default function RegistrationForm() {
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
         {/* Left Side - Branding & Features */}
         <div
-          className={`hidden lg:flex lg:flex-1 flex-col ${isDark ? "text-white" : "text-white"} space-y-8`}
+          className={`hidden lg:flex lg:flex-1 flex-col ${
+            isDark ? "text-white" : "text-white"
+          } space-y-8`}
         >
           <div className="space-y-4">
             <div
@@ -224,151 +318,237 @@ export default function RegistrationForm() {
             } backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border transition-colors duration-500`}
           >
             <h2
-              className={`text-xl sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"} mb-4 sm:mb-6 text-center`}
+              className={`text-xl sm:text-2xl font-bold ${isDark ? "text-white" : "text-gray-800"} mb-2 text-center`}
             >
-              Create Account
+              {step === 1 ? "Create Account" : "Verify OTP"}
             </h2>
 
-            {/* Form Inputs */}
-            <div className="space-y-3 sm:space-y-4">
-              <div>
-                <label
-                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
-                >
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                  />
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="John Doe"
-                    className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                      isDark
-                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
-                >
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                  />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="you@example.com"
-                    className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                      isDark
-                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
-                >
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                  />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="••••••••"
-                    className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                      isDark
-                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
-                >
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                  />
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="••••••••"
-                    className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                      isDark
-                        ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                    } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={handleSignUp}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            {step === 2 && (
+              <p
+                className={`text-xs sm:text-sm ${isDark ? "text-gray-400" : "text-gray-600"} text-center mb-4`}
               >
-                {loading ? "Processing..." : "Create Account"}
-              </button>
-            </div>
+                Enter the 6-digit code sent to {email}
+              </p>
+            )}
 
-            {/* Divider */}
-            <div className="relative my-4 sm:my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div
-                  className={`w-full border-t ${isDark ? "border-gray-600" : "border-gray-300"}`}
-                ></div>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+                <p className="text-red-500 text-sm">{error}</p>
               </div>
-              <div className="relative flex justify-center text-xs sm:text-sm">
-                <span
-                  className={`px-3 sm:px-4 ${isDark ? "bg-gray-800 text-gray-400" : "bg-white text-gray-500"}`}
+            )}
+
+            {/* Success Message */}
+            {success && (
+              <div className="mb-4 p-3 bg-green-500/10 border border-green-500/50 rounded-lg">
+                <p className="text-green-500 text-sm">{success}</p>
+              </div>
+            )}
+
+            {/* Step 1: Registration Form */}
+            {step === 1 && (
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <label
+                    className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
+                  >
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User
+                      className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="John Doe"
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+                        isDark
+                          ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
+                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="you@example.com"
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+                        isDark
+                          ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
+                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
+                  >
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock
+                      className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="••••••••"
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+                        isDark
+                          ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
+                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-1 sm:mb-2`}
+                  >
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock
+                      className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="••••••••"
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
+                        isDark
+                          ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
+                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSignUp}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Or continue with
-                </span>
+                  {loading ? "Sending OTP..." : "Continue"}
+                </button>
               </div>
-            </div>
+            )}
 
-            {/* GitHub Signup */}
-            <button
-              onClick={handleGithubAuth}
-              disabled={loading}
-              className={`w-full ${
-                isDark
-                  ? "bg-gray-700 hover:bg-gray-600"
-                  : "bg-gray-900 hover:bg-gray-800"
-              } text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <Github className="w-4 h-4 sm:w-5 sm:h-5" />
-              Continue with GitHub
-            </button>
+            {/* Step 2: OTP Verification */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <label
+                    className={`block text-xs sm:text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"} mb-2`}
+                  >
+                    Enter OTP
+                  </label>
+                  <div className="relative">
+                    <KeyRound
+                      className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    />
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      onKeyPress={handleKeyPress}
+                      placeholder="000000"
+                      maxLength={6}
+                      className={`w-full pl-10 pr-4 py-3 text-center text-2xl tracking-widest font-semibold ${
+                        isDark
+                          ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
+                      } border rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all`}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleVerifyOTP}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold text-base hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Verifying..." : "Verify & Create Account"}
+                </button>
+
+                <button
+                  onClick={handleResendOTP}
+                  disabled={loading}
+                  className={`w-full ${
+                    isDark
+                      ? "bg-gray-700 hover:bg-gray-600 text-white"
+                      : "bg-gray-200 hover:bg-gray-300 text-gray-800"
+                  } py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Resend OTP
+                </button>
+
+                <button
+                  onClick={() => setStep(1)}
+                  className={`w-full text-center ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-800"} text-sm transition-colors`}
+                >
+                  ← Back to Registration
+                </button>
+              </div>
+            )}
+
+            {/* Divider - Only show in step 1 */}
+            {step === 1 && (
+              <>
+                <div className="relative my-4 sm:my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div
+                      className={`w-full border-t ${isDark ? "border-gray-600" : "border-gray-300"}`}
+                    ></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs sm:text-sm">
+                    <span
+                      className={`px-3 sm:px-4 ${isDark ? "bg-gray-800 text-gray-400" : "bg-white text-gray-500"}`}
+                    >
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                {/* GitHub Signup */}
+                <button
+                  onClick={handleGithubAuth}
+                  disabled={loading}
+                  className={`w-full ${
+                    isDark
+                      ? "bg-gray-700 hover:bg-gray-600"
+                      : "bg-gray-900 hover:bg-gray-800"
+                  } text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Github className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Continue with GitHub
+                </button>
+              </>
+            )}
 
             {/* Toggle to Login */}
             <div

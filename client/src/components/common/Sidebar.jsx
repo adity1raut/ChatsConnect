@@ -118,7 +118,6 @@ export default function Sidebar({
         break;
       case "search":
       case "profile":
-        // For views without dedicated routes yet
         setCurrentView(view);
         break;
       default:
@@ -126,39 +125,91 @@ export default function Sidebar({
     }
   };
 
+  // Centralized style classes
+  const sidebarBaseClasses = `
+    w-64 
+    flex flex-col 
+    py-6 px-3 
+    border-r 
+    transition-all duration-300 ease-in-out
+    ${isDark 
+      ? "bg-gray-900/95 backdrop-blur-xl border-gray-700/50" 
+      : "bg-white/95 backdrop-blur-xl border-gray-200/70"
+    }
+  `;
+
+  const navButtonActiveClasses = `
+    bg-gradient-to-r from-purple-500 to-blue-500 
+    text-white 
+    shadow-lg 
+    font-semibold
+    transform scale-105
+  `;
+
+  const navButtonInactiveClasses = `
+    font-normal
+    ${isDark 
+      ? "text-gray-300 hover:bg-gray-800/60 hover:text-white" 
+      : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
+    }
+  `;
+
+  const navButtonBaseClasses = `
+    flex items-center gap-4 
+    px-4 py-3 
+    rounded-xl 
+    transition-all duration-200 
+    ease-in-out
+    relative
+  `;
+
+  const menuDropdownClasses = `
+    absolute bottom-full left-0 
+    mb-2 
+    rounded-2xl 
+    shadow-2xl 
+    py-2 
+    w-64 
+    z-50 
+    border
+    ${isDark
+      ? "bg-gray-900/95 backdrop-blur-xl border-gray-700/50"
+      : "bg-white/98 backdrop-blur-xl border-gray-200/70"
+    }
+  `;
+
+  const menuItemClasses = `
+    w-full 
+    px-4 py-3 
+    text-left 
+    flex items-center gap-3 
+    transition-all duration-200
+    ${isDark
+      ? "hover:bg-gray-800/60 text-gray-200 hover:text-white"
+      : "hover:bg-gray-100/80 text-gray-700 hover:text-gray-900"
+    }
+  `;
+
+  const dividerClasses = `
+    h-px my-2
+    ${isDark ? "bg-gray-700/50" : "bg-gray-200/60"}
+  `;
+
   return (
-    <div
-      className={`w-64 ${
-        isDark
-          ? "bg-gray-800/80 backdrop-blur-xl border-gray-700/50"
-          : "bg-white/90 backdrop-blur-xl border-white/50"
-      } flex flex-col py-8 px-3 border-r transition-colors`}
-    >
+    <div className={sidebarBaseClasses}>
       {/* Logo */}
-      <div className="px-3 mb-6">
-        <svg width="103" height="29" viewBox="0 0 103 29" fill="none">
-          <text
-            x="0"
-            y="24"
-            fontFamily="Arial, sans-serif"
-            fontSize="24"
-            fontWeight="bold"
-            fill="currentColor"
-            className={isDark ? "fill-white" : "fill-gray-800"}
-          >
-            Connectify
-          </text>
-        </svg>
+      <div className="px-3 mb-8">
+        <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+          Connectify
+        </h1>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1">
+      <nav className="flex-1 flex flex-col gap-2">
         <button
           onClick={() => handleNavigation("home")}
-          className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all ${
-            activeView === "home"
-              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg font-bold"
-              : `font-normal ${isDark ? "hover:bg-gray-700/50 text-gray-300" : "hover:bg-white/50 text-gray-700"}`
+          className={`${navButtonBaseClasses} ${
+            activeView === "home" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
         >
           <HomeIcon filled={activeView === "home"} />
@@ -167,10 +218,8 @@ export default function Sidebar({
 
         <button
           onClick={() => handleNavigation("search")}
-          className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all ${
-            activeView === "search"
-              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg font-bold"
-              : `${isDark ? "hover:bg-gray-700/50 text-gray-300" : "hover:bg-white/50 text-gray-700"}`
+          className={`${navButtonBaseClasses} ${
+            activeView === "search" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
         >
           <SearchIcon />
@@ -179,29 +228,25 @@ export default function Sidebar({
 
         <button
           onClick={() => handleNavigation("messages")}
-          className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all relative ${
-            activeView === "messages"
-              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg font-bold"
-              : `font-normal ${isDark ? "hover:bg-gray-700/50 text-gray-300" : "hover:bg-white/50 text-gray-700"}`
+          className={`${navButtonBaseClasses} ${
+            activeView === "messages" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
         >
           <MessagesIcon filled={activeView === "messages"} />
           <span className="text-base">Messages</span>
-          <span className="absolute left-6 top-2 w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-md"></span>
+          <span className="absolute left-7 top-2.5 w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-lg animate-pulse"></span>
         </button>
 
         <button
           onClick={() => handleNavigation("notifications")}
-          className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all relative ${
-            activeView === "notifications"
-              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg font-bold"
-              : `font-normal ${isDark ? "hover:bg-gray-700/50 text-gray-300" : "hover:bg-white/50 text-gray-700"}`
+          className={`${navButtonBaseClasses} ${
+            activeView === "notifications" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
         >
           <HeartIcon filled={activeView === "notifications"} />
           <span className="text-base">Notifications</span>
           {unreadNotifications > 0 && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 px-1.5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[22px] h-5 px-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
               {unreadNotifications > 9 ? "9+" : unreadNotifications}
             </span>
           )}
@@ -209,18 +254,21 @@ export default function Sidebar({
 
         <button
           onClick={() => handleNavigation("profile")}
-          className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all ${
-            activeView === "profile"
-              ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg font-bold"
-              : `font-normal ${isDark ? "hover:bg-gray-700/50 text-gray-300" : "hover:bg-white/50 text-gray-700"}`
+          className={`${navButtonBaseClasses} ${
+            activeView === "profile" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
         >
           <div
-            className={`w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold shadow-md ${
-              activeView === "profile"
-                ? "ring-2 ring-white ring-offset-2 ring-offset-transparent"
-                : ""
-            }`}
+            className={`
+              w-7 h-7 
+              rounded-full 
+              bg-gradient-to-br from-purple-400 to-pink-500 
+              flex items-center justify-center 
+              text-white text-sm font-bold 
+              shadow-md
+              transition-all duration-200
+              ${activeView === "profile" ? "ring-2 ring-white ring-offset-2 ring-offset-transparent scale-110" : ""}
+            `}
           >
             J
           </div>
@@ -229,14 +277,10 @@ export default function Sidebar({
       </nav>
 
       {/* Bottom Menu */}
-      <div className="relative">
+      <div className="relative mt-4">
         <button
           onClick={() => setShowUserMenu(!showUserMenu)}
-          className={`flex items-center gap-4 px-3 py-3 rounded-lg transition-all w-full ${
-            isDark
-              ? "hover:bg-gray-700/50 text-gray-300"
-              : "hover:bg-white/50 text-gray-700"
-          }`}
+          className={`${navButtonBaseClasses} w-full ${navButtonInactiveClasses}`}
         >
           <MenuIcon />
           <span className="text-base">More</span>
@@ -244,31 +288,24 @@ export default function Sidebar({
 
         {showUserMenu && (
           <>
+            {/* Backdrop */}
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
               onClick={() => setShowUserMenu(false)}
             ></div>
-            <div
-              className={`absolute bottom-full left-0 mb-2 ${
-                isDark
-                  ? "bg-gray-800/90 backdrop-blur-xl border-gray-700/50"
-                  : "bg-white/95 backdrop-blur-xl border-white/50"
-              } rounded-2xl shadow-2xl py-2 w-64 z-50 border`}
-            >
+
+            {/* Dropdown Menu */}
+            <div className={menuDropdownClasses}>
               <button
                 onClick={() => {
                   setShowSettingsModal(true);
                   setShowUserMenu(false);
                 }}
-                className={`w-full px-4 py-3 text-left ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                } flex items-center gap-3 transition-all`}
+                className={menuItemClasses}
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -277,19 +314,13 @@ export default function Sidebar({
                   <circle cx="12" cy="12" r="3" />
                   <path d="M12 1v6m0 6v6" />
                 </svg>
-                <span className="text-sm">Settings</span>
+                <span className="text-sm font-medium">Settings</span>
               </button>
 
-              <button
-                className={`w-full px-4 py-3 text-left ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                } flex items-center gap-3 transition-all`}
-              >
+              <button className={menuItemClasses}>
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -297,19 +328,13 @@ export default function Sidebar({
                 >
                   <path d="M12 2v20M2 12h20" />
                 </svg>
-                <span className="text-sm">Your activity</span>
+                <span className="text-sm font-medium">Your activity</span>
               </button>
 
-              <button
-                className={`w-full px-4 py-3 text-left ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                } flex items-center gap-3 transition-all`}
-              >
+              <button className={menuItemClasses}>
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -319,19 +344,13 @@ export default function Sidebar({
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                <span className="text-sm">Saved</span>
+                <span className="text-sm font-medium">Saved</span>
               </button>
 
-              <button
-                className={`w-full px-4 py-3 text-left ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                } flex items-center gap-3 transition-all`}
-              >
+              <button className={menuItemClasses}>
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -340,19 +359,13 @@ export default function Sidebar({
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
-                <span className="text-sm">Switch appearance</span>
+                <span className="text-sm font-medium">Switch appearance</span>
               </button>
 
-              <button
-                className={`w-full px-4 py-3 text-left ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                } flex items-center gap-3 transition-all`}
-              >
+              <button className={menuItemClasses}>
                 <svg
-                  width="18"
-                  height="18"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -360,36 +373,19 @@ export default function Sidebar({
                 >
                   <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                 </svg>
-                <span className="text-sm">Report a problem</span>
+                <span className="text-sm font-medium">Report a problem</span>
               </button>
 
-              <div
-                className={`h-px ${isDark ? "bg-gray-700/50" : "bg-gray-200/50"} my-1`}
-              ></div>
+              <div className={dividerClasses}></div>
 
-              <button
-                className={`w-full px-4 py-3 text-left ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                } flex items-center gap-3 transition-all`}
-              >
-                <span className="text-sm">Switch accounts</span>
+              <button className={menuItemClasses}>
+                <span className="text-sm font-medium">Switch accounts</span>
               </button>
 
-              <div
-                className={`h-px ${isDark ? "bg-gray-700/50" : "bg-gray-200/50"} my-1`}
-              ></div>
+              <div className={dividerClasses}></div>
 
-              <button
-                onClick={handleLogout}
-                className={`w-full px-4 py-3 text-left transition-all ${
-                  isDark
-                    ? "hover:bg-gray-700/50 text-gray-200"
-                    : "hover:bg-white/70 text-gray-700"
-                }`}
-              >
-                <span className="text-sm">Log out</span>
+              <button onClick={handleLogout} className={menuItemClasses}>
+                <span className="text-sm font-medium">Log out</span>
               </button>
             </div>
           </>

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Heart, MessageCircle, UserPlus, AtSign, Settings, Filter } from 'lucide-react';
+import ThemeToggle from '../common/ThemeToggle';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function NotificationPage() {
-  const [isDark, setIsDark] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
+  const { isDark } = useTheme();
 
   const notifications = [
     {
@@ -105,16 +107,7 @@ export default function NotificationPage() {
     <div className="flex flex-col h-screen">
       {/* Theme Toggle */}
       <div className="absolute top-4 right-4 z-10">
-        <button
-          onClick={() => setIsDark(!isDark)}
-          className={`px-4 py-2 rounded-lg font-medium transition ${
-            isDark 
-              ? 'bg-white/20 text-white hover:bg-white/30' 
-              : 'bg-gray-800/20 text-gray-800 hover:bg-gray-800/30'
-          }`}
-        >
-          {isDark ? '☀️ Light' : '🌙 Dark'}
-        </button>
+        <ThemeToggle />
       </div>
 
       <div className={`flex-1 overflow-y-auto p-6 ${
