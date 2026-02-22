@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "../common/ThemeToggle";
 import axios from "axios";
 
@@ -28,6 +29,7 @@ export default function RegistrationForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const { isDark } = useTheme();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSignUp = async () => {
@@ -90,16 +92,17 @@ export default function RegistrationForm() {
       });
 
       if (response.data.success) {
-        // Store tokens in localStorage
-        localStorage.setItem("accessToken", response.data.accessToken);
+        // Use the login function from AuthContext
+        login(response.data.user, response.data.accessToken);
+        
+        // Store refresh token separately
         localStorage.setItem("refreshToken", response.data.refreshToken);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
 
         setSuccess("Account created successfully! Redirecting...");
 
-        // Redirect to dashboard or home after 1.5 seconds
+        // Redirect to dashboard after 1.5 seconds
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/");
         }, 1500);
       }
     } catch (err) {

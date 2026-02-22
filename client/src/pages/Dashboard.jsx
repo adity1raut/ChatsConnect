@@ -4,8 +4,8 @@ import MainDashboard from "../components/chat/MainDashboard";
 
 function Dashboard() {
   const [aiEnabled, setAiEnabled] = useState(true);
-  const [currentView, setCurrentView] = useState("dashboard");
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [_currentView, setCurrentView] = useState('dashboard');
+  const [_showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Stats data
   const stats = [

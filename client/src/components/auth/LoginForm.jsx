@@ -8,39 +8,63 @@ import {
   Mail,
   Lock,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "../common/ThemeToggle";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { isDark } = useTheme();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleEmailAuth = () => {
+  const handleEmailAuth = async () => {
+    setError("");
+
     if (!email || !password) {
-      alert("Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     }
 
     setLoading(true);
 
-    setTimeout(() => {
-      console.log("Login with email:", email);
-      alert("Logged in successfully! (Demo)");
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password,
+      });
+
+      if (response.data.success) {
+        // Use the login function from AuthContext
+        login(response.data.user, response.data.accessToken);
+
+        // Store refresh token separately if needed
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+
+        // Navigate to dashboard
+        navigate("/");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   const handleGithubAuth = () => {
     setLoading(true);
-
-    setTimeout(() => {
-      console.log("GitHub authentication initiated");
-      alert("GitHub login successful! (Demo)");
-      setLoading(false);
-    }, 1500);
+    // Redirect to GitHub OAuth
+    window.location.href = `${API_URL}/auth/github`;
   };
 
   const handleKeyPress = (e) => {
@@ -65,7 +89,9 @@ export default function LoginForm() {
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
         {/* Left Side - Branding & Features */}
         <div
-          className={`hidden lg:flex lg:flex-1 flex-col ${isDark ? "text-white" : "text-white"} space-y-8`}
+          className={`hidden lg:flex lg:flex-1 flex-col ${
+            isDark ? "text-white" : "text-white"
+          } space-y-8`}
         >
           <div className="space-y-4">
             <div
@@ -221,6 +247,13 @@ export default function LoginForm() {
               Welcome Back
             </h2>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg">
+                <p className="text-red-500 text-sm">{error}</p>
+              </div>
+            )}
+
             {/* Email/Password Inputs */}
             <div className="space-y-3 sm:space-y-4">
               <div>
@@ -296,7 +329,7 @@ export default function LoginForm() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Processing..." : "Sign In"}
+                {loading ? "Signing In..." : "Sign In"}
               </button>
             </div>
 
