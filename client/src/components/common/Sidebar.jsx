@@ -105,24 +105,9 @@ export default function Sidebar({
 
   const activeView = getActiveView();
 
-  const handleNavigation = (view) => {
-    switch (view) {
-      case "home":
-        navigate("/");
-        break;
-      case "messages":
-        navigate("/chat");
-        break;
-      case "notifications":
-        navigate("/notifications");
-        break;
-      case "search":
-      case "profile":
-        setCurrentView(view);
-        break;
-      default:
-        setCurrentView(view);
-    }
+  const handleNavigation = (view, path) => {
+    setCurrentView(view);
+    navigate(path);
   };
 
   // Centralized style classes
@@ -207,7 +192,7 @@ export default function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-2">
         <button
-          onClick={() => handleNavigation("home")}
+          onClick={() => handleNavigation("home", "/")}
           className={`${navButtonBaseClasses} ${
             activeView === "home" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
@@ -217,7 +202,7 @@ export default function Sidebar({
         </button>
 
         <button
-          onClick={() => handleNavigation("search")}
+          onClick={() => handleNavigation("search", "/search")}
           className={`${navButtonBaseClasses} ${
             activeView === "search" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
@@ -227,7 +212,7 @@ export default function Sidebar({
         </button>
 
         <button
-          onClick={() => handleNavigation("messages")}
+          onClick={() => handleNavigation("messages", "/chat")}
           className={`${navButtonBaseClasses} ${
             activeView === "messages" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
@@ -238,7 +223,7 @@ export default function Sidebar({
         </button>
 
         <button
-          onClick={() => handleNavigation("notifications")}
+          onClick={() => handleNavigation("notifications", "/notifications")}
           className={`${navButtonBaseClasses} ${
             activeView === "notifications" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
@@ -253,7 +238,7 @@ export default function Sidebar({
         </button>
 
         <button
-          onClick={() => handleNavigation("profile")}
+          onClick={() => handleNavigation("profile", "/profile")}
           className={`${navButtonBaseClasses} ${
             activeView === "profile" ? navButtonActiveClasses : navButtonInactiveClasses
           }`}
