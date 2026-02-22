@@ -6,7 +6,7 @@ function ChatPage() {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isVideoCall, setIsVideoCall] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiEnabled, _setAiEnabled] = useState(true);
 
   // Sample contacts data
   const contacts = [

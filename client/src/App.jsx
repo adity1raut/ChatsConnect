@@ -5,20 +5,26 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import Login from "./pages/Login.jsx";
 import Registration from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Notification from "./pages/Notification.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
+import Profile from "./pages/Profile.jsx";
 import Sidebar from "./components/common/Sidebar.jsx";
+import ProtectedRoute from "./components/routes/ProtectedRoute.jsx";
+import PublicRoute from "./components/routes/PublicRoute.jsx";
 
 function MainLayout({ children }) {
   const [currentView, setCurrentView] = useState("home");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [_showSettingsModal, setShowSettingsModal] = useState(false);
+  const { logout } = useAuth();
 
   const handleLogout = () => {
+    logout();
     window.location.href = "/login";
   };
 
@@ -43,39 +49,73 @@ function MainLayout({ children }) {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/registration" element={<Registration />} />
-          
-          <Route
-            path="/"
-            element={
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/notifications"
-            element={
-              <MainLayout>
-                <Notification />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/chat"
-            element={
-              <MainLayout>
-                <ChatPage />
-              </MainLayout>
-            }
-          />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes - Only accessible when NOT logged in */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/registration"
+              element={
+                <PublicRoute>
+                  <Registration />
+                </PublicRoute>
+              }
+            />
+            
+            {/* Protected Routes - Only accessible when logged in */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Dashboard />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Notification />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <ChatPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <MainLayout>
+                    <Profile />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
