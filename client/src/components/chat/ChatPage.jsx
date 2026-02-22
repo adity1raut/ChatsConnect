@@ -13,6 +13,7 @@ import {
   Bot,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import ThemeToggle from "../common/ThemeToggle"; // <-- Add this import
 
 export default function ChatPage({
   contacts,
@@ -72,6 +73,10 @@ export default function ChatPage({
 
   return (
     <>
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       {/* Chat Sidebar */}
       <div
         className={`w-80 ${
