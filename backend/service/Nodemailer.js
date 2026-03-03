@@ -3,19 +3,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-  console.error(
-    "❌ Email credentials missing. Set EMAIL_USER and EMAIL_PASSWORD in .env\n" +
-    "   For Gmail: enable 2-Step Verification → generate an App Password at\n" +
-    "   https://myaccount.google.com/apppasswords"
-  );
-}
+const EMAIL_USER = process.env.EMAIL_USER || "araut7798@gmail.com";
+const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD || "dlopcaeamcjnzgyo";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    user: EMAIL_USER,
+    pass: EMAIL_PASSWORD,
   },
 });
 

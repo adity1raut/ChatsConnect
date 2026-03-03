@@ -12,9 +12,15 @@ let _io = null;
 export const getIO = () => _io;
 
 export function initSocket(httpServer) {
+  const allowedOrigins = [
+    "https://mini-project-omega-ochre.vercel.app",
+    process.env.CLIENT_URL,
+    ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : []),
+  ].filter(Boolean);
+
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: allowedOrigins,
       credentials: true,
     },
   });
