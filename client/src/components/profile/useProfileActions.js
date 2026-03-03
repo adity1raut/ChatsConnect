@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../config/api.js";
 
 export function useProfileActions({ updateUser, logout, navigate }) {
   const [loading, setLoading] = useState(false);
@@ -26,16 +26,28 @@ export function useProfileActions({ updateUser, logout, navigate }) {
   };
 
   const updateProfile = ({ username, bio, avatarFile, name }) => {
-    if (!name || !username) return setError("Name and username are required");
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return setError("Username must be 3–20 chars (letters, numbers, underscore)");
+    if (!name) return setError("Name is required");
 
     withFeedback(async () => {
       const { data } = await axios.put(`${API_URL}/profile/update`,
-        { username, bio, avatar: avatarFile },
+        { username, bio, avatar: avatarFile, name },
         { headers: authHeader() }
       );
       updateUser(data.user);
     }, "Profile updated!");
+  };
+
+  const updateUsername = (username) => {
+    if (!username) return setError("Username is required");
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return setError("Username must be 3–20 chars (letters, numbers, underscore)");
+
+    withFeedback(async () => {
+      const { data } = await axios.put(`${API_URL}/profile/update`,
+        { username },
+        { headers: authHeader() }
+      );
+      updateUser(data.user);
+    }, "Username updated!");
   };
 
   const updateEmail = (email) => {
@@ -77,5 +89,5 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     }
   };
 
-  return { loading, error, success, setError, setSuccess, updateProfile, updateEmail, updatePassword, deleteAccount };
+  return { loading, error, success, setError, setSuccess, updateProfile, updateUsername, updateEmail, updatePassword, deleteAccount };
 }

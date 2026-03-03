@@ -1,27 +1,5 @@
 import React from "react";
-import { User, AtSign, Save, Sparkles } from "lucide-react";
-
-function FormField({ label, hint, icon: Icon, isDark, children }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-        {label}
-      </label>
-      <div className="relative group">
-        {Icon && (
-          <Icon
-            className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${isDark ? "text-gray-600 group-focus-within:text-violet-400" : "text-gray-400 group-focus-within:text-violet-500"
-              }`}
-          />
-        )}
-        {children}
-      </div>
-      {hint && (
-        <p className={`text-xs leading-relaxed ${isDark ? "text-gray-600" : "text-gray-400"}`}>{hint}</p>
-      )}
-    </div>
-  );
-}
+import { User, Save } from "lucide-react";
 
 const inputClass = (isDark, hasIcon = true) =>
   `w-full ${hasIcon ? "pl-11" : "pl-4"} pr-4 py-3.5 text-sm rounded-xl border outline-none transition-all duration-200 ${isDark
@@ -29,7 +7,7 @@ const inputClass = (isDark, hasIcon = true) =>
     : "bg-gray-50/80 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-500/8"
   }`;
 
-export default function ProfileTab({ isDark, name, setName, username, setUsername, bio, setBio, loading, onSave }) {
+export default function ProfileTab({ isDark, name, setName, bio, setBio, loading, onSave }) {
   return (
     <div className="tab-enter">
       {/* Section header */}
@@ -42,36 +20,27 @@ export default function ProfileTab({ isDark, name, setName, username, setUsernam
             Profile Information
           </h3>
           <p className={`text-sm mt-1 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-            Update your name, username, and personal bio
+            Update your display name and personal bio
           </p>
         </div>
       </div>
 
       <div className="flex flex-col gap-5">
-        <FormField label="Full Name" icon={User} isDark={isDark}>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your full name"
-            className={inputClass(isDark)}
-          />
-        </FormField>
-
-        <FormField
-          label="Username"
-          icon={AtSign}
-          isDark={isDark}
-          hint="3–20 characters: letters, numbers, or underscore"
-        >
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase())}
-            placeholder="yourhandle"
-            className={inputClass(isDark)}
-          />
-        </FormField>
+        <div className="flex flex-col gap-2">
+          <label className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+            Full Name
+          </label>
+          <div className="relative group">
+            <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-colors duration-200 ${isDark ? "text-gray-600 group-focus-within:text-violet-400" : "text-gray-400 group-focus-within:text-violet-500"}`} />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your full name"
+              className={inputClass(isDark)}
+            />
+          </div>
+        </div>
 
         <div className="flex flex-col gap-2">
           <label className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-gray-400" : "text-gray-500"}`}>
@@ -102,7 +71,6 @@ export default function ProfileTab({ isDark, name, setName, username, setUsernam
           className="relative flex items-center justify-center gap-2.5 w-full py-4 mt-2 rounded-xl font-bold text-white overflow-hidden transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-violet-500/25 group"
           style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)" }}
         >
-          {/* Shimmer overlay */}
           <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
           <Save size={16} strokeWidth={2.5} />
           {loading ? "Saving…" : "Save Changes"}

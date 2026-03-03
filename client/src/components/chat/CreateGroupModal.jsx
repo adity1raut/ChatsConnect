@@ -3,7 +3,7 @@ import { X, Search, Users, Check, Loader2 } from "lucide-react";
 import axios from "axios";
 import { useTheme } from "../../context/ThemeContext";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL as API } from "../../config/api.js";
 
 export default function CreateGroupModal({ onClose, onGroupCreated }) {
   const { isDark } = useTheme();
@@ -205,11 +205,10 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
                     <button
                       key={u._id}
                       onClick={() => toggleUser(u)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
-                        isSelected
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${isSelected
                           ? isDark ? "bg-violet-500/15" : "bg-violet-50"
                           : isDark ? "hover:bg-white/[0.04]" : "hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                         {u.avatar ? (

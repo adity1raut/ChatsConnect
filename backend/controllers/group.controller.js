@@ -1,5 +1,6 @@
 import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
+import { getIO } from "../socket/socket.js";
 
 // POST /api/groups — create a new group
 export const createGroup = async (req, res) => {
@@ -37,6 +38,17 @@ export const createGroup = async (req, res) => {
     const populated = await Group.findById(group._id)
       .populate("members.user", "name username avatar isOnline")
       .populate("createdBy", "name username avatar");
+
+    // Notify all other members via socket so they see the group immediately
+    const io = getIO();
+    if (io) {
+      populated.members.forEach((m) => {
+        const memberId = m.user._id.toString();
+        if (memberId !== creatorId.toString()) {
+          io.to(memberId).emit("groupCreated", { group: populated });
+        }
+      });
+    }
 
     res.status(201).json({ group: populated });
   } catch (err) {
@@ -137,6 +149,19 @@ export const addMembers = async (req, res) => {
       "members.user",
       "name username avatar isOnline"
     );
+
+    // Notify newly added members via socket
+    if (added > 0) {
+      const io = getIO();
+      if (io) {
+        const newMemberIds = memberIds.map((id) => id.toString());
+        updated.members.forEach((m) => {
+          if (newMemberIds.includes(m.user._id.toString())) {
+            io.to(m.user._id.toString()).emit("groupCreated", { group: updated });
+          }
+        });
+      }
+    }
 
     res.status(200).json({ group: updated, added });
   } catch (err) {

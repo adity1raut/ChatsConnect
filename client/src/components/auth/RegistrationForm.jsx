@@ -21,7 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 import ThemeToggle from "../common/ThemeToggle";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../config/api.js";
 
 export default function RegistrationForm() {
   const [step, setStep] = useState(1);
@@ -183,28 +183,24 @@ export default function RegistrationForm() {
 
   return (
     <div
-      className={`min-h-screen transition-all duration-700 relative overflow-hidden ${
-        isDark
+      className={`min-h-screen transition-all duration-700 relative overflow-hidden ${isDark
           ? "bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900"
           : "bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400"
-      } flex items-center justify-center p-4 sm:p-6 md:p-8`}
+        } flex items-center justify-center p-4 sm:p-6 md:p-8`}
     >
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className={`absolute top-1/4 left-1/4 w-64 h-64 ${
-            isDark ? "bg-purple-500" : "bg-white"
-          } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob`}
+          className={`absolute top-1/4 left-1/4 w-64 h-64 ${isDark ? "bg-purple-500" : "bg-white"
+            } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob`}
         ></div>
         <div
-          className={`absolute top-1/3 right-1/4 w-64 h-64 ${
-            isDark ? "bg-pink-500" : "bg-yellow-200"
-          } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000`}
+          className={`absolute top-1/3 right-1/4 w-64 h-64 ${isDark ? "bg-pink-500" : "bg-yellow-200"
+            } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000`}
         ></div>
         <div
-          className={`absolute bottom-1/4 left-1/3 w-64 h-64 ${
-            isDark ? "bg-blue-500" : "bg-pink-200"
-          } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000`}
+          className={`absolute bottom-1/4 left-1/3 w-64 h-64 ${isDark ? "bg-blue-500" : "bg-pink-200"
+            } rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000`}
         ></div>
       </div>
 
@@ -216,17 +212,14 @@ export default function RegistrationForm() {
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
         {/* Left Side - Branding & Features */}
         <div
-          className={`hidden lg:flex lg:flex-1 flex-col ${
-            isDark ? "text-white" : "text-white"
-          } space-y-8 animate-fade-in-left`}
+          className={`hidden lg:flex lg:flex-1 flex-col ${isDark ? "text-white" : "text-white"
+            } space-y-8 animate-fade-in-left`}
         >
           <div className="space-y-4">
             <div
-              className={`inline-flex items-center gap-3 ${
-                isDark ? "bg-white/10" : "bg-white/20"
-              } backdrop-blur-md px-6 py-3 rounded-full border ${
-                isDark ? "border-white/20" : "border-white/30"
-              } shadow-xl hover:scale-105 transition-transform duration-300`}
+              className={`inline-flex items-center gap-3 ${isDark ? "bg-white/10" : "bg-white/20"
+                } backdrop-blur-md px-6 py-3 rounded-full border ${isDark ? "border-white/20" : "border-white/30"
+                } shadow-xl hover:scale-105 transition-transform duration-300`}
             >
               <MessageSquare className="w-8 h-8 animate-pulse" />
               <span className="text-2xl font-bold">ChatConnect</span>
@@ -251,11 +244,10 @@ export default function RegistrationForm() {
           {/* Feature Cards */}
           <div className="space-y-4">
             <div
-              className={`${
-                isDark
+              className={`${isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white/20 border-white/30"
-              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
+                } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
@@ -274,11 +266,10 @@ export default function RegistrationForm() {
             </div>
 
             <div
-              className={`${
-                isDark
+              className={`${isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white/20 border-white/30"
-              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
+                } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-gradient-to-br from-pink-500 to-pink-600 p-3 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
@@ -297,11 +288,10 @@ export default function RegistrationForm() {
             </div>
 
             <div
-              className={`${
-                isDark
+              className={`${isDark
                   ? "bg-white/5 border-white/10"
                   : "bg-white/20 border-white/30"
-              } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
+                } backdrop-blur-xl rounded-2xl p-6 border hover:bg-white/20 hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group`}
             >
               <div className="flex items-start gap-4">
                 <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
@@ -326,9 +316,8 @@ export default function RegistrationForm() {
           {/* Mobile Logo */}
           <div className="text-center mb-6 lg:hidden">
             <div
-              className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 ${
-                isDark ? "bg-gray-800" : "bg-white"
-              } rounded-2xl shadow-xl mb-3 hover:scale-110 transition-transform duration-300`}
+              className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 ${isDark ? "bg-gray-800" : "bg-white"
+                } rounded-2xl shadow-xl mb-3 hover:scale-110 transition-transform duration-300`}
             >
               <MessageSquare
                 className={`w-8 h-8 sm:w-10 sm:h-10 ${isDark ? "text-purple-400" : "text-purple-600"}`}
@@ -362,62 +351,56 @@ export default function RegistrationForm() {
 
           {/* Registration Card */}
           <div
-            className={`${
-              isDark
+            className={`${isDark
                 ? "bg-gray-800/90 border-gray-700/50"
                 : "bg-white/95 border-white/50"
-            } backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border transition-all duration-500 hover:shadow-3xl`}
+              } backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 border transition-all duration-500 hover:shadow-3xl`}
           >
             {/* Progress Indicator */}
             <div className="flex items-center justify-center gap-2 mb-6">
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  step === 1
+                className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 1
                     ? "bg-gradient-to-r from-purple-600 to-pink-600"
                     : "bg-green-500"
-                } text-white font-semibold shadow-lg transition-all duration-300`}
+                  } text-white font-semibold shadow-lg transition-all duration-300`}
               >
                 {step === 1 ? "1" : <CheckCircle className="w-5 h-5" />}
               </div>
               <div
-                className={`h-1 w-12 rounded-full ${
-                  step >= 2
+                className={`h-1 w-12 rounded-full ${step >= 2
                     ? "bg-gradient-to-r from-purple-600 to-pink-600"
                     : isDark
-                    ? "bg-gray-700"
-                    : "bg-gray-300"
-                } transition-all duration-500`}
+                      ? "bg-gray-700"
+                      : "bg-gray-300"
+                  } transition-all duration-500`}
               ></div>
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  step === 2
+                className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 2
                     ? "bg-gradient-to-r from-purple-600 to-pink-600"
                     : step > 2
-                    ? "bg-green-500"
-                    : isDark
-                    ? "bg-gray-700"
-                    : "bg-gray-300"
-                } text-white font-semibold transition-all duration-300`}
+                      ? "bg-green-500"
+                      : isDark
+                        ? "bg-gray-700"
+                        : "bg-gray-300"
+                  } text-white font-semibold transition-all duration-300`}
               >
                 {step > 2 ? <CheckCircle className="w-5 h-5" /> : "2"}
               </div>
               <div
-                className={`h-1 w-12 rounded-full ${
-                  step === 3
+                className={`h-1 w-12 rounded-full ${step === 3
                     ? "bg-gradient-to-r from-purple-600 to-pink-600"
                     : isDark
-                    ? "bg-gray-700"
-                    : "bg-gray-300"
-                } transition-all duration-500`}
+                      ? "bg-gray-700"
+                      : "bg-gray-300"
+                  } transition-all duration-500`}
               ></div>
               <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  step === 3
+                className={`flex items-center justify-center w-8 h-8 rounded-full ${step === 3
                     ? "bg-gradient-to-r from-purple-600 to-pink-600"
                     : isDark
-                    ? "bg-gray-700"
-                    : "bg-gray-300"
-                } text-white font-semibold transition-all duration-300`}
+                      ? "bg-gray-700"
+                      : "bg-gray-300"
+                  } text-white font-semibold transition-all duration-300`}
               >
                 3
               </div>
@@ -482,11 +465,10 @@ export default function RegistrationForm() {
                       onChange={(e) => setName(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="John Doe"
-                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                        isDark
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${isDark
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
+                        } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                     />
                   </div>
                 </div>
@@ -507,11 +489,10 @@ export default function RegistrationForm() {
                       onChange={(e) => setUsername(e.target.value.toLowerCase())}
                       onKeyPress={handleKeyPress}
                       placeholder="johndoe"
-                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                        isDark
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${isDark
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
+                        } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                     />
                   </div>
                   <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
@@ -535,11 +516,10 @@ export default function RegistrationForm() {
                       onChange={(e) => setEmail(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="you@example.com"
-                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${
-                        isDark
+                      className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${isDark
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
+                        } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                     />
                   </div>
                 </div>
@@ -571,11 +551,10 @@ export default function RegistrationForm() {
                 <button
                   onClick={handleGithubAuth}
                   disabled={loading}
-                  className={`w-full ${
-                    isDark
+                  className={`w-full ${isDark
                       ? "bg-gray-700 hover:bg-gray-600"
                       : "bg-gray-900 hover:bg-gray-800"
-                  } text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group`}
+                    } text-white py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group`}
                 >
                   <Github className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-12 transition-transform" />
                   Continue with GitHub
@@ -602,11 +581,10 @@ export default function RegistrationForm() {
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="••••••••"
-                      className={`w-full pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base ${
-                        isDark
+                      className={`w-full pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base ${isDark
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
+                        } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                     />
                     <button
                       type="button"
@@ -641,11 +619,10 @@ export default function RegistrationForm() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="••••••••"
-                      className={`w-full pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base ${
-                        isDark
+                      className={`w-full pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base ${isDark
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                      } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
+                        } border rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                     />
                     <button
                       type="button"
@@ -723,11 +700,10 @@ export default function RegistrationForm() {
                       onKeyPress={handleKeyPress}
                       placeholder="000000"
                       maxLength={6}
-                      className={`w-full px-4 py-3 text-center text-2xl tracking-widest font-semibold ${
-                        isDark
+                      className={`w-full px-4 py-3 text-center text-2xl tracking-widest font-semibold ${isDark
                           ? "bg-gray-700/50 border-gray-600 text-white placeholder-gray-400 focus:border-purple-500"
                           : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-purple-500"
-                      } border rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
+                        } border rounded-xl focus:ring-2 focus:ring-purple-500/50 outline-none transition-all hover:border-purple-400`}
                     />
                   </div>
                 </div>
@@ -768,11 +744,10 @@ export default function RegistrationForm() {
                 <button
                   onClick={handleResendOTP}
                   disabled={loading}
-                  className={`w-full ${
-                    isDark
+                  className={`w-full ${isDark
                       ? "bg-gray-700 hover:bg-gray-600"
                       : "bg-gray-200 hover:bg-gray-300"
-                  } ${isDark ? "text-white" : "text-gray-800"} py-3 rounded-xl font-semibold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                    } ${isDark ? "text-white" : "text-gray-800"} py-3 rounded-xl font-semibold text-sm hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
                 >
                   Resend OTP
                 </button>
