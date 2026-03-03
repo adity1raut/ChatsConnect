@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import {
   Send, Phone, Video, MoreVertical, Search, MessageSquare,
-  Image, Paperclip, Smile, X, Users, ArrowLeft,
-  Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2,
+  Image, Paperclip, Smile, Users, ArrowLeft,
+  Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2, SquarePen, X,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../common/ThemeToggle";
@@ -15,14 +15,16 @@ export default function ChatPage({
   setMessage,
   activeTab,
   setActiveTab,
-  isVideoCall,
-  setIsVideoCall,
   handleSendMessage,
   messages = [],
   loadingMessages = false,
   isTyping = false,
   onlineUsers = new Set(),
   onCreateGroup,
+  onNewDM,
+  currentUser,
+  onStartVideoCall,
+  onStartAudioCall,
 }) {
   const { isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,6 +87,13 @@ export default function ChatPage({
             </h1>
             <div className="flex items-center gap-1.5">
               <button
+                onClick={onNewDM}
+                title="New Direct Message"
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-110 ${isDark ? "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-500"}`}
+              >
+                <SquarePen size={14} strokeWidth={2} />
+              </button>
+              <button
                 onClick={onCreateGroup}
                 title="New Group"
                 className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-110 ${isDark ? "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-500"}`}
@@ -140,7 +149,7 @@ export default function ChatPage({
         </div>
 
         {/* Contact list */}
-        <div className="flex-1 overflow-y-auto py-1">
+        <div className="flex-1 overflow-y-auto py-1 min-h-0">
           {filteredContacts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 px-6 text-center">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 ${isDark ? "bg-white/4" : "bg-gray-100"}`}>
@@ -238,6 +247,34 @@ export default function ChatPage({
             })
           )}
         </div>
+
+        {/* Profile footer */}
+        {currentUser && (
+          <div className={`px-4 py-3 border-t shrink-0 flex items-center gap-3 ${isDark ? "border-white/6" : "border-gray-100"}`}>
+            <div className="relative shrink-0">
+              {currentUser.avatar && currentUser.avatar.startsWith("http") ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-9 h-9 rounded-full object-cover ring-2 ring-violet-500/30"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-linear-to-br from-violet-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm ring-2 ring-violet-500/30">
+                  {currentUser.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-gray-950" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold truncate leading-none mb-0.5 ${isDark ? "text-gray-100" : "text-gray-800"}`}>
+                {currentUser.name}
+              </p>
+              <p className={`text-xs truncate ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                @{currentUser.username}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ══ Chat Area ════════════════════════════════════════════ */}
@@ -285,10 +322,18 @@ export default function ChatPage({
               </div>
 
               <div className="flex items-center gap-1">
-                <button className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}>
+                <button
+                  onClick={() => onStartAudioCall?.(selectedChat)}
+                  title="Audio call"
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}
+                >
                   <Phone size={15} strokeWidth={2} />
                 </button>
-                <button onClick={() => setIsVideoCall(true)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}>
+                <button
+                  onClick={() => onStartVideoCall?.(selectedChat)}
+                  title="Video call"
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}
+                >
                   <Video size={15} strokeWidth={2} />
                 </button>
                 <button onClick={() => setShowInfo(!showInfo)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${showInfo ? isDark ? "bg-violet-500/20 text-violet-400" : "bg-violet-50 text-violet-600" : isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}>
@@ -322,30 +367,6 @@ export default function ChatPage({
                     </button>
                     <button className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${isDark ? "bg-red-500/10 text-red-400 hover:bg-red-500/20" : "bg-red-50 text-red-500 hover:bg-red-100"}`}>
                       <Trash2 size={14} /><span>Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Video call overlay */}
-            {isVideoCall && (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-violet-950 to-gray-950 z-50 flex items-center justify-center">
-                <div className="text-center px-6">
-                  <div className="relative mx-auto mb-6 w-28 h-28 sm:w-32 sm:h-32">
-                    <div className="absolute inset-0 rounded-full bg-violet-500/20 animate-ping" />
-                    <div className="relative w-full h-full rounded-full bg-linear-to-br from-violet-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-4xl shadow-2xl">
-                      {selectedChat.name?.charAt(0).toUpperCase()}
-                    </div>
-                  </div>
-                  <h2 className="text-xl font-bold text-white mb-1">{selectedChat.name}</h2>
-                  <p className="text-gray-400 text-sm mb-8">Calling...</p>
-                  <div className="flex gap-5 justify-center">
-                    <button className="w-14 h-14 bg-linear-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-xl shadow-emerald-500/30">
-                      <Video size={20} className="text-white" />
-                    </button>
-                    <button onClick={() => setIsVideoCall(false)} className="w-14 h-14 bg-linear-to-r from-red-500 to-rose-600 rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-xl shadow-red-500/30">
-                      <X size={20} className="text-white" />
                     </button>
                   </div>
                 </div>

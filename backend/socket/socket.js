@@ -158,6 +158,48 @@ export function initSocket(httpServer) {
       if (groupId) socket.leave(`group:${groupId}`);
     });
 
+    // ── WebRTC Signaling ─────────────────────────────────────────
+
+    // Caller → Callee: ring the callee
+    socket.on("callUser", ({ toUserId, callerName, callerAvatar, callType }) => {
+      io.to(toUserId).emit("incomingCall", {
+        callerId: userId,
+        callerName,
+        callerAvatar,
+        callType, // "video" | "audio"
+      });
+    });
+
+    // Callee → Caller: call accepted
+    socket.on("callAccepted", ({ toUserId }) => {
+      io.to(toUserId).emit("callAccepted", { calleeId: userId });
+    });
+
+    // Callee → Caller: call rejected
+    socket.on("callRejected", ({ toUserId }) => {
+      io.to(toUserId).emit("callRejected", { calleeId: userId });
+    });
+
+    // Either side → other: hang up
+    socket.on("endCall", ({ toUserId }) => {
+      io.to(toUserId).emit("callEnded", { byUserId: userId });
+    });
+
+    // Relay WebRTC offer
+    socket.on("webrtcOffer", ({ toUserId, offer }) => {
+      io.to(toUserId).emit("webrtcOffer", { fromUserId: userId, offer });
+    });
+
+    // Relay WebRTC answer
+    socket.on("webrtcAnswer", ({ toUserId, answer }) => {
+      io.to(toUserId).emit("webrtcAnswer", { fromUserId: userId, answer });
+    });
+
+    // Relay ICE candidates
+    socket.on("iceCandidate", ({ toUserId, candidate }) => {
+      io.to(toUserId).emit("iceCandidate", { fromUserId: userId, candidate });
+    });
+
     // ── Typing indicators ─────────────────────────────────────────
     socket.on("typing", ({ receiverId, groupId }) => {
       if (receiverId) {

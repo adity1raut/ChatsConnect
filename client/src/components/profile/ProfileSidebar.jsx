@@ -1,13 +1,11 @@
 import React from "react";
 import {
-  User, Mail, Lock, AlertCircle, AtSign, Camera, ShieldCheck, LogOut,
+  User, AlertCircle, AtSign, Camera, ShieldCheck, LogOut,
 } from "lucide-react";
 
 const TABS = [
   { id: "profile", label: "Profile Info", icon: User, color: "from-violet-500 to-purple-600" },
-  { id: "email", label: "Email", icon: Mail, color: "from-blue-500 to-cyan-500" },
-  { id: "password", label: "Password", icon: Lock, color: "from-emerald-500 to-teal-500" },
-  { id: "danger", label: "Danger", icon: AlertCircle, color: "from-red-500 to-rose-600" },
+  { id: "danger", label: "Danger Zone", icon: AlertCircle, color: "from-red-500 to-rose-600" },
 ];
 
 export default function ProfileSidebar({ user, activeTab, setActiveTab, isDark, avatarPreview, onAvatarChange, onLogout }) {

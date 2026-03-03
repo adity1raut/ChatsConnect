@@ -6,8 +6,6 @@ import ThemeToggle from "../common/ThemeToggle";
 
 import ProfileSidebar from "./ProfileSidebar";
 import ProfileTab from "./ProfileTab";
-import EmailTab from "./EmailTab";
-import PasswordTab from "./PasswordTab";
 import DangerZoneTab from "./DangerZoneTab";
 import DeleteModal from "./DeleteModal";
 import Toast from "./Toast";
@@ -23,22 +21,13 @@ export default function ProfilePage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const [name, setName] = useState(user?.name || "");
-  const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
   const [avatarFile, setAvatarFile] = useState(null);
-  const [newEmail, setNewEmail] = useState(user?.email || "");
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     loading, error, success, setError, setSuccess,
-    updateProfile, updateEmail, updatePassword, deleteAccount,
+    updateProfile, deleteAccount,
   } = useProfileActions({ user, updateUser, logout, navigate });
 
   useEffect(() => { if (!user) navigate("/login"); }, [user, navigate]);
@@ -97,7 +86,7 @@ export default function ProfilePage() {
         .tab-enter { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
       `}</style>
 
-      {/* Theme toggle — desktop only (mobile has bottom nav) */}
+      {/* Theme toggle — desktop only */}
       <div className="fixed top-5 right-5 z-[100] hidden md:block">
         <ThemeToggle />
       </div>
@@ -124,15 +113,11 @@ export default function ProfilePage() {
               </span>
             </h1>
             <p className={`text-xs sm:text-sm font-medium mt-1.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-              Manage your account settings and preferences
+              Update your photo, name, and bio
             </p>
           </div>
         </header>
 
-        {/* ── Main layout
-             Mobile: sidebar stacks on top as a compact nav bar, then full-width content
-             Desktop: 290px sidebar + flex-1 content side-by-side
-        ── */}
         <div className="flex flex-col md:grid md:grid-cols-[290px_1fr] gap-4 sm:gap-6 items-start">
 
           {/* Sidebar */}
@@ -155,13 +140,16 @@ export default function ProfilePage() {
 
             <div className="p-5 sm:p-8 md:p-10">
               {activeTab === "profile" && (
-                <ProfileTab key="profile" isDark={isDark} name={name} setName={setName} username={username} setUsername={setUsername} bio={bio} setBio={setBio} loading={loading} onSave={() => updateProfile({ name, username, bio, avatarFile })} />
-              )}
-              {activeTab === "email" && (
-                <EmailTab key="email" isDark={isDark} user={user} newEmail={newEmail} setNewEmail={setNewEmail} loading={loading} onSave={() => updateEmail(newEmail)} />
-              )}
-              {activeTab === "password" && (
-                <PasswordTab key="password" isDark={isDark} currentPassword={currentPassword} setCurrentPassword={setCurrentPassword} newPassword={newPassword} setNewPassword={setNewPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} showCurrentPassword={showCurrentPassword} setShowCurrentPassword={setShowCurrentPassword} showNewPassword={showNewPassword} setShowNewPassword={setShowNewPassword} showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword} loading={loading} onSave={() => updatePassword({ currentPassword, newPassword, confirmPassword })} />
+                <ProfileTab
+                  key="profile"
+                  isDark={isDark}
+                  name={name}
+                  setName={setName}
+                  bio={bio}
+                  setBio={setBio}
+                  loading={loading}
+                  onSave={() => updateProfile({ name, username: user?.username, bio, avatarFile })}
+                />
               )}
               {activeTab === "danger" && (
                 <DangerZoneTab key="danger" isDark={isDark} onDeleteClick={() => setShowDeleteModal(true)} />

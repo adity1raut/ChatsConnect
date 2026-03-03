@@ -12,6 +12,10 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider, useNotifications } from "./context/NotificationContext";
 import { FriendProvider } from "./context/FriendContext";
+import { CallProvider } from "./context/CallContext";
+import IncomingCallModal from "./components/video/IncomingCallModal";
+import VideoCallModal from "./components/video/VideoCallModal";
+import SettingsModal from "./components/common/SettingsModal";
 import { Home, MessageSquare, Bell, User, Search } from "lucide-react";
 
 import Login from "./pages/Login.jsx";
@@ -79,7 +83,9 @@ function MobileNav() {
 function MainLayout({ children }) {
   const [currentView, setCurrentView] = useState("home");
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [_showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
 
@@ -105,6 +111,14 @@ function MainLayout({ children }) {
         {children}
       </div>
       <MobileNav />
+      <SettingsModal
+        showSettingsModal={showSettingsModal}
+        setShowSettingsModal={setShowSettingsModal}
+        aiEnabled={aiEnabled}
+        setAiEnabled={setAiEnabled}
+        notifications={notifications}
+        setNotifications={setNotifications}
+      />
     </div>
   );
 }
@@ -113,7 +127,9 @@ function MainLayout({ children }) {
 function ChatLayout({ children }) {
   const [currentView, setCurrentView] = useState("home");
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [_showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
 
@@ -141,6 +157,14 @@ function ChatLayout({ children }) {
         </div>
       </div>
       <MobileNav />
+      <SettingsModal
+        showSettingsModal={showSettingsModal}
+        setShowSettingsModal={setShowSettingsModal}
+        aiEnabled={aiEnabled}
+        setAiEnabled={setAiEnabled}
+        notifications={notifications}
+        setNotifications={setNotifications}
+      />
     </div>
   );
 }
@@ -150,9 +174,13 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <SocketProvider>
+          <CallProvider>
           <FriendProvider>
           <NotificationProvider>
             <Router>
+              {/* Global call overlays — visible from any page */}
+              <IncomingCallModal />
+              <VideoCallModal />
               <Routes>
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/registration" element={<PublicRoute><Registration /></PublicRoute>} />
@@ -168,6 +196,7 @@ function App() {
             </Router>
           </NotificationProvider>
           </FriendProvider>
+          </CallProvider>
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>

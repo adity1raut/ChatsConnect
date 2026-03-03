@@ -3,9 +3,11 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import ChatPageComponent from "../components/chat/ChatPage";
 import CreateGroupModal from "../components/chat/CreateGroupModal";
+import NewDMModal from "../components/chat/NewDMModal";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useNotifications } from "../context/NotificationContext";
+import { useCall } from "../context/CallContext";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -17,7 +19,6 @@ function ChatPage() {
     socket,
     onlineUsers,
     joinGroup,
-    leaveGroup,
     sendMessage,
     sendGroupMessage,
     emitTyping,
@@ -29,9 +30,10 @@ function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [isVideoCall, setIsVideoCall] = useState(false);
   const [aiEnabled] = useState(false);
+  const { startCall } = useCall();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showNewDM, setShowNewDM] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
   const typingTimerRef = useRef(null);
@@ -249,6 +251,20 @@ function ChatPage() {
     return () => socket.off("newGroupMessage", handleGroupMessage);
   }, [socket, user, loadContacts]);
 
+  // ── Socket: another user added this user to a group ─────────────
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGroupCreated = ({ group }) => {
+      // Join the socket room for the new group and refresh contact list
+      joinGroup(group._id);
+      loadContacts();
+    };
+
+    socket.on("groupCreated", handleGroupCreated);
+    return () => socket.off("groupCreated", handleGroupCreated);
+  }, [socket, joinGroup, loadContacts]);
+
   // ── Socket: typing indicators ─────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
@@ -326,6 +342,24 @@ function ChatPage() {
     loadContacts();
   };
 
+  // ── New DM: open chat with selected user ──────────────────────────
+  const handleNewDM = (userProfile) => {
+    // Check if we already have a conversation with this user
+    const existing = contacts.find(
+      (c) => c.type === "user" && c.id === userProfile._id
+    );
+    handleSelectChat(
+      existing || {
+        id: userProfile._id,
+        name: userProfile.name,
+        username: userProfile.username,
+        avatar: userProfile.avatar || null,
+        type: "user",
+        isOnline: onlineUsers.has(userProfile._id),
+      }
+    );
+  };
+
   // ── Select a chat: update socket rooms + clear typing + tell notifications ─
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
@@ -358,8 +392,6 @@ function ChatPage() {
         setMessage={handleMessageChange}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        isVideoCall={isVideoCall}
-        setIsVideoCall={setIsVideoCall}
         aiEnabled={aiEnabled}
         handleSendMessage={handleSendMessage}
         messages={messages}
@@ -367,11 +399,21 @@ function ChatPage() {
         isTyping={isTyping}
         onlineUsers={onlineUsers}
         onCreateGroup={() => setShowCreateGroup(true)}
+        onNewDM={() => setShowNewDM(true)}
+        currentUser={user}
+        onStartVideoCall={(chat) => startCall(chat, false)}
+        onStartAudioCall={(chat) => startCall(chat, true)}
       />
       {showCreateGroup && (
         <CreateGroupModal
           onClose={() => setShowCreateGroup(false)}
           onGroupCreated={handleGroupCreated}
+        />
+      )}
+      {showNewDM && (
+        <NewDMModal
+          onClose={() => setShowNewDM(false)}
+          onSelectUser={handleNewDM}
         />
       )}
     </div>

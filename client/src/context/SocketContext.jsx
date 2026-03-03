@@ -89,6 +89,35 @@ export function SocketProvider({ children }) {
     socketRef.current?.emit("stopTyping", { receiverId, groupId });
   };
 
+  // ── Call signaling helpers ─────────────────────────────────────
+  const initiateCall = (toUserId, callerName, callerAvatar, callType) => {
+    socketRef.current?.emit("callUser", { toUserId, callerName, callerAvatar, callType });
+  };
+
+  const acceptCall = (toUserId) => {
+    socketRef.current?.emit("callAccepted", { toUserId });
+  };
+
+  const rejectCall = (toUserId) => {
+    socketRef.current?.emit("callRejected", { toUserId });
+  };
+
+  const hangUp = (toUserId) => {
+    socketRef.current?.emit("endCall", { toUserId });
+  };
+
+  const sendOffer = (toUserId, offer) => {
+    socketRef.current?.emit("webrtcOffer", { toUserId, offer });
+  };
+
+  const sendAnswer = (toUserId, answer) => {
+    socketRef.current?.emit("webrtcAnswer", { toUserId, answer });
+  };
+
+  const sendIceCandidate = (toUserId, candidate) => {
+    socketRef.current?.emit("iceCandidate", { toUserId, candidate });
+  };
+
   return (
     <SocketContext.Provider
       value={{
@@ -101,6 +130,13 @@ export function SocketProvider({ children }) {
         sendGroupMessage,
         emitTyping,
         emitStopTyping,
+        initiateCall,
+        acceptCall,
+        rejectCall,
+        hangUp,
+        sendOffer,
+        sendAnswer,
+        sendIceCandidate,
       }}
     >
       {children}
