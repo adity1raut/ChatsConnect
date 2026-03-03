@@ -12,7 +12,6 @@ import DangerZoneTab from "./DangerZoneTab";
 import DeleteModal from "./DeleteModal";
 import Toast from "./Toast";
 import { useProfileActions } from "./useProfileActions";
-import "./ProfilePage.css";
 
 export default function ProfilePage() {
   const { isDark } = useTheme();
@@ -23,7 +22,6 @@ export default function ProfilePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
-  // Profile form state
   const [name, setName] = useState(user?.name || "");
   const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState(user?.bio || "");
@@ -31,7 +29,6 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [newEmail, setNewEmail] = useState(user?.email || "");
 
-  // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -56,34 +53,88 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className={`profile-page ${isDark ? "profile-page--dark" : "profile-page--light"}`}>
-      {/* Ambient blobs */}
-      <div className="blobs" aria-hidden>
-        <div className={`blob blob-1 ${isDark ? "blob--dark-a" : "blob--light-a"}`} />
-        <div className={`blob blob-2 ${isDark ? "blob--dark-b" : "blob--light-b"}`} />
-        <div className={`blob blob-3 ${isDark ? "blob--dark-c" : "blob--light-c"}`} />
+    <div
+      className={`min-h-[100dvh] relative overflow-hidden transition-all duration-700 flex flex-col p-4 sm:p-6 md:p-10 ${isDark ? "bg-[#0a0a14] text-gray-50" : "bg-[#f4f5ff] text-gray-900"
+        }`}
+    >
+      {/* ── Background ── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isDark
+              ? "radial-gradient(ellipse at top left, rgba(139,92,246,0.25) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(236,72,153,0.2) 0%, transparent 50%)"
+              : "radial-gradient(ellipse at top left, rgba(167,139,250,0.35) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(244,114,182,0.25) 0%, transparent 50%)",
+          }}
+        />
+        <div
+          className={`absolute top-[-120px] left-[-80px] w-[500px] h-[500px] rounded-full filter blur-[100px] opacity-30 ${isDark ? "bg-violet-600" : "bg-violet-400"}`}
+          style={{ animation: "float 12s ease-in-out infinite" }}
+        />
+        <div
+          className={`absolute top-[45%] right-[-100px] w-[400px] h-[400px] rounded-full filter blur-[100px] opacity-25 ${isDark ? "bg-pink-600" : "bg-pink-300"}`}
+          style={{ animation: "float 15s ease-in-out infinite", animationDelay: "-5s" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
       </div>
 
-      {/* Theme toggle */}
-      <div className="theme-toggle-anchor">
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(20px, -20px) scale(1.05); }
+          66% { transform: translate(-15px, 15px) scale(0.95); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-enter { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+      `}</style>
+
+      {/* Theme toggle — desktop only (mobile has bottom nav) */}
+      <div className="fixed top-5 right-5 z-[100] hidden md:block">
         <ThemeToggle />
       </div>
 
-      {/* Toast */}
+      {/* Toasts */}
       {error && <Toast type="error" message={error} onDismiss={() => setError("")} />}
       {success && <Toast type="success" message={success} onDismiss={() => setSuccess("")} />}
 
-      <div className="profile-page__inner">
-        {/* Page heading */}
-        <header className="profile-page__header">
-          <div className={`header-icon ${isDark ? "header-icon--dark" : "header-icon--light"}`}>💬</div>
+      <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-5 sm:gap-8">
+
+        {/* ── Page heading ── */}
+        <header className="flex items-center gap-4 sm:gap-5" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div
+            className={`w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-lg ${isDark ? "bg-white/5 backdrop-blur-md border border-white/10" : "bg-white/60 backdrop-blur-md border border-white/70"
+              }`}
+          >
+            ✦
+          </div>
           <div>
-            <h1 className="profile-page__title">My Profile</h1>
-            <p className="profile-page__subtitle">Manage your account settings</p>
+            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-none ${isDark ? "text-white" : "text-gray-900"}`}>
+              My{" "}
+              <span className="bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                Profile
+              </span>
+            </h1>
+            <p className={`text-xs sm:text-sm font-medium mt-1.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              Manage your account settings and preferences
+            </p>
           </div>
         </header>
 
-        <div className="profile-page__layout">
+        {/* ── Main layout
+             Mobile: sidebar stacks on top as a compact nav bar, then full-width content
+             Desktop: 290px sidebar + flex-1 content side-by-side
+        ── */}
+        <div className="flex flex-col md:grid md:grid-cols-[290px_1fr] gap-4 sm:gap-6 items-start">
+
           {/* Sidebar */}
           <ProfileSidebar
             user={user}
@@ -96,50 +147,30 @@ export default function ProfilePage() {
           />
 
           {/* Main panel */}
-          <main className={`main-panel ${isDark ? "main-panel--dark" : "main-panel--light"}`}>
-            {activeTab === "profile" && (
-              <ProfileTab
-                isDark={isDark}
-                name={name} setName={setName}
-                username={username} setUsername={setUsername}
-                bio={bio} setBio={setBio}
-                loading={loading}
-                onSave={() => updateProfile({ name, username, bio, avatarFile })}
-              />
-            )}
-            {activeTab === "email" && (
-              <EmailTab
-                isDark={isDark}
-                user={user}
-                newEmail={newEmail} setNewEmail={setNewEmail}
-                loading={loading}
-                onSave={() => updateEmail(newEmail)}
-              />
-            )}
-            {activeTab === "password" && (
-              <PasswordTab
-                isDark={isDark}
-                currentPassword={currentPassword} setCurrentPassword={setCurrentPassword}
-                newPassword={newPassword} setNewPassword={setNewPassword}
-                confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword}
-                showCurrentPassword={showCurrentPassword} setShowCurrentPassword={setShowCurrentPassword}
-                showNewPassword={showNewPassword} setShowNewPassword={setShowNewPassword}
-                showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword}
-                loading={loading}
-                onSave={() => updatePassword({ currentPassword, newPassword, confirmPassword })}
-              />
-            )}
-            {activeTab === "danger" && (
-              <DangerZoneTab
-                isDark={isDark}
-                onDeleteClick={() => setShowDeleteModal(true)}
-              />
-            )}
+          <main
+            className={`w-full rounded-3xl backdrop-blur-2xl shadow-2xl overflow-hidden transition-colors duration-300 ${isDark ? "bg-gray-900/70 border border-white/5" : "bg-white/80 border border-white/80"
+              }`}
+          >
+            <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 opacity-80" />
+
+            <div className="p-5 sm:p-8 md:p-10">
+              {activeTab === "profile" && (
+                <ProfileTab key="profile" isDark={isDark} name={name} setName={setName} username={username} setUsername={setUsername} bio={bio} setBio={setBio} loading={loading} onSave={() => updateProfile({ name, username, bio, avatarFile })} />
+              )}
+              {activeTab === "email" && (
+                <EmailTab key="email" isDark={isDark} user={user} newEmail={newEmail} setNewEmail={setNewEmail} loading={loading} onSave={() => updateEmail(newEmail)} />
+              )}
+              {activeTab === "password" && (
+                <PasswordTab key="password" isDark={isDark} currentPassword={currentPassword} setCurrentPassword={setCurrentPassword} newPassword={newPassword} setNewPassword={setNewPassword} confirmPassword={confirmPassword} setConfirmPassword={setConfirmPassword} showCurrentPassword={showCurrentPassword} setShowCurrentPassword={setShowCurrentPassword} showNewPassword={showNewPassword} setShowNewPassword={setShowNewPassword} showConfirmPassword={showConfirmPassword} setShowConfirmPassword={setShowConfirmPassword} loading={loading} onSave={() => updatePassword({ currentPassword, newPassword, confirmPassword })} />
+              )}
+              {activeTab === "danger" && (
+                <DangerZoneTab key="danger" isDark={isDark} onDeleteClick={() => setShowDeleteModal(true)} />
+              )}
+            </div>
           </main>
         </div>
       </div>
 
-      {/* Delete modal */}
       {showDeleteModal && (
         <DeleteModal
           isDark={isDark}
