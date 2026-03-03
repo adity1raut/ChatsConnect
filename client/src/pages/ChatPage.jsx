@@ -1,14 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import ChatPageComponent from "../components/chat/ChatPage";
 import CreateGroupModal from "../components/chat/CreateGroupModal";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
+import { useNotifications } from "../context/NotificationContext";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 function ChatPage() {
   const { user } = useAuth();
+  const location = useLocation();
+  const { setActiveChat: setNotifActiveChat } = useNotifications();
   const {
     socket,
     onlineUsers,
@@ -92,6 +96,41 @@ function ChatPage() {
       if (c.type === "group") joinGroup(c.groupId);
     });
   }, [contacts, joinGroup]);
+
+  // ── Deep-link: open a chat from navigation state (Search / Notifications) ─
+  useEffect(() => {
+    if (!contacts.length) return;
+    const { openChat, openGroup } = location.state || {};
+
+    if (openChat) {
+      // Try to find existing contact; if not, create a transient one
+      const existing = contacts.find(
+        (c) => c.type === "user" && c.id === openChat.id
+      );
+      setSelectedChat(
+        existing || {
+          id: openChat.id,
+          name: openChat.name,
+          username: openChat.username,
+          avatar: openChat.avatar || null,
+          type: "user",
+          isOnline: onlineUsers.has(openChat.id),
+        }
+      );
+      // Clear state so re-renders don't re-trigger
+      window.history.replaceState({}, "");
+    } else if (openGroup) {
+      const existing = contacts.find(
+        (c) => c.type === "group" && c.groupId === openGroup.groupId
+      );
+      if (existing) {
+        setSelectedChat(existing);
+        window.history.replaceState({}, "");
+      }
+    }
+  // Only run once after contacts first load, or when navigation state changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contacts.length, location.state]);
 
   // ── Load message history when chat is selected ──────────────────
   useEffect(() => {
@@ -287,10 +326,21 @@ function ChatPage() {
     loadContacts();
   };
 
-  // ── Leave a group room when deselecting ──────────────────────────
+  // ── Select a chat: update socket rooms + clear typing + tell notifications ─
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setTypingUsers(new Set());
+
+    // Mark notifications for this chat as read
+    if (chat) {
+      const chatId =
+        chat.type === "group"
+          ? `group-${chat.groupId}`
+          : chat.conversationId?.toString() || null;
+      setNotifActiveChat(chatId);
+    } else {
+      setNotifActiveChat(null);
+    }
   };
 
   const isTyping =

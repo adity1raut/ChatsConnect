@@ -7,6 +7,10 @@ import Group from "../models/group.model.js";
 // Map: userId -> socketId (for sending targeted events)
 const onlineUsers = new Map();
 
+// Singleton io — used by controllers to emit events (e.g. friend requests)
+let _io = null;
+export const getIO = () => _io;
+
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
@@ -14,6 +18,8 @@ export function initSocket(httpServer) {
       credentials: true,
     },
   });
+
+  _io = io; // store singleton for controller use
 
   // ── Auth middleware: verify JWT from handshake ──────────────────
   io.use((socket, next) => {
