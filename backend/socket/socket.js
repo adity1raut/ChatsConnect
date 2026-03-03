@@ -13,7 +13,7 @@ export const getIO = () => _io;
 
 export function initSocket(httpServer) {
   const allowedOrigins = [
-    "https://mini-project-omega-ochre.vercel.app",
+    "https://www.chatsconnect.tech",
     process.env.CLIENT_URL,
     ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : []),
   ].filter(Boolean);
