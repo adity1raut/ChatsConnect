@@ -9,7 +9,7 @@ import { useSocket } from "../context/SocketContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCall } from "../context/CallContext";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL as API } from "../config/api.js";
 
 function ChatPage() {
   const { user } = useAuth();
@@ -130,8 +130,8 @@ function ChatPage() {
         window.history.replaceState({}, "");
       }
     }
-  // Only run once after contacts first load, or when navigation state changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only run once after contacts first load, or when navigation state changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contacts.length, location.state]);
 
   // ── Load message history when chat is selected ──────────────────

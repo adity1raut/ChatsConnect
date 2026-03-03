@@ -5,7 +5,7 @@ import { useAuth } from "./AuthContext";
 
 const FriendContext = createContext(null);
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL as API } from "../config/api.js";
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("authToken")}`,
 });

@@ -3,7 +3,7 @@ import { X, Search, MessageSquare, Loader2 } from "lucide-react";
 import axios from "axios";
 import { useTheme } from "../../context/ThemeContext";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL as API } from "../../config/api.js";
 
 export default function NewDMModal({ onClose, onSelectUser }) {
   const { isDark } = useTheme();

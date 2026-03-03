@@ -10,7 +10,7 @@ import axios from "axios";
 import ThemeToggle from "../components/common/ThemeToggle";
 import { useFriends } from "../context/FriendContext";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL as API } from "../config/api.js";
 
 const CATEGORIES = [
   { id: "all", label: "All", icon: Sparkles },
@@ -169,7 +169,7 @@ export default function SearchPage() {
           className={`relative flex items-center rounded-2xl border transition-all duration-200 mb-4 sm:mb-5 ${isDark
             ? "bg-gray-900/70 border-white/10 focus-within:border-violet-500/50 focus-within:shadow-lg focus-within:shadow-violet-500/10"
             : "bg-white/90 border-gray-200 focus-within:border-violet-400 focus-within:shadow-lg focus-within:shadow-violet-500/10 shadow-sm"
-          }`}
+            }`}
           style={{ animation: "slideUp 0.42s 0.04s cubic-bezier(0.16,1,0.3,1) both" }}
         >
           {loading ? (
@@ -209,8 +209,8 @@ export default function SearchPage() {
                 className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 border transition-all duration-200 ${isActive
                   ? "text-white border-transparent shadow-md"
                   : isDark ? "text-gray-400 border-white/8 bg-white/4 hover:bg-white/8 hover:text-gray-200"
-                  : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50 hover:text-gray-700 shadow-sm"
-                }`}
+                    : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50 hover:text-gray-700 shadow-sm"
+                  }`}
                 style={isActive ? { background: "linear-gradient(135deg,#7c3aed,#a855f7)" } : {}}
               >
                 <Icon size={13} strokeWidth={2} />

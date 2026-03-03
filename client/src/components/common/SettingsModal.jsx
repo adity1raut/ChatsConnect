@@ -7,7 +7,7 @@ import axios from "axios";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../../config/api.js";
 
 function Toggle({ checked, onChange }) {
   return (
@@ -176,7 +176,7 @@ export default function SettingsModal({
   const inputClass = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all duration-200 ${isDark
     ? "bg-white/[0.04] border-white/8 text-white placeholder-gray-600 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/15"
     : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/10"
-  }`;
+    }`;
 
   const btnPrimary = `w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed`;
 
@@ -212,8 +212,8 @@ export default function SettingsModal({
             </div>
             <div className="space-y-1">
               <SectionRow label="Enable AI Suggestions" right={<Toggle checked={aiEnabled} onChange={setAiEnabled} />} />
-              <SectionRow label="Auto-translate Messages" right={<Toggle checked={false} onChange={() => {}} />} />
-              <SectionRow label="Smart Reply" right={<Toggle checked={true} onChange={() => {}} />} />
+              <SectionRow label="Auto-translate Messages" right={<Toggle checked={false} onChange={() => { }} />} />
+              <SectionRow label="Smart Reply" right={<Toggle checked={true} onChange={() => { }} />} />
             </div>
           </div>
 
@@ -230,8 +230,8 @@ export default function SettingsModal({
             </div>
             <div className="space-y-1">
               <SectionRow label="Push Notifications" right={<Toggle checked={notifications} onChange={setNotifications} />} />
-              <SectionRow label="Email Notifications" right={<Toggle checked={false} onChange={() => {}} />} />
-              <SectionRow label="Sound Alerts" right={<Toggle checked={true} onChange={() => {}} />} />
+              <SectionRow label="Email Notifications" right={<Toggle checked={false} onChange={() => { }} />} />
+              <SectionRow label="Sound Alerts" right={<Toggle checked={true} onChange={() => { }} />} />
             </div>
           </div>
 
