@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -27,6 +28,39 @@ const sendOTP = async (email, otp, name) => {
         <p><strong>This OTP will expire in 10 minutes.</strong></p>
         <p>If you didn't request this, please ignore this email.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="color: #6b7280; font-size: 12px;">This is an automated message, please do not reply.</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+const send2FAEmail = async (email, name, verificationUrl) => {
+  const mailOptions = {
+    from: `"ChatConnect Security" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Login Verification Link - ChatConnect",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #8b5cf6;">Two-Factor Authentication</h2>
+        <p>Hi ${name},</p>
+        <p>A login attempt was made on your ChatConnect account. Click the button below to verify it was you and complete sign-in.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}"
+            style="background-color: #8b5cf6; color: #ffffff; padding: 14px 28px;
+                   text-decoration: none; border-radius: 6px; font-size: 16px;
+                   display: inline-block;">
+            Verify and Sign In
+          </a>
+        </div>
+        <p><strong>This link expires in 10 minutes and can only be used once.</strong></p>
+        <p>If you did not attempt to log in, your password may be compromised. Change it immediately.</p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="color: #6b7280; font-size: 12px;">
+          If the button above does not work, copy and paste this URL into your browser:<br>
+          <span style="color: #8b5cf6;">${verificationUrl}</span>
+        </p>
         <p style="color: #6b7280; font-size: 12px;">This is an automated message, please do not reply.</p>
       </div>
     `,
@@ -268,48 +302,67 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email and password are required" 
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required",
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select("+password +refreshToken");
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select(
+      "+password +refreshToken"
+    );
 
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Invalid email or password" 
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
       });
     }
 
     if (user.authProvider !== "LOCAL") {
-      return res.status(401).json({ 
-        success: false, 
-        message: `This account was created using ${user.authProvider}. Please use ${user.authProvider} to login.` 
+      return res.status(401).json({
+        success: false,
+        message: `This account was created using ${user.authProvider}. Please use ${user.authProvider} to login.`,
       });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Invalid email or password" 
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
       });
     }
 
-    const accessToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    // 2FA: generate a verification link instead of issuing JWT
+    if (user.twoFactorEnabled) {
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
 
-    const refreshToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
+      user.twoFactorToken = hashedToken;
+      user.twoFactorTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      await user.save();
+
+      const verificationUrl = `${process.env.CLIENT_URL}/auth/verify-2fa?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+
+      await send2FAEmail(user.email, user.name, verificationUrl);
+
+      return res.status(200).json({
+        success: true,
+        twoFactorRequired: true,
+        message: "A verification link has been sent to your email. It expires in 10 minutes.",
+      });
+    }
+
+    // No 2FA — issue tokens directly
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
 
     user.refreshToken = refreshToken;
     user.isOnline = true;
@@ -338,9 +391,109 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in login:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: error.message || "Login failed. Please try again." 
+    res.status(500).json({
+      success: false,
+      message: error.message || "Login failed. Please try again.",
+    });
+  }
+};
+
+// Verify 2FA link and issue JWT
+export const verify2FA = async (req, res) => {
+  try {
+    const { token, email } = req.body;
+
+    if (!token || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Token and email are required",
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select(
+      "+twoFactorToken +twoFactorTokenExpiry +refreshToken"
+    );
+
+    if (!user || !user.twoFactorToken || !user.twoFactorTokenExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification link is invalid or has already been used",
+      });
+    }
+
+    // Check expiry before doing any crypto work
+    if (user.twoFactorTokenExpiry < new Date()) {
+      user.twoFactorToken = undefined;
+      user.twoFactorTokenExpiry = undefined;
+      await user.save();
+      return res.status(400).json({
+        success: false,
+        message: "Verification link has expired. Please log in again.",
+      });
+    }
+
+    // Hash the incoming raw token and compare with the stored hash
+    const incomingHash = crypto.createHash("sha256").update(token).digest("hex");
+    const storedHash = user.twoFactorToken;
+
+    // Constant-time comparison to prevent timing attacks
+    const incomingBuf = Buffer.from(incomingHash, "hex");
+    const storedBuf = Buffer.from(storedHash, "hex");
+    const isValid =
+      incomingBuf.length === storedBuf.length &&
+      crypto.timingSafeEqual(incomingBuf, storedBuf);
+
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification link is invalid",
+      });
+    }
+
+    // Token is valid — clear it (single-use)
+    user.twoFactorToken = undefined;
+    user.twoFactorTokenExpiry = undefined;
+
+    // Issue JWT
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
+
+    user.refreshToken = refreshToken;
+    user.isOnline = true;
+    user.lastSeen = new Date();
+    await user.save();
+
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      avatar: user.avatar,
+      bio: user.bio,
+      isOnline: user.isOnline,
+      lastSeen: user.lastSeen,
+      authProvider: user.authProvider,
+      twoFactorEnabled: user.twoFactorEnabled,
+      createdAt: user.createdAt,
+    };
+
+    res.status(200).json({
+      success: true,
+      message: "Two-factor authentication successful!",
+      user: userResponse,
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error("Error in verify2FA:", error);
+    res.status(500).json({
+      success: false,
+      message: "Verification failed. Please try again.",
     });
   }
 };

@@ -23,12 +23,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS configuration
+// CORS configuration — allow production frontend + localhost in dev
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://mini-project-omega-ochre.vercel.app",
+  ...(process.env.NODE_ENV !== "production"
+    ? ["http://localhost:5173"]
+    : []),
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 ConnectDB();

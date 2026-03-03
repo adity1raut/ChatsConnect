@@ -48,6 +48,18 @@ const userSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
       select: false
+    },
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false
+    },
+    twoFactorToken: {
+      type: String,
+      select: false
+    },
+    twoFactorTokenExpiry: {
+      type: Date,
+      select: false
     }
   },
   { timestamps: true }
