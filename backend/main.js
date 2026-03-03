@@ -26,7 +26,7 @@ app.use(cookieParser());
 // CORS configuration — allow production frontend + localhost in dev
 const allowedOrigins = [
   process.env.CLIENT_URL,
-  "https://mini-project-omega-ochre.vercel.app",
+  "https://www.chatsconnect.tech",
   ...(process.env.NODE_ENV !== "production"
     ? ["http://localhost:5173"]
     : []),
