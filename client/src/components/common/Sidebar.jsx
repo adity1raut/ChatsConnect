@@ -1,105 +1,30 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-
-const HomeIcon = ({ filled }) => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
-    strokeWidth={filled ? "0" : "2"}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
-
-const SearchIcon = () => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.35-4.35" />
-  </svg>
-);
-
-const MessagesIcon = ({ filled }) => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
-    strokeWidth={filled ? "0" : "2"}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
-
-const HeartIcon = ({ filled }) => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill={filled ? "currentColor" : "none"}
-    stroke="currentColor"
-    strokeWidth={filled ? "0" : "2"}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const MenuIcon = () => (
-  <svg
-    width="26"
-    height="26"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="3" y1="12" x2="21" y2="12" />
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <line x1="3" y1="18" x2="21" y2="18" />
-  </svg>
-);
+import {
+  Home, Search, MessageSquare, Bell, User, MoreHorizontal,
+  Settings, Activity, Bookmark, Palette, AlertCircle, LogOut, SwitchCamera, Sparkles,
+} from "lucide-react";
 
 export default function Sidebar({
   currentView = "home",
-  setCurrentView = () => {},
+  setCurrentView = () => { },
   showUserMenu = false,
-  setShowUserMenu = () => {},
-  setShowSettingsModal = () => {},
-  handleLogout = () => {},
+  setShowUserMenu = () => { },
+  setShowSettingsModal = () => { },
+  handleLogout = () => { },
   unreadNotifications = 3,
 }) {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine active view based on current route
   const getActiveView = () => {
     const path = location.pathname;
     if (path === "/") return "home";
     if (path === "/chat") return "messages";
     if (path === "/notifications") return "notifications";
+    if (path === "/profile") return "profile";
     return currentView;
   };
 
@@ -110,268 +35,191 @@ export default function Sidebar({
     navigate(path);
   };
 
-  // Centralized style classes
-  const sidebarBaseClasses = `
-    w-64 
-    flex flex-col 
-    py-6 px-3 
-    border-r 
-    transition-all duration-300 ease-in-out
-    ${isDark 
-      ? "bg-gray-900/95 backdrop-blur-xl border-gray-700/50" 
-      : "bg-white/95 backdrop-blur-xl border-gray-200/70"
-    }
-  `;
+  const NAV_ITEMS = [
+    { id: "home", label: "Home", icon: Home, path: "/" },
+    { id: "search", label: "Search", icon: Search, path: "/search" },
+    { id: "messages", label: "Messages", icon: MessageSquare, path: "/chat", badge: "●" },
+    { id: "notifications", label: "Notifications", icon: Bell, path: "/notifications", badge: unreadNotifications > 0 ? (unreadNotifications > 9 ? "9+" : unreadNotifications) : null },
+    { id: "profile", label: "Profile", icon: User, path: "/profile" },
+  ];
 
-  const navButtonActiveClasses = `
-    bg-gradient-to-r from-purple-500 to-blue-500 
-    text-white 
-    shadow-lg 
-    font-semibold
-    transform scale-105
-  `;
-
-  const navButtonInactiveClasses = `
-    font-normal
-    ${isDark 
-      ? "text-gray-300 hover:bg-gray-800/60 hover:text-white" 
-      : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
-    }
-  `;
-
-  const navButtonBaseClasses = `
-    flex items-center gap-4 
-    px-4 py-3 
-    rounded-xl 
-    transition-all duration-200 
-    ease-in-out
-    relative
-  `;
-
-  const menuDropdownClasses = `
-    absolute bottom-full left-0 
-    mb-2 
-    rounded-2xl 
-    shadow-2xl 
-    py-2 
-    w-64 
-    z-50 
-    border
-    ${isDark
-      ? "bg-gray-900/95 backdrop-blur-xl border-gray-700/50"
-      : "bg-white/98 backdrop-blur-xl border-gray-200/70"
-    }
-  `;
-
-  const menuItemClasses = `
-    w-full 
-    px-4 py-3 
-    text-left 
-    flex items-center gap-3 
-    transition-all duration-200
-    ${isDark
-      ? "hover:bg-gray-800/60 text-gray-200 hover:text-white"
-      : "hover:bg-gray-100/80 text-gray-700 hover:text-gray-900"
-    }
-  `;
-
-  const dividerClasses = `
-    h-px my-2
-    ${isDark ? "bg-gray-700/50" : "bg-gray-200/60"}
-  `;
+  const MENU_ITEMS = [
+    { label: "Settings", icon: Settings, action: () => { setShowSettingsModal(true); setShowUserMenu(false); } },
+    { label: "Your activity", icon: Activity, action: () => setShowUserMenu(false) },
+    { label: "Saved", icon: Bookmark, action: () => setShowUserMenu(false) },
+    { label: "Appearance", icon: Palette, action: () => setShowUserMenu(false) },
+    { label: "Report a problem", icon: AlertCircle, action: () => setShowUserMenu(false) },
+    { divider: true },
+    { label: "Switch accounts", icon: SwitchCamera, action: () => setShowUserMenu(false) },
+    { divider: true },
+    { label: "Log out", icon: LogOut, action: handleLogout, danger: true },
+  ];
 
   return (
-    <div className={sidebarBaseClasses}>
+    <div
+      className={`w-64 flex flex-col h-full transition-all duration-300 relative ${isDark
+          ? "bg-gray-950/95 border-r border-white/[0.06]"
+          : "bg-white/95 border-r border-gray-200/80"
+        }`}
+      style={{ backdropFilter: "blur(20px)" }}
+    >
+      {/* Subtle top-to-bottom gradient overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: isDark
+            ? "linear-gradient(180deg, rgba(139,92,246,0.05) 0%, transparent 40%)"
+            : "linear-gradient(180deg, rgba(139,92,246,0.04) 0%, transparent 40%)",
+        }}
+      />
+
       {/* Logo */}
-      <div className="px-3 mb-8">
-        <h1 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-          Connectify
-        </h1>
+      <div className="relative px-5 pt-7 pb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+            style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)" }}
+          >
+            <Sparkles size={16} className="text-white" strokeWidth={2.5} />
+          </div>
+          <div>
+            <h1
+              className="text-lg font-extrabold tracking-tight bg-clip-text text-transparent"
+              style={{ backgroundImage: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+            >
+              Connectify
+            </h1>
+            <p className={`text-[10px] font-medium -mt-0.5 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+              Chat platform
+            </p>
+          </div>
+        </div>
+
+        {/* Separator */}
+        <div className={`mt-5 h-px ${isDark ? "bg-white/5" : "bg-gray-100"}`} />
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-2">
-        <button
-          onClick={() => handleNavigation("home", "/")}
-          className={`${navButtonBaseClasses} ${
-            activeView === "home" ? navButtonActiveClasses : navButtonInactiveClasses
-          }`}
-        >
-          <HomeIcon filled={activeView === "home"} />
-          <span className="text-base">Home</span>
-        </button>
+      <nav className="relative flex-1 flex flex-col gap-1 px-3">
+        {NAV_ITEMS.map((item) => {
+          const isActive = activeView === item.id;
+          const Icon = item.icon;
 
-        <button
-          onClick={() => handleNavigation("search", "/search")}
-          className={`${navButtonBaseClasses} ${
-            activeView === "search" ? navButtonActiveClasses : navButtonInactiveClasses
-          }`}
-        >
-          <SearchIcon />
-          <span className="text-base">Search</span>
-        </button>
+          return (
+            <button
+              key={item.id}
+              onClick={() => handleNavigation(item.id, item.path)}
+              className={`relative flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left group ${isActive
+                  ? "text-white shadow-lg"
+                  : isDark
+                    ? "text-gray-400 hover:text-white hover:bg-white/5"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+              style={
+                isActive
+                  ? {
+                    background: "linear-gradient(135deg, rgba(124,58,237,0.9), rgba(168,85,247,0.8))",
+                    boxShadow: "0 4px 20px rgba(124,58,237,0.35)",
+                  }
+                  : {}
+              }
+            >
+              {/* Active left bar */}
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-white opacity-60" />
+              )}
 
-        <button
-          onClick={() => handleNavigation("messages", "/chat")}
-          className={`${navButtonBaseClasses} ${
-            activeView === "messages" ? navButtonActiveClasses : navButtonInactiveClasses
-          }`}
-        >
-          <MessagesIcon filled={activeView === "messages"} />
-          <span className="text-base">Messages</span>
-          <span className="absolute left-7 top-2.5 w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-lg animate-pulse"></span>
-        </button>
+              {/* Icon container */}
+              <span
+                className={`flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all duration-200 ${isActive
+                    ? "bg-white/20"
+                    : isDark
+                      ? "bg-white/5 group-hover:bg-white/10"
+                      : "bg-gray-100 group-hover:bg-gray-200"
+                  }`}
+              >
+                <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+              </span>
 
-        <button
-          onClick={() => handleNavigation("notifications", "/notifications")}
-          className={`${navButtonBaseClasses} ${
-            activeView === "notifications" ? navButtonActiveClasses : navButtonInactiveClasses
-          }`}
-        >
-          <HeartIcon filled={activeView === "notifications"} />
-          <span className="text-base">Notifications</span>
-          {unreadNotifications > 0 && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 min-w-[22px] h-5 px-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
-              {unreadNotifications > 9 ? "9+" : unreadNotifications}
-            </span>
-          )}
-        </button>
+              <span className="font-semibold tracking-tight">{item.label}</span>
 
-        <button
-          onClick={() => handleNavigation("profile", "/profile")}
-          className={`${navButtonBaseClasses} ${
-            activeView === "profile" ? navButtonActiveClasses : navButtonInactiveClasses
-          }`}
-        >
-          <div
-            className={`
-              w-7 h-7 
-              rounded-full 
-              bg-gradient-to-br from-purple-400 to-pink-500 
-              flex items-center justify-center 
-              text-white text-sm font-bold 
-              shadow-md
-              transition-all duration-200
-              ${activeView === "profile" ? "ring-2 ring-white ring-offset-2 ring-offset-transparent scale-110" : ""}
-            `}
-          >
-            J
-          </div>
-          <span className="text-base">Profile</span>
-        </button>
+              {/* Badges */}
+              {item.id === "messages" && !isActive && (
+                <span className="absolute left-8 top-2.5 w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full shadow-sm animate-pulse" />
+              )}
+              {item.badge && item.id === "notifications" && !isActive && unreadNotifications > 0 && (
+                <span className="ml-auto min-w-[20px] h-5 px-1.5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold shadow-md">
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Bottom Menu */}
-      <div className="relative mt-4">
+      {/* Bottom separator */}
+      <div className={`mx-5 h-px ${isDark ? "bg-white/5" : "bg-gray-100"}`} />
+
+      {/* More / user menu trigger */}
+      <div className="relative px-3 py-4">
         <button
           onClick={() => setShowUserMenu(!showUserMenu)}
-          className={`${navButtonBaseClasses} w-full ${navButtonInactiveClasses}`}
+          className={`relative flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-200 w-full text-left group ${isDark
+              ? "text-gray-400 hover:text-white hover:bg-white/5"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+            }`}
         >
-          <MenuIcon />
-          <span className="text-base">More</span>
+          <span
+            className={`flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 ${isDark ? "bg-white/5 group-hover:bg-white/10" : "bg-gray-100 group-hover:bg-gray-200"
+              }`}
+          >
+            <MoreHorizontal size={16} strokeWidth={2} />
+          </span>
+          <span className="font-semibold tracking-tight">More</span>
         </button>
 
+        {/* Dropdown menu */}
         {showUserMenu && (
           <>
             {/* Backdrop */}
             <div
               className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
               onClick={() => setShowUserMenu(false)}
-            ></div>
+            />
 
-            {/* Dropdown Menu */}
-            <div className={menuDropdownClasses}>
-              <button
-                onClick={() => {
-                  setShowSettingsModal(true);
-                  setShowUserMenu(false);
-                }}
-                className={menuItemClasses}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 1v6m0 6v6" />
-                </svg>
-                <span className="text-sm font-medium">Settings</span>
-              </button>
+            <div
+              className={`absolute bottom-full left-2 right-2 mb-2 rounded-2xl shadow-2xl py-1.5 z-50 border overflow-hidden ${isDark
+                  ? "bg-gray-900/98 border-white/10"
+                  : "bg-white border-gray-200/80"
+                }`}
+              style={{ backdropFilter: "blur(20px)" }}
+            >
+              {/* Gradient top bar */}
+              <div className="h-0.5 w-full bg-gradient-to-r from-violet-500 to-purple-500 opacity-60 mb-1" />
 
-              <button className={menuItemClasses}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 2v20M2 12h20" />
-                </svg>
-                <span className="text-sm font-medium">Your activity</span>
-              </button>
-
-              <button className={menuItemClasses}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <span className="text-sm font-medium">Saved</span>
-              </button>
-
-              <button className={menuItemClasses}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-                <span className="text-sm font-medium">Switch appearance</span>
-              </button>
-
-              <button className={menuItemClasses}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                </svg>
-                <span className="text-sm font-medium">Report a problem</span>
-              </button>
-
-              <div className={dividerClasses}></div>
-
-              <button className={menuItemClasses}>
-                <span className="text-sm font-medium">Switch accounts</span>
-              </button>
-
-              <div className={dividerClasses}></div>
-
-              <button onClick={handleLogout} className={menuItemClasses}>
-                <span className="text-sm font-medium">Log out</span>
-              </button>
+              {MENU_ITEMS.map((item, i) => {
+                if (item.divider) {
+                  return <div key={i} className={`h-px my-1 mx-2 ${isDark ? "bg-white/5" : "bg-gray-100"}`} />;
+                }
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={i}
+                    onClick={item.action}
+                    className={`w-full px-4 py-2.5 text-left flex items-center gap-3 text-sm font-medium transition-all duration-150 ${item.danger
+                        ? isDark
+                          ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                          : "text-red-600 hover:bg-red-50 hover:text-red-700"
+                        : isDark
+                          ? "text-gray-300 hover:bg-white/5 hover:text-white"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                  >
+                    <Icon size={16} strokeWidth={2} className="flex-shrink-0" />
+                    {item.label}
+                  </button>
+                );
+              })}
             </div>
           </>
         )}

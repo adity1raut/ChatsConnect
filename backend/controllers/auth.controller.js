@@ -390,7 +390,7 @@ export const githubCallback = async (req, res) => {
 // Logout controller
 export const logout = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const userId = req.user._id;
 
     await User.findByIdAndUpdate(userId, {
       isOnline: false,
@@ -450,6 +450,44 @@ export const refreshToken = async (req, res) => {
       success: false, 
       message: "Invalid or expired refresh token" 
     });
+  }
+};
+
+// Change password controller
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Both passwords are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters" });
+    }
+
+    const user = await User.findById(req.user._id).select("+password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.authProvider !== "LOCAL") {
+      return res.status(400).json({ success: false, message: "Cannot change password for OAuth accounts" });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error in changePassword:", error);
+    res.status(500).json({ success: false, message: "Failed to change password" });
   }
 };
 

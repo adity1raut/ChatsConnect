@@ -81,7 +81,7 @@ function ChatPage() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full">
       <ChatPageComponent
         contacts={contacts}
         selectedChat={selectedChat}
