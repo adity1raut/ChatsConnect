@@ -4,6 +4,7 @@ import {
   requestOTP,
   verifyOTPAndRegister,
   login,
+  verify2FA,
   logout,
   refreshToken,
   githubCallback,
@@ -22,6 +23,7 @@ router.post("/request-otp", requestOTP);
 router.post("/resend-otp", resendOTP);
 router.post("/verify-otp", verifyOTPAndRegister);
 router.post("/login", login);
+router.post("/verify-2fa", verify2FA);
 router.post("/logout", protect, logout);
 router.post("/refresh-token", refreshToken);
 router.put("/change-password", protect, changePassword);

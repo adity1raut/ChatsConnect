@@ -14,8 +14,8 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "araut7798@gmail.com",
-    pass: "igmv poco lozo bsyn",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
