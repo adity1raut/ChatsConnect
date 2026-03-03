@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider, useNotifications } from "./context/NotificationContext";
+import { FriendProvider } from "./context/FriendContext";
 import { Home, MessageSquare, Bell, User, Search } from "lucide-react";
 
 import Login from "./pages/Login.jsx";
@@ -149,6 +150,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <SocketProvider>
+          <FriendProvider>
           <NotificationProvider>
             <Router>
               <Routes>
@@ -165,6 +167,7 @@ function App() {
               </Routes>
             </Router>
           </NotificationProvider>
+          </FriendProvider>
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>

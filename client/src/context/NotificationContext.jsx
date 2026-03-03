@@ -79,12 +79,45 @@ export function NotificationProvider({ children }) {
       ]);
     };
 
+    const handleFriendRequest = ({ request }) => {
+      setNotifications((prev) => [
+        {
+          id: `fr-${request._id}`,
+          type: "friendRequest",
+          requestId: request._id,
+          from: request.sender,
+          content: "sent you a friend request",
+          time: new Date(request.createdAt || Date.now()),
+          read: false,
+        },
+        ...prev,
+      ]);
+    };
+
+    const handleFriendRequestAccepted = ({ acceptedBy }) => {
+      setNotifications((prev) => [
+        {
+          id: `fra-${Date.now()}`,
+          type: "friendAccepted",
+          from: acceptedBy,
+          content: "accepted your friend request",
+          time: new Date(),
+          read: false,
+        },
+        ...prev,
+      ]);
+    };
+
     socket.on("newMessage", handleNewMessage);
     socket.on("newGroupMessage", handleNewGroupMessage);
+    socket.on("friendRequest", handleFriendRequest);
+    socket.on("friendRequestAccepted", handleFriendRequestAccepted);
 
     return () => {
       socket.off("newMessage", handleNewMessage);
       socket.off("newGroupMessage", handleNewGroupMessage);
+      socket.off("friendRequest", handleFriendRequest);
+      socket.off("friendRequestAccepted", handleFriendRequestAccepted);
     };
   }, [socket, user]);
 
