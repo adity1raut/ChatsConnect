@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Heart, MessageCircle, UserPlus, AtSign, Bell, BellOff,
-  CheckCheck, Filter, Settings, Sparkles, TrendingUp, Clock,
+  CheckCheck, Filter, Settings, Sparkles, TrendingUp,
   Users, Star, Zap,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
@@ -89,7 +89,7 @@ export default function NotificationPage() {
       {/* theme toggle — desktop */}
       <div className="fixed top-5 right-5 z-[100] hidden md:block"><ThemeToggle /></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 md:pb-10">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* ── Header ── */}
         <div className="mb-7" style={{ animation: "slideUp .4s cubic-bezier(.16,1,.3,1) both" }}>
@@ -155,8 +155,8 @@ export default function NotificationPage() {
                   return (
                     <button key={id} onClick={() => setActiveFilter(id)}
                       className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap flex-shrink-0 transition-all duration-200 border ${isActive
-                          ? "text-white border-transparent shadow-sm"
-                          : isDark ? "text-gray-500 border-white/8 hover:text-gray-300 hover:bg-white/[0.05]" : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50 shadow-sm"
+                        ? "text-white border-transparent shadow-sm"
+                        : isDark ? "text-gray-500 border-white/8 hover:text-gray-300 hover:bg-white/[0.05]" : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50 shadow-sm"
                         }`}
                       style={isActive ? { background: "linear-gradient(135deg,#7c3aed,#a855f7)" } : {}}>
                       <Icon size={11} strokeWidth={2} />
