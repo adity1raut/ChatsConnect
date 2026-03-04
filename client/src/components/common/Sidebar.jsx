@@ -87,7 +87,7 @@ export default function Sidebar({
               className="text-lg font-extrabold tracking-tight bg-clip-text text-transparent"
               style={{ backgroundImage: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
             >
-              Connectify
+              ChatsConnect
             </h1>
             <p className={`text-[10px] font-medium -mt-0.5 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
               Chat platform

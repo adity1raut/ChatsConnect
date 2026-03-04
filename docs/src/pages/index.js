@@ -2,13 +2,12 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
 
 import Heading from '@theme/Heading';
 import styles from './index.module.css';
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
@@ -19,8 +18,8 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
-            Docusaurus Tutorial - 5min ⏱️
+            to="/docs/architecture">
+            View Project Architecture 🚀
           </Link>
         </div>
       </div>
@@ -29,14 +28,17 @@ function HomepageHeader() {
 }
 
 export default function Home() {
-  const {siteConfig} = useDocusaurusContext();
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title={`Welcome to ${siteConfig.title}`}
+      description="Documentation for AI-Powered Real-Time Chat & Group Video Communication Application">
       <HomepageHeader />
       <main>
-        <HomepageFeatures />
+        <div className="container" style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <h2>Comprehensive documentation for developers to understand the AI real-time chat stack.</h2>
+          <p>Click the button above to explore the core architecture, backend, frontend, AI microservices, and deployment strategies.</p>
+        </div>
       </main>
     </Layout>
   );
