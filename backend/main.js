@@ -8,6 +8,7 @@ import profileRoutes from "./routes/profile.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import groupRoutes from "./routes/group.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 import ConnectDB from "./db/ConnectDB.js";
 import passport from "./config/passport.js";
 import { initSocket } from "./socket/socket.js";
@@ -50,6 +51,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/friends", friendRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is running" });
