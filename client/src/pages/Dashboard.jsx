@@ -1,71 +1,141 @@
-import React, { useState } from "react";
-import { MessageSquare, Video, Users, Calendar } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { MessageSquare, Video, Users, Layers } from "lucide-react";
+import axios from "axios";
 import MainDashboard from "../components/chat/MainDashboard";
+import { API_URL } from "../config/api.js";
+import { useSocket } from "../context/SocketContext";
+
+function timeAgo(dateStr) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
 
 function Dashboard() {
   const [aiEnabled, setAiEnabled] = useState(true);
-  const [_currentView, setCurrentView] = useState('dashboard');
+  const [_currentView, setCurrentView] = useState("dashboard");
   const [_showSettingsModal, setShowSettingsModal] = useState(false);
 
-  // Stats data
+  const [statsData, setStatsData] = useState({
+    totalMessages: 0,
+    activeUsers: 0,
+    conversations: 0,
+    groups: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+
+  const { socket } = useSocket();
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const { data } = await axios.get(`${API_URL}/dashboard/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStatsData(data.stats);
+      setRecentActivity(
+        data.recentActivity.map((a) => ({
+          ...a,
+          time: timeAgo(a.time),
+          avatar: a.avatar || "👤",
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to fetch dashboard stats:", err);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // Real-time updates via socket
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewMessage = ({ message }) => {
+      // Increment message count
+      setStatsData((prev) => ({ ...prev, totalMessages: prev.totalMessages + 1 }));
+
+      // Prepend to recent activity (messages from others only)
+      setRecentActivity((prev) => {
+        const newEntry = {
+          user: message.senderId?.name || "Someone",
+          avatar: message.senderId?.avatar || "👤",
+          action: "sent you a message",
+          time: "just now",
+          type: "dm",
+        };
+        return [newEntry, ...prev.slice(0, 4)];
+      });
+    };
+
+    const handleNewGroupMessage = ({ message }) => {
+      setStatsData((prev) => ({ ...prev, totalMessages: prev.totalMessages + 1 }));
+
+      setRecentActivity((prev) => {
+        const newEntry = {
+          user: message.senderId?.name || "Someone",
+          avatar: message.senderId?.avatar || "👤",
+          action: "sent a group message",
+          time: "just now",
+          type: "group",
+        };
+        return [newEntry, ...prev.slice(0, 4)];
+      });
+    };
+
+    const handleUserOnline = () => {
+      setStatsData((prev) => ({ ...prev, activeUsers: prev.activeUsers + 1 }));
+    };
+
+    const handleUserOffline = () => {
+      setStatsData((prev) => ({
+        ...prev,
+        activeUsers: Math.max(0, prev.activeUsers - 1),
+      }));
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    socket.on("newGroupMessage", handleNewGroupMessage);
+    socket.on("userOnline", handleUserOnline);
+    socket.on("userOffline", handleUserOffline);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("newGroupMessage", handleNewGroupMessage);
+      socket.off("userOnline", handleUserOnline);
+      socket.off("userOffline", handleUserOffline);
+    };
+  }, [socket]);
+
   const stats = [
     {
       icon: MessageSquare,
-      value: "156",
+      value: String(statsData.totalMessages),
       label: "Total Messages",
       color: "blue",
     },
     {
       icon: Video,
-      value: "23",
-      label: "Video Calls",
+      value: String(statsData.activeUsers),
+      label: "Online Now",
       color: "green",
     },
     {
       icon: Users,
-      value: "45",
-      label: "Active Users",
+      value: String(statsData.conversations),
+      label: "Conversations",
       color: "purple",
     },
     {
-      icon: Calendar,
-      value: "12",
-      label: "Meetings Today",
+      icon: Layers,
+      value: String(statsData.groups),
+      label: "Groups",
       color: "orange",
-    },
-  ];
-
-  // Recent activity data
-  const recentActivity = [
-    {
-      user: "Sarah Johnson",
-      action: "sent you a message",
-      time: "2 minutes ago",
-      avatar: "👩",
-    },
-    {
-      user: "Mike Chen",
-      action: "started a video call",
-      time: "15 minutes ago",
-      avatar: "👨",
-    },
-    {
-      user: "Emma Wilson",
-      action: "joined the group chat",
-      time: "1 hour ago",
-      avatar: "👩‍💼",
-    },
-    {
-      user: "Alex Brown",
-      action: "shared a file",
-      time: "2 hours ago",
-      avatar: "👨‍💻",
-    },
-    {
-      user: "Lisa Martinez",
-      action: "scheduled a meeting",
-      time: "3 hours ago",
-      avatar: "👩‍🦰",
     },
   ];
 
