@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAI } from "./context/AIContext";
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,6 +14,7 @@ import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider, useNotifications } from "./context/NotificationContext";
 import { FriendProvider } from "./context/FriendContext";
 import { CallProvider } from "./context/CallContext";
+import { AIProvider } from "./context/AIContext";
 import IncomingCallModal from "./components/video/IncomingCallModal";
 import VideoCallModal from "./components/video/VideoCallModal";
 import SettingsModal from "./components/common/SettingsModal";
@@ -84,10 +86,10 @@ function MainLayout({ children }) {
   const [currentView, setCurrentView] = useState("home");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { aiEnabled, setAiEnabled } = useAI();
 
   const handleLogout = () => {
     logout();
@@ -128,10 +130,10 @@ function ChatLayout({ children }) {
   const [currentView, setCurrentView] = useState("home");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { aiEnabled, setAiEnabled } = useAI();
 
   const handleLogout = () => {
     logout();
@@ -174,6 +176,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <SocketProvider>
+          <AIProvider>
           <CallProvider>
           <FriendProvider>
           <NotificationProvider>
@@ -197,6 +200,7 @@ function App() {
           </NotificationProvider>
           </FriendProvider>
           </CallProvider>
+          </AIProvider>
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>

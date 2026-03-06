@@ -1,47 +1,147 @@
 ---
-sidebar_position: 5
+sidebar_position: 9
+title: Deployment
 ---
 
-# Deployment Strategy
+# Deployment
 
-This document outlines the general strategy for deploying the AI-Powered Real-Time Chat & Group Video Communication application in a production environment. Given its microservices nature, different components are suited for different hosting platforms.
+Both the frontend and backend are deployed on **Vercel**. The live site is accessible at **[chatsconnect.tech](https://www.chatsconnect.tech)**.
 
-## Multi-Tier Deployment
+## Deployment Topology
 
-### 1. Frontend Client
-Since the frontend is a statically built React application, it does not require a runtime server for processing unless Server-Side Rendering (SSR) is added via Next.js.
-- **Recommended Platforms**: Vercel, Netlify, or AWS S3 + CloudFront.
-- **Process**: Code is compiled via `npm run build` and static assets (HTML, JS, CSS) are pushed to the edge CDN.
+```mermaid
+flowchart LR
+    GitHub["GitHub Repo\nadity1raut/MiniProject-"] --> |push to main| Vercel
+    subgraph Vercel
+        FE["client/ → Vercel Edge\nwww.chatsconnect.tech"]
+        BE["backend/ → Vercel Serverless\napi.chatsconnect.tech"]
+    end
+    BE --> Atlas["MongoDB Atlas"]
+    BE --> Cloud["Cloudinary"]
+    BE --> SMTP["SMTP (email)"]
+    BE --> GH["GitHub OAuth"]
+```
 
-### 2. Backend API & Real-Time Server
-Requires sustained execution and WebSockets support. Serverless environments are often tricky for WebSockets without specialized API Gateways.
-- **Recommended Platforms**: Heroku, Render, AWS ECS, or DigitalOcean Droplets.
-- **Requirements**:
-  - The hosting environment must support active/persistent connections for `Socket.IO`.
-  - Environment variables must be securely injected for Database connection strings and JWT secrets.
+## Deployed URLs
 
-### 3. AI Microservice
-Python AI workloads often require heavier memory utilization and occasionally GPU environments.
-- **Recommended Platforms**: AWS EC2, GCP Compute Engine, or Render.
-- **Requirements**:
-  - Dockerizing the Python FastAPI application is highly recommended to manage heavy system dependencies (like PyTorch or TensorFlow constraints).
-  - Can be scaled independently of the Node.js backend.
+| Component | URL |
+|-----------|-----|
+| Frontend | `https://www.chatsconnect.tech` |
+| Backend API | Vercel serverless (configured via `VITE_BACKEND_URL`) |
 
-### 4. Database Layer
-Managed services are vastly superior for maintenance and scaling.
-- **PostgreSQL**: Supabase, AWS RDS, or Render PostgreSQL.
-- **MongoDB**: MongoDB Atlas (Serverless or Dedicated Clusters).
-- **Redis**: Upstash (Serverless Redis) or AWS ElastiCache for Socket.IO multi-node clustering and presence storage.
+## Frontend Deployment (`client/`)
 
-## Continuous Integration & Deployment (CI/CD)
+The frontend is a **Vite static SPA** deployed directly to Vercel.
 
-Implementing CI/CD pipelines (e.g., via GitHub Actions) is critical for this architecture:
+**`client/vercel.json`** configures SPA fallback routing (all paths return `index.html`):
 
-1. **Linting and Tests**: Automatically run `npm test` and `flake8 / pytest` when Pull Requests are opened.
-2. **Build and Deploy**: Upon merging to the `main` branch, the pipeline should trigger separate deployments for the frontend (`Vercel`) and backend/AI servers (`Docker build` -> `Render/AWS deploy`).
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
 
-## Considerations for Scale
+### Build & Deploy Steps
 
-If scaling horizontally (running multiple Node.js backend instances):
-- **Socket.IO Redis Adapter**: You *must* use a Redis adapter for Socket.IO. Without it, a user connected to Instance A won't receive a message broadcasted from a user on Instance B.
-- **Load Balancing**: Utilize NGINX or an AWS Application Load Balancer configured for sticky sessions (if required) or standard WebSocket proxying.
+```bash
+# Vercel auto-runs these on push:
+cd client
+npm install
+npm run build        # Output: dist/
+```
+
+### Frontend Environment Variables
+
+Set these in the Vercel dashboard under **Project → Settings → Environment Variables**:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_BACKEND_URL` | Deployed backend base URL | `https://your-api.vercel.app` |
+
+:::info
+Vite only exposes variables prefixed with `VITE_` to the browser bundle.
+:::
+
+## Backend Deployment (`backend/`)
+
+The backend is deployed as a **Node.js serverless function** on Vercel.
+
+**`backend/vercel.json`** routes all requests through `main.js`:
+
+```json
+{
+  "version": 2,
+  "builds": [{ "src": "main.js", "use": "@vercel/node" }],
+  "routes": [{ "src": "/(.*)", "dest": "/main.js" }]
+}
+```
+
+### Backend Environment Variables
+
+Set all of these in the Vercel dashboard:
+
+| Variable | Description |
+|----------|-------------|
+| `MONGO_URI` | MongoDB Atlas connection string |
+| `JWT_SECRET` | Secret key for signing JWTs |
+| `CLIENT_URL` | Frontend URL (for CORS) e.g. `https://www.chatsconnect.tech` |
+| `NODE_ENV` | Set to `production` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth app client secret |
+| `GITHUB_CALLBACK_URL` | OAuth callback e.g. `https://api.chatsconnect.tech/api/auth/github/callback` |
+| `EMAIL_USER` | SMTP sender email address |
+| `EMAIL_PASS` | SMTP email password / app password |
+
+## CORS Configuration
+
+The backend allows requests only from whitelisted origins defined in `main.js`:
+
+```js
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "https://www.chatsconnect.tech",
+  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : []),
+].filter(Boolean);
+```
+
+## CI/CD — GitHub Actions
+
+The repository (`.github/`) includes GitHub Actions workflows for automated quality checks:
+
+- **Lint**: Runs ESLint on the client on every pull request.
+- **Build Check**: Runs `npm run ci` (lint + build) to catch compile errors.
+- **Tests**: Runs `npm test` (Vitest) on the backend.
+
+Merging to `main` triggers automatic Vercel deployments for both `client/` and `backend/`.
+
+## Running Locally
+
+```bash
+# Terminal 1 — Backend
+cd backend
+cp .env.example .env   # fill in local values
+npm install
+npm start              # http://localhost:5000
+
+# Terminal 2 — Frontend
+cd client
+cp .env.example .env   # set VITE_BACKEND_URL=http://localhost:5000
+npm install
+npm run dev            # http://localhost:5173
+```
+
+## MongoDB Atlas Setup
+
+1. Create a free cluster on [MongoDB Atlas](https://cloud.mongodb.com).
+2. Create a database user with read/write access.
+3. Whitelist `0.0.0.0/0` (Vercel uses dynamic IPs) or specific Vercel IPs.
+4. Copy the connection string to `MONGO_URI`.
+
+## Cloudinary Setup
+
+1. Create a free account at [cloudinary.com](https://cloudinary.com).
+2. Copy **Cloud Name**, **API Key**, and **API Secret** from the dashboard.
+3. Set them as environment variables in Vercel.

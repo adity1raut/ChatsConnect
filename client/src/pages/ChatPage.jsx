@@ -4,10 +4,13 @@ import axios from "axios";
 import ChatPageComponent from "../components/chat/ChatPage";
 import CreateGroupModal from "../components/chat/CreateGroupModal";
 import NewDMModal from "../components/chat/NewDMModal";
+import AIPanel from "../components/ai/AIPanel";
+import SmartReply from "../components/ai/SmartReply";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCall } from "../context/CallContext";
+import { useAI } from "../context/AIContext";
 
 import { API_URL as API } from "../config/api.js";
 
@@ -30,7 +33,8 @@ function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [aiEnabled] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const { aiEnabled, fetchSmartReplies, clearSmartReplies } = useAI();
   const { startCall } = useCall();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDM, setShowNewDM] = useState(false);
@@ -336,6 +340,24 @@ function ChatPage() {
     }, 1500);
   };
 
+  // ── AI: fetch smart replies when last message arrives ────────────
+  useEffect(() => {
+    if (!aiEnabled || !messages.length || !selectedChat) {
+      clearSmartReplies();
+      return;
+    }
+    const aiMessages = messages.slice(-6).map((m) => ({
+      role: m.sender === "me" ? "user" : "assistant",
+      content: m.text,
+    }));
+    fetchSmartReplies(aiMessages);
+  }, [messages, aiEnabled, selectedChat, fetchSmartReplies, clearSmartReplies]);
+
+  // ── AI: clear smart replies when chat changes ──────────────────
+  useEffect(() => {
+    clearSmartReplies();
+  }, [selectedChat, clearSmartReplies]);
+
   // ── Group created callback ────────────────────────────────────────
   const handleGroupCreated = (group) => {
     joinGroup(group._id);
@@ -403,7 +425,16 @@ function ChatPage() {
         currentUser={user}
         onStartVideoCall={(chat) => startCall(chat, false)}
         onStartAudioCall={(chat) => startCall(chat, true)}
+        onToggleAIPanel={() => setShowAIPanel((v) => !v)}
+        smartReplySlot={
+          <SmartReply onSelect={(reply) => { handleMessageChange(reply); }} />
+        }
       />
+      {showAIPanel && aiEnabled && (
+        <div className="hidden lg:flex w-72 xl:w-80 flex-shrink-0 h-full">
+          <AIPanel onClose={() => setShowAIPanel(false)} />
+        </div>
+      )}
       {showCreateGroup && (
         <CreateGroupModal
           onClose={() => setShowCreateGroup(false)}

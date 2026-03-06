@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Send, Phone, Video, MoreVertical, Search, MessageSquare,
   Image, Paperclip, Smile, Users, ArrowLeft,
-  Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2, SquarePen, X,
+  Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2, SquarePen, X, Bot,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../common/ThemeToggle";
@@ -25,6 +25,9 @@ export default function ChatPage({
   currentUser,
   onStartVideoCall,
   onStartAudioCall,
+  onToggleAIPanel,
+  aiEnabled = false,
+  smartReplySlot = null,
 }) {
   const { isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
@@ -336,6 +339,15 @@ export default function ChatPage({
                 >
                   <Video size={15} strokeWidth={2} />
                 </button>
+                {onToggleAIPanel && (
+                  <button
+                    onClick={onToggleAIPanel}
+                    title="AI Assistant"
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${aiEnabled ? isDark ? "bg-violet-500/20 text-violet-400" : "bg-violet-50 text-violet-600" : isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}
+                  >
+                    <Bot size={15} strokeWidth={2} />
+                  </button>
+                )}
                 <button onClick={() => setShowInfo(!showInfo)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${showInfo ? isDark ? "bg-violet-500/20 text-violet-400" : "bg-violet-50 text-violet-600" : isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}>
                   <MoreVertical size={15} strokeWidth={2} />
                 </button>
@@ -464,6 +476,9 @@ export default function ChatPage({
                 </>
               )}
             </div>
+
+            {/* Smart reply suggestions */}
+            {smartReplySlot}
 
             {/* Input bar */}
             <div className={`px-3 sm:px-4 py-3 border-t shrink-0 ${isDark ? "bg-gray-950/90 border-white/6" : "bg-white/98 border-gray-200/70"}`}>
