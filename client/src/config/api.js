@@ -12,3 +12,9 @@ export const API_URL =
 
 export const SOCKET_URL =
     import.meta.env.VITE_SOCKET_URL || "https://miniproject-ckza.onrender.com" || "http://localhost:5000";
+
+// AI routes: call FastAPI directly if VITE_AI_API_URL is set (local dev),
+// otherwise proxy through the Node backend at /api/ai (production).
+export const AI_API_URL = import.meta.env.VITE_AI_API_URL
+  ? `${import.meta.env.VITE_AI_API_URL}/ai`
+  : `${API_URL}/ai`;
