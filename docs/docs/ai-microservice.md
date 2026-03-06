@@ -1,39 +1,69 @@
 ---
-sidebar_position: 4
+sidebar_position: 8
+title: AI Microservice
 ---
 
-# AI Microservice
+# AI Microservice — `server/`
 
-The AI Microservice is a dedicated backend service designed to handle all natural language processing (NLP) and machine learning workloads. Moving these computationally intense requirements away from the primary Node.js backend guarantees high performance and scalability.
+The `server/` directory contains the foundation for a **Python-based AI microservice** (`server/server.py`). It is currently a stub and is planned to be developed into a standalone AI inference server that the Node.js backend can call via HTTP.
 
-## Core Technologies
+## Current State
 
-- **Python**: Primary language for AI workloads.
-- **FastAPI**: Extremely fast and lightweight web framework for Python, used to expose REST APIs for the Node.js backend to consume.
-- **HuggingFace Transformers**: Used to load and execute pre-trained AI models locally.
-- **OpenAI API (Optional)**: Can be integrated for advanced conversational features or high-quality summarization processing.
+```
+server/
+├── server.py      # Python server entry point (stub)
+└── env/           # Python virtual environment
+```
 
-## Key Capabilities
+The microservice is **not yet integrated** with the main backend. It is a planned extension of the platform.
 
-### 1. Real-Time Sentiment Analysis
-As messages flow through the system, the AI Microservice analyzes text for its underlying sentiment (Positive, Negative, Neutral). This can be used to warn users or provide community sentiment dashboards.
+## Planned Architecture
 
-### 2. Smart Reply & Rewriting
-Based on the context of the recent chat history, the microservice can suggest short, relevant replies, similar to features found in enterprise email and chat clients. It also provides "rewrite" functionality to improve tone or professionalism.
+```mermaid
+flowchart LR
+    BE["Node.js Backend\n(backend/)"] -- "HTTP POST" --> AI["Python AI Server\n(server/server.py)"]
+    AI --> NLP["NLP Models\n(HuggingFace / OpenAI)"]
+    AI -- "JSON response" --> BE
+```
 
-### 3. Automated Summarization
-For long group conversations or video transcripts (if implemented), the microservice processes the extensive text blocks and extracts:
-- A brief abstract/summary of the discussion.
-- Key action items or bullet points.
+## Planned Capabilities
 
-### 4. Toxicity Moderation
-Before finalizing messages, or asynchronously, the AI checks for offensive language, hate speech, or harassment. Configurable rules allow group admins to block the message entirely, hide it behind a warning, or mute the offending user.
+### 1. Smart Reply Suggestions
+Based on the last few messages in a conversation, the service will suggest short contextual reply options displayed above the chat input box.
 
-## Communication with Main Backend
+### 2. Automated Chat Summarisation
+For long group conversations, the service will produce a short summary and extract key action items — accessible from a sidebar panel.
 
-The main backend interacts with the AI Microservice solely via internal HTTP/REST endpoints.
-For example:
+### 3. Sentiment Analysis
+Each message can be scored for sentiment (positive / negative / neutral) to display community health dashboards or warn users about tone.
 
-- `POST /api/v1/analyze-sentiment` -> Returns polarity scores.
-- `POST /api/v1/moderate` -> Returns boolean `isSafe` and reason.
-- `POST /api/v1/summarize` -> Returns text summary.
+### 4. Message Moderation
+Before persisting or broadcasting a message, the backend can call the AI service to check for toxic or abusive content.
+
+## Planned API Contract
+
+When implemented, the backend will call these endpoints:
+
+| Method | Endpoint | Input | Output |
+|--------|----------|-------|--------|
+| POST | `/analyze-sentiment` | `{ "text": "..." }` | `{ "sentiment": "positive", "score": 0.92 }` |
+| POST | `/suggest-replies` | `{ "history": [...] }` | `{ "replies": ["Sure!", "Sounds good", "Let me check"] }` |
+| POST | `/summarize` | `{ "messages": [...] }` | `{ "summary": "...", "action_items": [...] }` |
+| POST | `/moderate` | `{ "text": "..." }` | `{ "isSafe": true }` |
+
+## Development Setup
+
+```bash
+cd server
+python -m venv env
+source env/bin/activate    # Windows: env\Scripts\activate
+pip install fastapi uvicorn transformers
+uvicorn server:app --reload --port 8000
+```
+
+## Frontend Integration (Planned)
+
+The `components/ai/` directory in the client is the UI placeholder waiting for this service:
+- Smart reply chips above the chat input box.
+- "Summarise this conversation" button in the chat panel.
+- Sentiment indicator on conversation list items.

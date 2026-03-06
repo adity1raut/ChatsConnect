@@ -10,8 +10,8 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'AI Real-Time Communication',
-  tagline: 'Architecture & Developer Documentation',
+  title: 'ChatsConnect',
+  tagline: 'Developer Documentation — Real-Time Chat, Video & AI',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -27,8 +27,14 @@ const config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'adity1raut',
+  projectName: 'MiniProject-',
+
+  markdown: {
+    mermaid: true,
+  },
+
+  themes: ['@docusaurus/theme-mermaid'],
 
   onBrokenLinks: 'throw',
 
@@ -50,7 +56,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/adity1raut/MiniProject-/tree/main/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -61,7 +67,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/adity1raut/MiniProject-/tree/main/docs/',
           // Useful options to enforce blogging best practices
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -83,9 +89,9 @@ const config = {
         respectPrefersColorScheme: true,
       },
       navbar: {
-        title: 'My Site',
+        title: 'ChatsConnect Docs',
         logo: {
-          alt: 'My Site Logo',
+          alt: 'ChatsConnect Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -112,36 +118,35 @@ const config = {
                 label: 'Architecture',
                 to: '/docs/architecture',
               },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+                label: 'Backend',
+                to: '/docs/backend',
               },
               {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/docusaurus',
+                label: 'Frontend',
+                to: '/docs/frontend',
               },
               {
-                label: 'X',
-                href: 'https://x.com/docusaurus',
+                label: 'Deployment',
+                to: '/docs/deployment',
               },
             ],
           },
           {
-            title: 'More',
+            title: 'Live',
             items: [
               {
-                label: 'GitHub',
+                label: 'ChatsConnect App',
+                href: 'https://www.chatsconnect.tech',
+              },
+              {
+                label: 'GitHub Repository',
                 href: 'https://github.com/adity1raut/MiniProject-',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} AI Communication App. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} ChatsConnect. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,
