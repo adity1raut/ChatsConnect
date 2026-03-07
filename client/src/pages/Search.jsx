@@ -7,7 +7,6 @@ import {
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import ThemeToggle from "../components/common/ThemeToggle";
 import { useFriends } from "../context/FriendContext";
 
 import { API_URL as API } from "../config/api.js";
@@ -144,7 +143,6 @@ export default function SearchPage() {
         @keyframes slideUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      <div className="absolute top-5 right-5 z-10 hidden md:block"><ThemeToggle /></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 

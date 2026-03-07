@@ -6,10 +6,22 @@ const AIContext = createContext(null);
 
 export function AIProvider({ children }) {
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [autoTranslate, setAutoTranslate] = useState(() => localStorage.getItem("autoTranslate") === "true");
+  const [preferredLanguage, setPreferredLanguage] = useState(() => localStorage.getItem("preferredLanguage") || "English");
   const [smartReplies, setSmartReplies] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleSetAutoTranslate = useCallback((val) => {
+    setAutoTranslate(val);
+    localStorage.setItem("autoTranslate", val);
+  }, []);
+
+  const handleSetPreferredLanguage = useCallback((lang) => {
+    setPreferredLanguage(lang);
+    localStorage.setItem("preferredLanguage", lang);
+  }, []);
 
   const authHeader = () => ({
     Authorization: `Bearer ${localStorage.getItem("accessToken") || localStorage.getItem("authToken")}`,
@@ -99,6 +111,8 @@ export function AIProvider({ children }) {
   return (
     <AIContext.Provider value={{
       aiEnabled, setAiEnabled,
+      autoTranslate, setAutoTranslate: handleSetAutoTranslate,
+      preferredLanguage, setPreferredLanguage: handleSetPreferredLanguage,
       smartReplies, fetchSmartReplies, clearSmartReplies,
       chatHistory, sendAIMessage, clearChat,
       summarizeMessages, translateMessage, analyzeSentiment,

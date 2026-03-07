@@ -5,7 +5,6 @@ import {
   Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2, SquarePen, X, Bot,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-import ThemeToggle from "../common/ThemeToggle";
 
 export default function ChatPage({
   contacts,
@@ -68,11 +67,6 @@ export default function ChatPage({
 
   return (
     <>
-      {/* Theme Toggle — desktop */}
-      <div className="absolute top-4 right-4 z-10 hidden md:block">
-        <ThemeToggle />
-      </div>
-
       {/* ══ Contact Sidebar ══════════════════════════════════════ */}
       <div
         className={`

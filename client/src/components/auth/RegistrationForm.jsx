@@ -18,7 +18,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
-import ThemeToggle from "../common/ThemeToggle";
 import axios from "axios";
 
 import { API_URL } from "../../config/api.js";
@@ -204,10 +203,6 @@ export default function RegistrationForm() {
         ></div>
       </div>
 
-      {/* Theme Toggle */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
-        <ThemeToggle />
-      </div>
 
       <div className="relative z-10 w-full max-w-6xl flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
         {/* Left Side - Branding & Features */}

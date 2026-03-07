@@ -4,6 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 import {
   Home, Search, MessageSquare, Bell, User, MoreHorizontal,
   Settings, Activity, Bookmark, Palette, AlertCircle, LogOut, SwitchCamera, Sparkles,
+  Sun, Moon, Monitor,
 } from "lucide-react";
 
 export default function Sidebar({
@@ -15,7 +16,7 @@ export default function Sidebar({
   handleLogout = () => { },
   unreadNotifications = 3,
 }) {
-  const { isDark } = useTheme();
+  const { isDark, themeMode, setThemeMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -159,6 +160,35 @@ export default function Sidebar({
 
       {/* Bottom separator */}
       <div className={`mx-5 h-px ${isDark ? "bg-white/5" : "bg-gray-100"}`} />
+
+      {/* Theme toggle */}
+      <div className="px-5 py-3 flex items-center justify-between">
+        <span className={`text-[11px] font-semibold uppercase tracking-wider ${isDark ? "text-gray-600" : "text-gray-400"}`}>
+          Theme
+        </span>
+        <div className={`flex items-center gap-1 p-1 rounded-lg ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
+          {[
+            { mode: "light", Icon: Sun, title: "Light" },
+            { mode: "dark", Icon: Moon, title: "Dark" },
+            { mode: "system", Icon: Monitor, title: "System" },
+          ].map(({ mode, Icon, title }) => (
+            <button
+              key={mode}
+              onClick={() => setThemeMode(mode)}
+              title={title}
+              className={`w-7 h-7 flex items-center justify-center rounded-md transition-all duration-200 ${
+                themeMode === mode
+                  ? "bg-violet-500 text-white shadow-sm"
+                  : isDark
+                  ? "text-gray-500 hover:text-gray-300 hover:bg-white/8"
+                  : "text-gray-400 hover:text-gray-700 hover:bg-white"
+              }`}
+            >
+              <Icon size={13} strokeWidth={2} />
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* More / user menu trigger */}
       <div className="relative px-3 py-4">

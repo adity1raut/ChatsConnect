@@ -4,7 +4,6 @@ import {
   ArrowRight, Zap, Calendar, Sparkles, ArrowUpRight,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-import ThemeToggle from "../common/ThemeToggle";
 import { useAuth } from "../../context/AuthContext";
 
 const STAT_CONFIG = {
@@ -108,10 +107,6 @@ export default function MainDashboard({
         }
       `}</style>
 
-      {/* Theme Toggle — desktop only */}
-      <div className="absolute top-5 right-5 z-10 hidden md:block">
-        <ThemeToggle />
-      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 

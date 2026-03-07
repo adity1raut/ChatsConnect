@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
-import ThemeToggle from "../common/ThemeToggle";
-
 import ProfileSidebar from "./ProfileSidebar";
 import ProfileTab from "./ProfileTab";
+import SettingsTab from "./SettingsTab";
 import DangerZoneTab from "./DangerZoneTab";
 import DeleteModal from "./DeleteModal";
 import Toast from "./Toast";
@@ -86,11 +85,6 @@ export default function ProfilePage() {
         .tab-enter { animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
       `}</style>
 
-      {/* Theme toggle — desktop only */}
-      <div className="fixed top-5 right-5 z-[100] hidden md:block">
-        <ThemeToggle />
-      </div>
-
       {/* Toasts */}
       {error && <Toast type="error" message={error} onDismiss={() => setError("")} />}
       {success && <Toast type="success" message={success} onDismiss={() => setSuccess("")} />}
@@ -150,6 +144,9 @@ export default function ProfilePage() {
                   loading={loading}
                   onSave={() => updateProfile({ name, username: user?.username, bio, avatarFile })}
                 />
+              )}
+              {activeTab === "settings" && (
+                <SettingsTab key="settings" isDark={isDark} />
               )}
               {activeTab === "danger" && (
                 <DangerZoneTab key="danger" isDark={isDark} onDeleteClick={() => setShowDeleteModal(true)} />
