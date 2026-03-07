@@ -79,11 +79,20 @@ function ExpandSection({ label, icon: Icon, color, isOpen, onToggle, isDark, chi
   );
 }
 
+const LANGUAGES = [
+  "English", "Spanish", "French", "German", "Portuguese", "Italian",
+  "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Arabic", "Hindi",
+];
+
 export default function SettingsModal({
   showSettingsModal,
   setShowSettingsModal,
   aiEnabled,
   setAiEnabled,
+  autoTranslate,
+  setAutoTranslate,
+  preferredLanguage,
+  setPreferredLanguage,
   notifications,
   setNotifications,
 }) {
@@ -212,7 +221,31 @@ export default function SettingsModal({
             </div>
             <div className="space-y-1">
               <SectionRow label="Enable AI Suggestions" right={<Toggle checked={aiEnabled} onChange={setAiEnabled} />} />
-              <SectionRow label="Auto-translate Messages" right={<Toggle checked={false} onChange={() => { }} />} />
+              <SectionRow
+                label="Auto-translate Messages"
+                description="Translate received messages to your language"
+                right={<Toggle checked={autoTranslate} onChange={setAutoTranslate} />}
+              />
+              {autoTranslate && (
+                <div className="pt-1 pb-0.5">
+                  <p className={`text-xs font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                    Translate to
+                  </p>
+                  <select
+                    value={preferredLanguage}
+                    onChange={(e) => setPreferredLanguage(e.target.value)}
+                    className={`w-full px-3 py-2 text-sm rounded-xl border outline-none transition-all ${
+                      isDark
+                        ? "bg-white/[0.04] border-white/8 text-white focus:border-violet-500/60"
+                        : "bg-white border-gray-200 text-gray-900 focus:border-violet-400"
+                    }`}
+                  >
+                    {LANGUAGES.map((lang) => (
+                      <option key={lang} value={lang}>{lang}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <SectionRow label="Smart Reply" right={<Toggle checked={true} onChange={() => { }} />} />
             </div>
           </div>

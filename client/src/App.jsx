@@ -89,7 +89,7 @@ function MainLayout({ children }) {
   const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
-  const { aiEnabled, setAiEnabled } = useAI();
+  const { aiEnabled, setAiEnabled, autoTranslate, setAutoTranslate, preferredLanguage, setPreferredLanguage } = useAI();
 
   const handleLogout = () => {
     logout();
@@ -118,6 +118,10 @@ function MainLayout({ children }) {
         setShowSettingsModal={setShowSettingsModal}
         aiEnabled={aiEnabled}
         setAiEnabled={setAiEnabled}
+        autoTranslate={autoTranslate}
+        setAutoTranslate={setAutoTranslate}
+        preferredLanguage={preferredLanguage}
+        setPreferredLanguage={setPreferredLanguage}
         notifications={notifications}
         setNotifications={setNotifications}
       />
@@ -133,7 +137,7 @@ function ChatLayout({ children }) {
   const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
-  const { aiEnabled, setAiEnabled } = useAI();
+  const { aiEnabled, setAiEnabled, autoTranslate, setAutoTranslate, preferredLanguage, setPreferredLanguage } = useAI();
 
   const handleLogout = () => {
     logout();
@@ -164,6 +168,10 @@ function ChatLayout({ children }) {
         setShowSettingsModal={setShowSettingsModal}
         aiEnabled={aiEnabled}
         setAiEnabled={setAiEnabled}
+        autoTranslate={autoTranslate}
+        setAutoTranslate={setAutoTranslate}
+        preferredLanguage={preferredLanguage}
+        setPreferredLanguage={setPreferredLanguage}
         notifications={notifications}
         setNotifications={setNotifications}
       />

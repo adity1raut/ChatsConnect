@@ -1,10 +1,11 @@
 import React from "react";
 import {
-  User, AlertCircle, AtSign, Camera, ShieldCheck, LogOut,
+  User, AlertCircle, AtSign, Camera, ShieldCheck, LogOut, Settings,
 } from "lucide-react";
 
 const TABS = [
   { id: "profile", label: "Profile Info", icon: User, color: "from-violet-500 to-purple-600" },
+  { id: "settings", label: "Settings", icon: Settings, color: "from-slate-500 to-gray-600" },
   { id: "danger", label: "Danger Zone", icon: AlertCircle, color: "from-red-500 to-rose-600" },
 ];
 
@@ -177,7 +178,7 @@ export default function ProfileSidebar({ user, activeTab, setActiveTab, isDark, 
             <div className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center">
                 <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Member since</span>
-                <span className={`text-xs font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}>{new Date(user?.createdAt || Date.now()).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
+                <span className={`text-xs font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—"}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Account type</span>

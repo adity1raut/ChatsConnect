@@ -34,7 +34,7 @@ function ChatPage() {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [showAIPanel, setShowAIPanel] = useState(false);
-  const { aiEnabled, fetchSmartReplies, clearSmartReplies } = useAI();
+  const { aiEnabled, fetchSmartReplies, clearSmartReplies, autoTranslate, preferredLanguage, translateMessage } = useAI();
   const { startCall } = useCall();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDM, setShowNewDM] = useState(false);
@@ -153,20 +153,31 @@ function ChatPage() {
         const res = await axios.get(url, { headers: authHeader() });
         const raw = res.data.messages || [];
 
-        setMessages(
-          raw.map((m) => ({
-            id: m._id,
-            sender: m.senderId._id === user._id ? "me" : "them",
-            senderName: m.senderId.name,
-            senderAvatar: m.senderId.avatar,
-            text: m.content,
-            time: new Date(m.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            status: "read",
-          }))
-        );
+        const mapped = raw.map((m) => ({
+          id: m._id,
+          sender: m.senderId._id === user._id ? "me" : "them",
+          senderName: m.senderId.name,
+          senderAvatar: m.senderId.avatar,
+          text: m.content,
+          time: new Date(m.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          status: "read",
+        }));
+
+        if (autoTranslate) {
+          const translated = await Promise.all(
+            mapped.map(async (m) => {
+              if (m.sender !== "them") return m;
+              const t = await translateMessage(m.text, preferredLanguage);
+              return t ? { ...m, text: t, originalText: m.text } : m;
+            })
+          );
+          setMessages(translated);
+        } else {
+          setMessages(mapped);
+        }
       } catch (err) {
         console.error("fetchHistory error:", err);
       } finally {

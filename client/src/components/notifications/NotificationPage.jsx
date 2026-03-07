@@ -8,7 +8,6 @@ import { useTheme } from "../../context/ThemeContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { useFriends } from "../../context/FriendContext";
 import { useNavigate } from "react-router-dom";
-import ThemeToggle from "../common/ThemeToggle";
 
 /* ─── config for static notification types ─── */
 const TYPE_CFG = {
@@ -131,7 +130,6 @@ export default function NotificationPage() {
         @keyframes slideUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      <div className="fixed top-5 right-5 z-[100] hidden md:block"><ThemeToggle /></div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
