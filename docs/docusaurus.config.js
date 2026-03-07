@@ -11,7 +11,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'ChatsConnect',
-  tagline: 'Developer Documentation — Real-Time Chat, Video & AI',
+  tagline: 'Mini Project Report — Real-Time Chat, Video & AI Platform',
   favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -99,7 +99,7 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'docsSidebar',
             position: 'left',
-            label: 'Documentation',
+            label: 'Project Report',
           },
           {
             href: 'https://github.com/adity1raut/MiniProject-',
@@ -115,20 +115,24 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Architecture',
-                to: '/docs/architecture',
+                label: 'Problem Definition',
+                to: '/docs/problem-definition',
               },
               {
-                label: 'Backend',
-                to: '/docs/backend',
+                label: 'Literature Survey',
+                to: '/docs/literature-survey',
               },
               {
-                label: 'Frontend',
-                to: '/docs/frontend',
+                label: 'Requirements',
+                to: '/docs/requirements',
               },
               {
-                label: 'Deployment',
-                to: '/docs/deployment',
+                label: 'System Design',
+                to: '/docs/system-design',
+              },
+              {
+                label: 'Implementation',
+                to: '/docs/implementation',
               },
             ],
           },
