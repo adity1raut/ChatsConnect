@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import FriendRequest from "../models/friendRequest.model.js";
 import { cloudinary } from "../config/cloudinary.js";
 
 // @desc    Get user profile by ID
@@ -14,7 +15,12 @@ export const getUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ success: true, user });
+    const friendCount = await FriendRequest.countDocuments({
+      $or: [{ sender: userId }, { receiver: userId }],
+      status: "accepted",
+    });
+
+    res.status(200).json({ success: true, user, friendCount });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

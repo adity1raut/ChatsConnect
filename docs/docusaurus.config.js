@@ -102,6 +102,11 @@ const config = {
             label: 'Project Report',
           },
           {
+            href: '/ChatsConnect-Report.docx',
+            label: '⬇ Export .docx',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/adity1raut/MiniProject-',
             label: 'GitHub',
             position: 'right',
@@ -133,6 +138,15 @@ const config = {
               {
                 label: 'Implementation',
                 to: '/docs/implementation',
+              },
+            ],
+          },
+          {
+            title: 'Download',
+            items: [
+              {
+                label: '⬇ Export Full Report (.docx)',
+                href: '/ChatsConnect-Report.docx',
               },
             ],
           },

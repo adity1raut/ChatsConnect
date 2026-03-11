@@ -30,6 +30,7 @@ import ChatPage from "./pages/ChatPage.jsx";
 import Profile from "./pages/Profile.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import SearchPage from "./pages/Search.jsx";
+import AuthCallback from "./pages/AuthCallback.jsx";
 import Sidebar from "./components/common/Sidebar.jsx";
 import ProtectedRoute from "./components/routes/ProtectedRoute.jsx";
 import PublicRoute from "./components/routes/PublicRoute.jsx";
@@ -200,6 +201,7 @@ function App() {
               <Routes>
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/registration" element={<PublicRoute><Registration /></PublicRoute>} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
                 <Route path="/" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><MainLayout><Notification /></MainLayout></ProtectedRoute>} />
