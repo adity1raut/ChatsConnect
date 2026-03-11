@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ChatPageComponent from "../components/chat/ChatPage";
 import CreateGroupModal from "../components/chat/CreateGroupModal";
 import NewDMModal from "../components/chat/NewDMModal";
+import ManageGroupModal from "../components/chat/ManageGroupModal";
 import AIPanel from "../components/ai/AIPanel";
 import SmartReply from "../components/ai/SmartReply";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCall } from "../context/CallContext";
+import { useGroupCall } from "../context/GroupCallContext";
 import { useAI } from "../context/AIContext";
 
 import { API_URL as API } from "../config/api.js";
@@ -17,6 +19,7 @@ import { API_URL as API } from "../config/api.js";
 function ChatPage() {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { setActiveChat: setNotifActiveChat } = useNotifications();
   const {
     socket,
@@ -36,8 +39,11 @@ function ChatPage() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const { aiEnabled, fetchSmartReplies, clearSmartReplies, autoTranslate, preferredLanguage, translateMessage } = useAI();
   const { startCall } = useCall();
+  const { startGroupCall } = useGroupCall();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showNewDM, setShowNewDM] = useState(false);
+  const [showManageGroup, setShowManageGroup] = useState(false);
+  const [managingGroup, setManagingGroup] = useState(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
   const typingTimerRef = useRef(null);
@@ -223,13 +229,19 @@ function ChatPage() {
         return prev;
       });
 
-      // Update contact's last message in list
-      loadContacts();
+      // Update contact's last message in-place (fast, no API call)
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.type === "user" && (c.conversationId?.toString() === conversationId?.toString() || c.id === msg.senderId._id)
+            ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt }
+            : c
+        )
+      );
     };
 
     socket.on("newMessage", handleNewMessage);
     return () => socket.off("newMessage", handleNewMessage);
-  }, [socket, user, loadContacts]);
+  }, [socket, user]);
 
   // ── Socket: incoming group message ───────────────────────────────
   useEffect(() => {
@@ -259,12 +271,19 @@ function ChatPage() {
         return prev;
       });
 
-      loadContacts();
+      // Update group contact's last message in-place
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.type === "group" && c.groupId === groupId
+            ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt }
+            : c
+        )
+      );
     };
 
     socket.on("newGroupMessage", handleGroupMessage);
     return () => socket.off("newGroupMessage", handleGroupMessage);
-  }, [socket, user, loadContacts]);
+  }, [socket, user]);
 
   // ── Socket: another user added this user to a group ─────────────
   useEffect(() => {
@@ -436,7 +455,10 @@ function ChatPage() {
         currentUser={user}
         onStartVideoCall={(chat) => startCall(chat, false)}
         onStartAudioCall={(chat) => startCall(chat, true)}
+        onManageGroup={(chat) => { setManagingGroup(chat); setShowManageGroup(true); }}
+        onStartGroupCall={(chat) => startGroupCall(chat.groupId, chat.name, "video")}
         onToggleAIPanel={() => setShowAIPanel((v) => !v)}
+        onViewProfile={(uid) => navigate(`/profile/${uid}`)}
         smartReplySlot={
           <SmartReply onSelect={(reply) => { handleMessageChange(reply); }} />
         }
@@ -456,6 +478,14 @@ function ChatPage() {
         <NewDMModal
           onClose={() => setShowNewDM(false)}
           onSelectUser={handleNewDM}
+        />
+      )}
+      {showManageGroup && managingGroup && (
+        <ManageGroupModal
+          group={managingGroup}
+          currentUser={user}
+          onClose={() => { setShowManageGroup(false); setManagingGroup(null); }}
+          onGroupUpdated={loadContacts}
         />
       )}
     </div>

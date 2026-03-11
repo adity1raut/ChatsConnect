@@ -7,10 +7,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (check token in localStorage)
     const token = localStorage.getItem('authToken');
     const userData = localStorage.getItem('userData');
-    
+
     if (token && userData) {
       setUser(JSON.parse(userData));
     }
@@ -29,12 +28,18 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (updatedData) => {
+    const merged = { ...user, ...updatedData };
+    localStorage.setItem('userData', JSON.stringify(merged));
+    setUser(merged);
+  };
+
   const isAuthenticated = () => {
     return !!user;
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );

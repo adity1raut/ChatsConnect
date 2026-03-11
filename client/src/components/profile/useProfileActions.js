@@ -8,7 +8,7 @@ export function useProfileActions({ updateUser, logout, navigate }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const token = () => localStorage.getItem("accessToken");
+  const token = () => localStorage.getItem("authToken");
   const authHeader = () => ({ Authorization: `Bearer ${token()}` });
 
   const withFeedback = async (fn, successMsg) => {

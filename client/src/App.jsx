@@ -14,8 +14,10 @@ import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider, useNotifications } from "./context/NotificationContext";
 import { FriendProvider } from "./context/FriendContext";
 import { CallProvider } from "./context/CallContext";
+import { GroupCallProvider } from "./context/GroupCallContext";
 import { AIProvider } from "./context/AIContext";
 import IncomingCallModal from "./components/video/IncomingCallModal";
+import GroupVideoCall from "./components/video/GroupVideoCall";
 import VideoCallModal from "./components/video/VideoCallModal";
 import SettingsModal from "./components/common/SettingsModal";
 import { Home, MessageSquare, Bell, User, Search } from "lucide-react";
@@ -26,6 +28,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Notification from "./pages/Notification.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
 import Profile from "./pages/Profile.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
 import SearchPage from "./pages/Search.jsx";
 import Sidebar from "./components/common/Sidebar.jsx";
 import ProtectedRoute from "./components/routes/ProtectedRoute.jsx";
@@ -186,12 +189,14 @@ function App() {
         <SocketProvider>
           <AIProvider>
           <CallProvider>
+          <GroupCallProvider>
           <FriendProvider>
           <NotificationProvider>
             <Router>
               {/* Global call overlays — visible from any page */}
               <IncomingCallModal />
               <VideoCallModal />
+              <GroupVideoCall />
               <Routes>
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/registration" element={<PublicRoute><Registration /></PublicRoute>} />
@@ -200,6 +205,7 @@ function App() {
                 <Route path="/notifications" element={<ProtectedRoute><MainLayout><Notification /></MainLayout></ProtectedRoute>} />
                 <Route path="/chat" element={<ProtectedRoute><ChatLayout><ChatPage /></ChatLayout></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
+                <Route path="/profile/:userId" element={<ProtectedRoute><MainLayout><UserProfile /></MainLayout></ProtectedRoute>} />
                 <Route path="/search" element={<ProtectedRoute><MainLayout><SearchPage /></MainLayout></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
@@ -207,6 +213,7 @@ function App() {
             </Router>
           </NotificationProvider>
           </FriendProvider>
+          </GroupCallProvider>
           </CallProvider>
           </AIProvider>
         </SocketProvider>

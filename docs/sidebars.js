@@ -5,19 +5,14 @@ const sidebars = {
   docsSidebar: [
     {
       type: 'category',
-      label: 'ChatsConnect Docs',
+      label: 'ChatsConnect Project Report',
       collapsible: false,
       items: [
-        'architecture',
+        'problem-definition',
         'literature-survey',
         'requirements',
         'system-design',
-        'uml-diagrams',
-        'backend',
-        'frontend',
-        'ai-microservice',
-        'deployment',
-        'research',
+        'implementation',
       ],
     },
   ],
