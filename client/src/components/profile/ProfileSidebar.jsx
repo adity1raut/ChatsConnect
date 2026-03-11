@@ -1,7 +1,8 @@
 import React from "react";
 import {
-  User, AlertCircle, AtSign, Camera, ShieldCheck, LogOut, Settings,
+  User, AlertCircle, AtSign, Camera, ShieldCheck, LogOut, Settings, Users,
 } from "lucide-react";
+import { useFriends } from "../../context/FriendContext";
 
 const TABS = [
   { id: "profile", label: "Profile Info", icon: User, color: "from-violet-500 to-purple-600" },
@@ -10,6 +11,7 @@ const TABS = [
 ];
 
 export default function ProfileSidebar({ user, activeTab, setActiveTab, isDark, avatarPreview, onAvatarChange, onLogout }) {
+  const { friends } = useFriends();
   return (
     <>
       {/* ──────────────────────────────────────────────────
@@ -123,11 +125,14 @@ export default function ProfileSidebar({ user, activeTab, setActiveTab, isDark, 
                 "{user.bio}"
               </p>
             )}
-            <div className="flex items-center gap-1.5 mt-4">
+            <div className="flex items-center gap-2 mt-4 flex-wrap justify-center">
               <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full ${user?.isOnline ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20" : isDark ? "bg-gray-700/60 text-gray-400 border border-gray-600/30" : "bg-gray-100 text-gray-500 border border-gray-200"
                 }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${user?.isOnline ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`} />
                 {user?.isOnline ? "Online" : "Offline"}
+              </span>
+              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full ${isDark ? "bg-violet-500/15 text-violet-400 border border-violet-500/20" : "bg-violet-50 text-violet-600 border border-violet-200"}`}>
+                <Users size={11} />{friends.length} Friends
               </span>
             </div>
           </div>

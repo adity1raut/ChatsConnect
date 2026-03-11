@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Send, Phone, Video, MoreVertical, Search, MessageSquare,
   Image, Paperclip, Smile, Users, ArrowLeft,
-  Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2, SquarePen, X, Bot,
+  Star, Pin, VolumeX, Trash2, Check, CheckCheck, Plus, Loader2, SquarePen, X, Bot, ExternalLink, Settings2,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -27,6 +27,9 @@ export default function ChatPage({
   onToggleAIPanel,
   aiEnabled = false,
   smartReplySlot = null,
+  onViewProfile,
+  onManageGroup,
+  onStartGroupCall,
 }) {
   const { isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
@@ -327,8 +330,8 @@ export default function ChatPage({
                   <Phone size={15} strokeWidth={2} />
                 </button>
                 <button
-                  onClick={() => onStartVideoCall?.(selectedChat)}
-                  title="Video call"
+                  onClick={() => selectedChat.type === "group" ? onStartGroupCall?.(selectedChat) : onStartVideoCall?.(selectedChat)}
+                  title={selectedChat.type === "group" ? "Group Video Call" : "Video call"}
                   className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 ${isDark ? "text-gray-400 hover:bg-white/8 hover:text-white" : "text-gray-500 hover:bg-gray-100"}`}
                 >
                   <Video size={15} strokeWidth={2} />
@@ -365,6 +368,22 @@ export default function ChatPage({
                     )}
                   </div>
                   <div className="ml-auto flex gap-2">
+                    {selectedChat.type === "user" && onViewProfile && (
+                      <button
+                        onClick={() => onViewProfile(selectedChat.id)}
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${isDark ? "bg-violet-500/10 text-violet-400 hover:bg-violet-500/20" : "bg-violet-50 text-violet-600 hover:bg-violet-100"}`}
+                      >
+                        <ExternalLink size={14} /><span>Profile</span>
+                      </button>
+                    )}
+                    {selectedChat.type === "group" && onManageGroup && (
+                      <button
+                        onClick={() => onManageGroup(selectedChat)}
+                        className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${isDark ? "bg-violet-500/10 text-violet-400 hover:bg-violet-500/20" : "bg-violet-50 text-violet-600 hover:bg-violet-100"}`}
+                      >
+                        <Settings2 size={14} /><span>Manage</span>
+                      </button>
+                    )}
                     <button className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-xs font-medium transition-all ${isDark ? "bg-white/4 text-gray-400 hover:bg-white/8" : "bg-white text-gray-600 hover:bg-gray-50 shadow-sm"}`}>
                       <Star size={14} /><span>Pin</span>
                     </button>
