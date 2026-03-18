@@ -7,6 +7,9 @@ import Group from "../models/group.model.js";
 // Map: userId -> socketId (for sending targeted events)
 const onlineUsers = new Map();
 
+// Map: groupId -> Map<userId, { name, avatar }>
+const groupCalls = new Map();
+
 // Singleton io — used by controllers to emit events (e.g. friend requests)
 let _io = null;
 export const getIO = () => _io;
@@ -164,6 +167,52 @@ export function initSocket(httpServer) {
       if (groupId) socket.leave(`group:${groupId}`);
     });
 
+    // ── Group Call Signaling ────────────────────────────────────
+
+    // Initiator starts a group call, notifies all group members
+    socket.on("startGroupCall", ({ groupId, callType, callerName, callerAvatar }) => {
+      if (!groupId) return;
+      if (!groupCalls.has(groupId)) groupCalls.set(groupId, new Map());
+      groupCalls.get(groupId).set(userId, { name: callerName || "User", avatar: callerAvatar || null });
+      socket.join(`gcall:${groupId}`);
+      // Notify all group members (they can choose to join)
+      socket.to(`group:${groupId}`).emit("groupCallStarted", {
+        groupId, callType, callerId: userId, callerName, callerAvatar,
+      });
+    });
+
+    // A member joins an existing group call
+    socket.on("joinGroupCall", ({ groupId, joinerName, joinerAvatar }) => {
+      if (!groupId) return;
+      const call = groupCalls.get(groupId);
+      // Get existing participants before adding joiner
+      const existingParticipants = call
+        ? [...call.entries()].map(([uid, info]) => ({ userId: uid, ...info }))
+        : [];
+      // Send existing participant list to joiner so they can initiate WebRTC with each
+      socket.emit("groupCallParticipants", { participants: existingParticipants, groupId });
+      // Add joiner to call map and socket room
+      if (!groupCalls.has(groupId)) groupCalls.set(groupId, new Map());
+      groupCalls.get(groupId).set(userId, { name: joinerName || "User", avatar: joinerAvatar || null });
+      socket.join(`gcall:${groupId}`);
+      // Notify existing participants that someone new joined (they'll receive WebRTC offer from joiner)
+      socket.to(`gcall:${groupId}`).emit("groupCallParticipantJoined", {
+        userId, name: joinerName, avatar: joinerAvatar, groupId,
+      });
+    });
+
+    // A participant leaves the group call
+    socket.on("leaveGroupCall", ({ groupId }) => {
+      if (!groupId) return;
+      const call = groupCalls.get(groupId);
+      if (call) {
+        call.delete(userId);
+        if (call.size === 0) groupCalls.delete(groupId);
+      }
+      socket.leave(`gcall:${groupId}`);
+      socket.to(`gcall:${groupId}`).emit("groupCallParticipantLeft", { userId, groupId });
+    });
+
     // ── WebRTC Signaling ─────────────────────────────────────────
 
     // Caller → Callee: ring the callee
@@ -233,6 +282,14 @@ export function initSocket(httpServer) {
     socket.on("disconnect", () => {
       onlineUsers.delete(userId);
       socket.broadcast.emit("userOffline", { userId });
+      // Clean up any group calls this user was in
+      for (const [groupId, call] of groupCalls.entries()) {
+        if (call.has(userId)) {
+          call.delete(userId);
+          if (call.size === 0) groupCalls.delete(groupId);
+          socket.to(`gcall:${groupId}`).emit("groupCallParticipantLeft", { userId, groupId });
+        }
+      }
     });
   });
 
