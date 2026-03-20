@@ -55,13 +55,8 @@ app.use("/api/friends", friendRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/ai", aiRoutes);
 
-app.get("/", (_req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({ message: "Server is running" });
-});
-
-// Docker / load-balancer healthcheck
-app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok", uptime: process.uptime() });
 });
 
 const PORT = process.env.PORT || 5000;
