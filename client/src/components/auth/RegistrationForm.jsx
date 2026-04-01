@@ -82,16 +82,6 @@ export default function RegistrationForm() {
       return;
     }
 
-    if (!/[A-Z]/.test(password)) {
-      setError("Password must contain at least one uppercase letter");
-      return;
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
-      setError("Password must contain at least one special character");
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -604,7 +594,7 @@ export default function RegistrationForm() {
                     </button>
                   </div>
                   <p className={`text-xs mt-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                    At least 6 characters, one uppercase letter, and one special character
+                    At least 6 characters
                   </p>
                 </div>
 

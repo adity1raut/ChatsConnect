@@ -45,8 +45,8 @@ class AgentState(TypedDict):
 def _build_graph():
     llm = get_llm(temperature=0.6).bind_tools(TOOLS)
 
-    async def agent_node(state: AgentState):
-        response = await llm.ainvoke(state["messages"])
+    def agent_node(state: AgentState):
+        response = llm.invoke(state["messages"])
         return {"messages": [response]}
 
     def should_continue(state: AgentState):
@@ -103,13 +103,14 @@ async def run_agent(user_message: str, history: list[dict], system_prompt: str |
 
     result = await graph.ainvoke({"messages": messages})
 
-    # Extract the final assistant reply (last AI message with no tool calls)
+    # Extract the final assistant reply (last AI message)
     reply = ""
     for msg in reversed(result["messages"]):
         if isinstance(msg, AIMessage) and not (hasattr(msg, "tool_calls") and msg.tool_calls):
             reply = msg.content
             break
 
+    # Build updated history
     new_history = list(history) + [
         {"role": "user", "content": user_message},
         {"role": "assistant", "content": reply},
