@@ -4,7 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 import {
   Home, Search, MessageSquare, Bell, User, MoreHorizontal,
   Settings, Activity, Bookmark, Palette, AlertCircle, LogOut, SwitchCamera, Sparkles,
-  Sun, Moon, Monitor,
+  Sun, Moon, Monitor, Info, BookOpen,
 } from "lucide-react";
 
 export default function Sidebar({
@@ -26,6 +26,7 @@ export default function Sidebar({
     if (path === "/chat") return "messages";
     if (path === "/notifications") return "notifications";
     if (path === "/profile") return "profile";
+    if (path === "/search") return "search";
     return currentView;
   };
 
@@ -50,6 +51,9 @@ export default function Sidebar({
     { label: "Saved", icon: Bookmark, action: () => setShowUserMenu(false) },
     { label: "Appearance", icon: Palette, action: () => setShowUserMenu(false) },
     { label: "Report a problem", icon: AlertCircle, action: () => setShowUserMenu(false) },
+    { divider: true },
+    { label: "About ChatsConnect", icon: Info, action: () => { navigate("/about"); setShowUserMenu(false); } },
+    { label: "Nirmal's Blog", icon: BookOpen, action: () => { navigate("/blog"); setShowUserMenu(false); } },
     { divider: true },
     { label: "Switch accounts", icon: SwitchCamera, action: () => setShowUserMenu(false) },
     { divider: true },
