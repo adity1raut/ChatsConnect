@@ -31,6 +31,8 @@ import Profile from "./pages/Profile.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import SearchPage from "./pages/Search.jsx";
 import AuthCallback from "./pages/AuthCallback.jsx";
+import About from "./pages/About.jsx";
+import Blog from "./pages/Blog.jsx";
 import Sidebar from "./components/common/Sidebar.jsx";
 import ProtectedRoute from "./components/routes/ProtectedRoute.jsx";
 import PublicRoute from "./components/routes/PublicRoute.jsx";
@@ -209,6 +211,8 @@ function App() {
                 <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
                 <Route path="/profile/:userId" element={<ProtectedRoute><MainLayout><UserProfile /></MainLayout></ProtectedRoute>} />
                 <Route path="/search" element={<ProtectedRoute><MainLayout><SearchPage /></MainLayout></ProtectedRoute>} />
+                <Route path="/about" element={<ProtectedRoute><MainLayout><About /></MainLayout></ProtectedRoute>} />
+                <Route path="/blog" element={<ProtectedRoute><MainLayout><Blog /></MainLayout></ProtectedRoute>} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

@@ -1,5 +1,23 @@
 from fastapi import APIRouter, HTTPException
 from langchain_core.messages import HumanMessage, SystemMessage
+from anthropic import BadRequestError, AuthenticationError, PermissionDeniedError
+
+
+def _handle_anthropic_error(e: Exception) -> HTTPException:
+    """Convert Anthropic API errors to meaningful HTTP responses."""
+    if isinstance(e, AuthenticationError):
+        return HTTPException(status_code=401, detail="Invalid Anthropic API key.")
+    if isinstance(e, PermissionDeniedError):
+        return HTTPException(status_code=403, detail="Anthropic API key lacks permission.")
+    if isinstance(e, BadRequestError):
+        msg = str(e)
+        if "credit balance is too low" in msg:
+            return HTTPException(
+                status_code=402,
+                detail="Anthropic account has insufficient credits. Please add credits at console.anthropic.com/settings/billing."
+            )
+        return HTTPException(status_code=400, detail=msg)
+    return HTTPException(status_code=500, detail=str(e))
 
 from models.schemas import (
     SmartReplyRequest, SmartReplyResponse,
@@ -8,7 +26,7 @@ from models.schemas import (
     SentimentRequest, SentimentResponse,
     ChatRequest, ChatResponse,
 )
-from services.llm_service import get_llm, build_langchain_messages
+from services.llm_service import get_llm, get_fast_llm, build_langchain_messages
 from services.agent_service import run_agent
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -27,7 +45,7 @@ async def health():
 async def smart_reply(body: SmartReplyRequest):
     """Generate 3 short smart reply suggestions for the last message in a conversation."""
     try:
-        llm = get_llm(temperature=0.8)
+        llm = get_fast_llm(temperature=0.8)
 
         # Summarise recent messages into context
         context_lines = "\n".join(
@@ -60,7 +78,7 @@ async def smart_reply(body: SmartReplyRequest):
 
         return SmartReplyResponse(replies=replies)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _handle_anthropic_error(e)
 
 
 # ── Summarize ─────────────────────────────────────────────────────────────────
@@ -84,7 +102,7 @@ async def summarize(body: SummarizeRequest):
         response = await llm.ainvoke([HumanMessage(content=prompt)])
         return SummarizeResponse(summary=response.content.strip())
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _handle_anthropic_error(e)
 
 
 # ── Translate ─────────────────────────────────────────────────────────────────
@@ -93,7 +111,7 @@ async def summarize(body: SummarizeRequest):
 async def translate(body: TranslateRequest):
     """Translate text to the specified target language."""
     try:
-        llm = get_llm(temperature=0.1)
+        llm = get_fast_llm(temperature=0.1)
 
         detect_note = (
             "Detect the source language and include it at the end on its own line as: DETECTED: <language>"
@@ -120,7 +138,7 @@ async def translate(body: TranslateRequest):
 
         return TranslateResponse(translated_text=translated, detected_language=detected)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _handle_anthropic_error(e)
 
 
 # ── Sentiment ─────────────────────────────────────────────────────────────────
@@ -129,7 +147,7 @@ async def translate(body: TranslateRequest):
 async def sentiment(body: SentimentRequest):
     """Analyse the sentiment of a message."""
     try:
-        llm = get_llm(temperature=0.1)
+        llm = get_fast_llm(temperature=0.1)
 
         prompt = (
             "Analyse the sentiment of the following message. "
@@ -154,7 +172,7 @@ async def sentiment(body: SentimentRequest):
             emoji=data.get("emoji", "😐"),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _handle_anthropic_error(e)
 
 
 # ── AI Chat Agent (LangGraph) ─────────────────────────────────────────────────
@@ -175,4 +193,4 @@ async def chat(body: ChatRequest):
             history=[Message(**m) for m in new_history],
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _handle_anthropic_error(e)
