@@ -1,335 +1,129 @@
-# ChatConnect — AI-Powered Real-Time Chat Application
 
-> A full-stack real-time communication platform with AI-driven features, built as a mini project.
 
----
-
-## Description
-
-ChatConnect is a modern, full-stack real-time messaging application that combines group chat, one-to-one messaging, and AI-powered communication tools in a single platform. Built with a scalable microservices architecture, it delivers low-latency messaging via WebSockets, intelligent reply suggestions, sentiment analysis, and automated conversation summarization — all within a clean, responsive interface.
-
-The project demonstrates industry-level system design using Node.js, React, Socket.IO, and a Python/FastAPI AI microservice powered by Groq's LLaMA model.
+# 📄 **AI-Powered Real-Time Chat & Group Video Communication Application**
 
 ---
 
-## Features
+## **1. Abstract**
 
-### Real-Time Messaging
-- One-to-one direct messaging with live delivery
-- Group chat creation and management
-- Typing indicators and online/offline presence
-- Message history with persistent storage (MongoDB)
+With the rapid growth of remote work, online education, and digital collaboration, there is a growing demand for intelligent real-time communication platforms. Traditional chat and video conferencing applications provide messaging and video calls but lack intelligent features such as conversation understanding, moderation, summarization, and productivity insights.
 
-### AI-Powered Enhancements
-- **Smart Replies** — AI-generated reply suggestions after each message
-- **Sentiment Analysis** — real-time emotional tone detection on messages
-- **Conversation Summarization** — summarize long chat threads instantly
-- **Message Translation** — translate messages to other languages
-- **AI Chat Assistant** — context-aware assistant within the chat interface
+This project presents an **AI-Powered Real-Time Chat and Group Video Communication Application** that enables users to **create groups, exchange messages, and conduct real-time group video calls**, enhanced with **artificial intelligence**. The system integrates **real-time chat, group video conferencing, AI-driven message analysis, smart reply suggestions, conversation summarization, and AI-based moderation**.
 
-### User & Profile Management
-- OTP-based email registration (two-step verification)
-- JWT authentication with access + refresh token flow
-- Profile update, avatar upload (Cloudinary), and email change
-- GitHub OAuth login via Passport.js
-- Password change and account deletion
-
-### Notifications & Search
-- Live unread message badge via Socket.IO events
-- Deep-link notifications that jump directly to the relevant chat
-- Search users and groups with recent search history (localStorage)
+The application is designed using modern web technologies and follows an **industry-level, scalable architecture**, making it suitable for enterprise collaboration, education, and community communication platforms.
 
 ---
 
-## Tech Stack
+## **2. Problem Statement**
 
-| Layer | Technology |
-|---|---|
-| Frontend | React, Vite, Tailwind CSS, Axios, React Router |
-| Backend | Node.js (ESM), Express 5, Mongoose, Socket.IO |
-| AI Microservice | Python, FastAPI, Groq (LLaMA 3.3 70B) |
-| Database | MongoDB Atlas |
-| Auth | JWT, Passport.js (GitHub OAuth), Nodemailer (OTP) |
-| Media | Cloudinary |
-| Real-Time | Socket.IO (WebSockets) |
+Existing communication platforms suffer from the following limitations:
+
+* Lack of intelligent understanding of chat conversations
+* No AI-assisted moderation in group chats
+* Difficulty managing long group discussions and meetings
+* Absence of automated meeting summaries and insights
+* Limited integration between chat and video communication
+
+In group-based environments such as teams, classrooms, and communities, unmanaged conversations and meetings often lead to miscommunication, reduced productivity, and safety issues. Therefore, there is a need for a **smart communication platform** that combines **group chat, group video calling, and AI intelligence** in a single system.
 
 ---
 
-## System Architecture
+## **3. Proposed System & Features**
 
+The proposed system is a **real-time communication platform** where users can interact via **group chats and group video calls**, supported by AI-powered features.
 
-## UML Diagrams
+### **Core Features**
 
-### Use Case Diagram
+* User authentication and profile management
+* One-to-one and **group chat creation**
+* Real-time message delivery using WebSockets
+* **Group video calling using WebRTC**
+* File and media sharing
+* Online/offline user presence
 
-```mermaid
-graph TD
-    Actor([User])
+### **AI-Powered Enhancements**
 
-    subgraph Authentication
-        UC1[Register with OTP]
-        UC2[Login with Email & Password]
-        UC3[Login with GitHub OAuth]
-        UC4[Logout]
-        UC5[Change Password]
-        UC6[Refresh Token]
-    end
+* **Sentiment analysis** of messages in real time
+* **Smart reply and message rewriting suggestions**
+* **Automatic conversation and meeting summarization**
+* **AI-based moderation** for toxic or abusive messages
+* Extraction of action items from group discussions
+* Communication analytics dashboard
 
-    subgraph Profile Management
-        UC7[View & Edit Profile]
-        UC8[Upload Avatar]
-        UC9[Change Email]
-        UC10[Set Online Status]
-        UC11[Delete Account]
-    end
+---
 
-    subgraph Messaging
-        UC12[Send Direct Message]
-        UC13[View Message History]
-        UC14[Create Group]
-        UC15[Send Group Message]
-        UC16[Join / Leave Group]
-        UC17[See Typing Indicator]
-        UC18[See Online Users]
-    end
+## **4. System Architecture & Technologies**
 
-    subgraph AI Features
-        UC19[Get Smart Reply Suggestions]
-        UC20[Analyze Message Sentiment]
-        UC21[Summarize Conversation]
-        UC22[Translate Message]
-        UC23[Chat with AI Assistant]
-    end
+### **Architecture Overview**
 
-    subgraph Notifications & Search
-        UC24[Receive Real-Time Notifications]
-        UC25[Search Users & Groups]
-        UC26[View Notification Feed]
-    end
+The application follows a **microservices-based and event-driven architecture**:
 
-    Actor --> UC1
-    Actor --> UC2
-    Actor --> UC3
-    Actor --> UC4
-    Actor --> UC5
-    Actor --> UC6
-    Actor --> UC7
-    Actor --> UC8
-    Actor --> UC9
-    Actor --> UC10
-    Actor --> UC11
-    Actor --> UC12
-    Actor --> UC13
-    Actor --> UC14
-    Actor --> UC15
-    Actor --> UC16
-    Actor --> UC17
-    Actor --> UC18
-    Actor --> UC19
-    Actor --> UC20
-    Actor --> UC21
-    Actor --> UC22
-    Actor --> UC23
-    Actor --> UC24
-    Actor --> UC25
-    Actor --> UC26
+```
+Client (React / Next.js)
+   ↓ WebSocket / WebRTC
+Realtime Server (Socket.IO + Signaling Server)
+   ↓
+Backend API (Node.js / NestJS)
+   ↓
+AI Microservice (Python + FastAPI)
+   ↓
+Databases (PostgreSQL / MongoDB / Redis)
 ```
 
----
+### **Technology Stack**
 
-### Class Diagram
+* **Frontend:** React / Next.js, Tailwind CSS
+* **Backend:** Node.js, Express or NestJS
+* **Real-Time Communication:** Socket.IO, WebSockets
+* **Video Calling:** WebRTC (Peer-to-Peer / SFU)
+* **AI & NLP:** Python, HuggingFace, OpenAI APIs
+* **Database:** PostgreSQL (users & groups), MongoDB (messages), Redis (presence & caching)
+* **Security:** JWT authentication, role-based access control, encrypted media streams
 
-```mermaid
-classDiagram
-
-    class User {
-        +ObjectId _id
-        +String name
-        +String email
-        +String password
-        +String avatar
-        +String githubId
-        +Boolean isOnline
-        +Date lastSeen
-        +String refreshToken
-        +register()
-        +login()
-        +logout()
-        +changePassword()
-        +updateProfile()
-        +deleteAccount()
-    }
-
-    class Message {
-        +ObjectId _id
-        +ObjectId sender
-        +ObjectId conversation
-        +ObjectId group
-        +String content
-        +String type
-        +Date createdAt
-        +send()
-        +getHistory()
-    }
-
-    class Conversation {
-        +ObjectId _id
-        +ObjectId[] participants
-        +ObjectId lastMessage
-        +Date updatedAt
-        +create()
-        +getByParticipants()
-    }
-
-    class Group {
-        +ObjectId _id
-        +String name
-        +String description
-        +ObjectId admin
-        +ObjectId[] members
-        +String avatar
-        +Date createdAt
-        +create()
-        +addMember()
-        +removeMember()
-        +delete()
-    }
-
-    class AIService {
-        +smartReply(messages) String[]
-        +summarize(messages) String
-        +translate(text, lang) String
-        +sentiment(text) String
-        +chat(prompt) String
-    }
-
-    class SocketServer {
-        +Map onlineUsers
-        +handleConnection(socket)
-        +handleDisconnect(socket)
-        +emitMessage(event, data)
-        +broadcastToGroup(groupId, data)
-    }
-
-    class AuthController {
-        +requestOTP(req, res)
-        +verifyOTP(req, res)
-        +login(req, res)
-        +logout(req, res)
-        +refreshToken(req, res)
-        +changePassword(req, res)
-    }
-
-    class ProfileController {
-        +getMe(req, res)
-        +updateProfile(req, res)
-        +searchUsers(req, res)
-        +getAllUsers(req, res)
-        +deleteAccount(req, res)
-    }
-
-    User "1" --> "many" Message : sends
-    User "many" --> "many" Conversation : participates
-    User "many" --> "many" Group : member of
-    Conversation "1" --> "many" Message : contains
-    Group "1" --> "many" Message : contains
-    User "1" --> "1" SocketServer : connects via
-    AuthController --> User : manages
-    ProfileController --> User : manages
-    SocketServer --> Message : broadcasts
-    AIService --> Message : analyzes
-```
+This architecture ensures **low latency**, **high scalability**, and **secure communication**, aligned with industry standards.
 
 ---
 
-### Sequence Diagram
+## **5. Applications, Advantages & Future Scope**
 
-> **Scenario: User sends a direct message**
+### **Applications**
 
-```mermaid
-sequenceDiagram
-    actor User as User (Browser)
-    participant React as React Frontend
-    participant Socket as Socket.IO Server
-    participant Express as Express API
-    participant Mongo as MongoDB
-    participant AI as AI Microservice
+* Enterprise team collaboration platforms
+* Online classrooms and virtual training
+* Remote meetings and group discussions
+* Customer support and community platforms
+* Startup and SaaS communication tools
 
-    User->>React: Types and submits message
-    React->>Socket: emit("sendMessage", { to, content })
-    Socket->>Mongo: Save Message document
-    Mongo-->>Socket: Saved message (_id, timestamp)
-    Socket->>Socket: Look up recipient socket by userId
-    Socket-->>React: emit("newMessage", messageData) [to sender]
-    Socket-->>React: emit("newMessage", messageData) [to recipient]
-    React->>React: Update chat UI with new message
+### **Advantages**
 
-    alt AI Features Enabled
-        React->>Express: POST /api/ai/smart-reply (last messages)
-        Express->>AI: POST /ai/smart-reply
-        AI-->>Express: [ "Sure!", "Got it.", "Tell me more." ]
-        Express-->>React: Smart reply suggestions
-        React->>React: Display suggestion pills above input
-    end
+* Seamless integration of chat and group video calls
+* AI-enhanced communication quality and safety
+* Automated summaries for chats and meetings
+* Scalable real-time architecture
+* Industry-ready system design
 
-    alt Recipient is offline
-        Socket->>Mongo: Store unread notification
-        Mongo-->>Socket: Stored
-    end
-```
+### **Future Enhancements**
+
+* AI-powered live video transcription
+* Emotion detection during video calls
+* End-to-end encrypted messaging and calls
+* Blockchain-based chat audit logs
+* AI-driven task and workflow automation
+* Recording and playback of group video sessions
 
 ---
 
-### Activity Diagram
+## **Conclusion**
 
-> **Scenario: User Registration (OTP Flow)**
+The **AI-Powered Real-Time Chat & Group Video Communication Application** demonstrates the effective integration of **real-time systems, video conferencing, and artificial intelligence**. By combining group chat, group video calls, and intelligent AI features within a scalable and secure architecture, the project delivers a **modern, industry-level communication solution** suitable for real-world deployment.
 
-```mermaid
-flowchart TD
-    Start([Start]) --> A[User enters name, email, password]
-    A --> B[POST /api/auth/request-otp]
-    B --> C{Email already registered?}
-    C -- Yes --> D[Return error: Email in use]
-    D --> A
-    C -- No --> E[Generate 6-digit OTP]
-    E --> F[Store OTP + expiry in DB]
-    F --> G[Send OTP via Gmail SMTP]
-    G --> H[User receives OTP email]
-    H --> I[User enters OTP]
-    I --> J[POST /api/auth/verify-otp]
-    J --> K{OTP valid & not expired?}
-    K -- No --> L{Retry limit reached?}
-    L -- No --> M[Return error: Invalid OTP]
-    M --> I
-    L -- Yes --> N[Block & prompt re-registration]
-    N --> A
-    K -- Yes --> O[Create User in MongoDB]
-    O --> P[Hash password with bcrypt]
-    P --> Q[Generate Access Token - 15m]
-    Q --> R[Generate Refresh Token - 7d]
-    R --> S[Set tokens in HTTP-only cookies]
-    S --> T[Return user profile to client]
-    T --> U[Redirect to Chat Page]
-    U --> End([End])
-```
 
----
 
-## License
 
-MIT License
 
-Copyright (c) 2025 Aditya Raut
+With the rapid expansion of remote work, online education, and digital collaboration, the demand for intelligent real-time communication platforms has significantly increased. Traditional chat and video conferencing systems offer basic messaging and video calling features but lack intelligent capabilities such as conversation analysis, moderation, summarization, and productivity insights. 
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+This project presents an AI-Powered Real-Time Chat and Group Communication Application that enables users to create groups, exchange messages, and participate in real-time group video calls enhanced with artificial intelligence. The system integrates real-time chat, group video conferencing, AI-driven sentiment analysis, smart reply suggestions, automated conversation and meeting summarization, and AI-based content moderation. 
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-
-## Developer
-
-**Aditya Raut**
-Mini Project — 2025
+Built using modern web technologies and a scalable microservices-based architecture, the application ensures low latency, high performance, and secure communication. By combining real-time communication with intelligent AI features, the proposed system improves collaboration efficiency, communication quality, and safety, making it suitable for enterprise collaboration, online education, and community-based communication platforms. 
+ 

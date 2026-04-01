@@ -203,7 +203,6 @@ function App() {
               <Routes>
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/registration" element={<PublicRoute><Registration /></PublicRoute>} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
 
                 <Route path="/" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><MainLayout><Notification /></MainLayout></ProtectedRoute>} />
