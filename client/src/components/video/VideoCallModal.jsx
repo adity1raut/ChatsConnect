@@ -1,6 +1,12 @@
 import { useEffect, useRef } from "react";
 import {
-  Mic, MicOff, Video, VideoOff, PhoneOff, Loader2, Phone,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  PhoneOff,
+  Loader2,
+  Phone,
 } from "lucide-react";
 import { useCall } from "../../context/CallContext";
 
@@ -100,21 +106,29 @@ export default function VideoCallModal() {
                 className="w-full h-full object-cover scale-x-[-1]" // mirror local
               />
             )}
-            <div className="absolute bottom-1.5 left-2 text-[10px] text-white/60 font-medium">You</div>
+            <div className="absolute bottom-1.5 left-2 text-[10px] text-white/60 font-medium">
+              You
+            </div>
           </div>
         )}
 
         {/* Peer name overlay (top-left) */}
         <div className="absolute top-6 left-6 flex items-center gap-3 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-2xl">
           {peerAvatar && peerAvatar.startsWith("http") ? (
-            <img src={peerAvatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+            <img
+              src={peerAvatar}
+              alt=""
+              className="w-8 h-8 rounded-full object-cover"
+            />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
               {peerName?.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <p className="text-white font-semibold text-sm leading-none">{peerName}</p>
+            <p className="text-white font-semibold text-sm leading-none">
+              {peerName}
+            </p>
             {!isConnecting && (
               <p className="text-emerald-400 text-[10px] font-medium mt-0.5">
                 {isAudio ? "Audio call" : "HD video"}
@@ -143,9 +157,16 @@ export default function VideoCallModal() {
             onClick={endCall}
             title="End call"
             className="w-16 h-16 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-xl"
-            style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", boxShadow: "0 6px 20px rgba(239,68,68,0.45)" }}
+            style={{
+              background: "linear-gradient(135deg, #ef4444, #dc2626)",
+              boxShadow: "0 6px 20px rgba(239,68,68,0.45)",
+            }}
           >
-            {activeCall.isAudio ? <PhoneOff size={24} className="text-white" /> : <PhoneOff size={24} className="text-white" />}
+            {activeCall.isAudio ? (
+              <PhoneOff size={24} className="text-white" />
+            ) : (
+              <PhoneOff size={24} className="text-white" />
+            )}
           </button>
 
           {/* Camera toggle — only for video calls */}

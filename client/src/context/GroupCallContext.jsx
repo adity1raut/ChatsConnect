@@ -1,10 +1,22 @@
-import { createContext, useContext, useRef, useState, useCallback, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
 
 const GroupCallContext = createContext(null);
 
-const STUN = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] };
+const STUN = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ],
+};
 
 export function GroupCallProvider({ children }) {
   const { user } = useAuth();
@@ -27,13 +39,22 @@ export function GroupCallProvider({ children }) {
   // ── Helpers ─────────────────────────────────────────────────────
   const getLocalStream = useCallback(async (isAudio = false) => {
     if (localStreamRef.current) return localStreamRef.current;
-    const stream = await navigator.mediaDevices.getUserMedia({ video: !isAudio, audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: !isAudio,
+      audio: true,
+    });
     localStreamRef.current = stream;
     return stream;
   }, []);
 
   const addParticipant = useCallback((userId, info) => {
-    setParticipants((prev) => new Map(prev).set(userId, { name: info.name, avatar: info.avatar, stream: info.stream || null }));
+    setParticipants((prev) =>
+      new Map(prev).set(userId, {
+        name: info.name,
+        avatar: info.avatar,
+        stream: info.stream || null,
+      }),
+    );
   }, []);
 
   const updateParticipantStream = useCallback((userId, stream) => {
@@ -53,38 +74,44 @@ export function GroupCallProvider({ children }) {
     });
     // Close PC for this user
     const pc = pcsRef.current.get(userId);
-    if (pc) { pc.close(); pcsRef.current.delete(userId); }
+    if (pc) {
+      pc.close();
+      pcsRef.current.delete(userId);
+    }
     pendingCandidatesRef.current.delete(userId);
   }, []);
 
   // ── Create a PeerConnection to a specific participant ────────────
-  const createPC = useCallback((peerId) => {
-    const pc = new RTCPeerConnection(STUN);
+  const createPC = useCallback(
+    (peerId) => {
+      const pc = new RTCPeerConnection(STUN);
 
-    pc.onicecandidate = ({ candidate }) => {
-      if (candidate && socket) {
-        socket.emit("iceCandidate", { toUserId: peerId, candidate });
+      pc.onicecandidate = ({ candidate }) => {
+        if (candidate && socket) {
+          socket.emit("iceCandidate", { toUserId: peerId, candidate });
+        }
+      };
+
+      pc.ontrack = (event) => {
+        updateParticipantStream(peerId, event.streams[0]);
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
+          removeParticipant(peerId);
+        }
+      };
+
+      // Buffer candidates until remote description is set
+      if (!pendingCandidatesRef.current.has(peerId)) {
+        pendingCandidatesRef.current.set(peerId, []);
       }
-    };
 
-    pc.ontrack = (event) => {
-      updateParticipantStream(peerId, event.streams[0]);
-    };
-
-    pc.onconnectionstatechange = () => {
-      if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
-        removeParticipant(peerId);
-      }
-    };
-
-    // Buffer candidates until remote description is set
-    if (!pendingCandidatesRef.current.has(peerId)) {
-      pendingCandidatesRef.current.set(peerId, []);
-    }
-
-    pcsRef.current.set(peerId, pc);
-    return pc;
-  }, [socket, updateParticipantStream, removeParticipant]);
+      pcsRef.current.set(peerId, pc);
+      return pc;
+    },
+    [socket, updateParticipantStream, removeParticipant],
+  );
 
   // ── Add local tracks to a PC ─────────────────────────────────────
   const addLocalTracks = useCallback((pc, stream) => {
@@ -92,29 +119,34 @@ export function GroupCallProvider({ children }) {
   }, []);
 
   // ── Joiner: initiate WebRTC with an existing participant ──────────
-  const connectToPeer = useCallback(async (peerId, peerInfo) => {
-    addParticipant(peerId, peerInfo);
-    const stream = localStreamRef.current;
-    if (!stream || !socket) return;
+  const connectToPeer = useCallback(
+    async (peerId, peerInfo) => {
+      addParticipant(peerId, peerInfo);
+      const stream = localStreamRef.current;
+      if (!stream || !socket) return;
 
-    const pc = createPC(peerId);
-    addLocalTracks(pc, stream);
+      const pc = createPC(peerId);
+      addLocalTracks(pc, stream);
 
-    try {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      socket.emit("webrtcOffer", { toUserId: peerId, offer });
-    } catch (err) {
-      console.error("connectToPeer offer error:", err);
-    }
-  }, [addParticipant, createPC, addLocalTracks, socket]);
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit("webrtcOffer", { toUserId: peerId, offer });
+      } catch (err) {
+        console.error("connectToPeer offer error:", err);
+      }
+    },
+    [addParticipant, createPC, addLocalTracks, socket],
+  );
 
   // ── Flush pending ICE candidates ─────────────────────────────────
   const flushCandidates = useCallback(async (peerId) => {
     const pc = pcsRef.current.get(peerId);
     const candidates = pendingCandidatesRef.current.get(peerId) || [];
     for (const c of candidates) {
-      try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch {}
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(c));
+      } catch {}
     }
     pendingCandidatesRef.current.set(peerId, []);
   }, []);
@@ -133,33 +165,48 @@ export function GroupCallProvider({ children }) {
   }, []);
 
   // ── Start a group call (initiator) ───────────────────────────────
-  const startGroupCall = useCallback(async (groupId, groupName, callType = "video") => {
-    if (!user || activeGroupCall || !socket) return;
-    const isAudio = callType === "audio";
-    try {
-      await getLocalStream(isAudio);
-      setActiveGroupCall({ groupId, groupName, callType });
-      socket.emit("startGroupCall", { groupId, callType, callerName: user.name, callerAvatar: user.avatar });
-    } catch (err) {
-      console.error("startGroupCall error:", err);
-      cleanupCall();
-    }
-  }, [user, activeGroupCall, socket, getLocalStream, cleanupCall]);
+  const startGroupCall = useCallback(
+    async (groupId, groupName, callType = "video") => {
+      if (!user || activeGroupCall || !socket) return;
+      const isAudio = callType === "audio";
+      try {
+        await getLocalStream(isAudio);
+        setActiveGroupCall({ groupId, groupName, callType });
+        socket.emit("startGroupCall", {
+          groupId,
+          callType,
+          callerName: user.name,
+          callerAvatar: user.avatar,
+        });
+      } catch (err) {
+        console.error("startGroupCall error:", err);
+        cleanupCall();
+      }
+    },
+    [user, activeGroupCall, socket, getLocalStream, cleanupCall],
+  );
 
   // ── Join an existing group call ──────────────────────────────────
-  const joinGroupCall = useCallback(async (groupId, groupName, callType = "video") => {
-    if (!user || !socket) return;
-    const isAudio = callType === "audio";
-    try {
-      await getLocalStream(isAudio);
-      setActiveGroupCall({ groupId, groupName, callType });
-      setIncomingGroupCall(null);
-      socket.emit("joinGroupCall", { groupId, joinerName: user.name, joinerAvatar: user.avatar });
-    } catch (err) {
-      console.error("joinGroupCall error:", err);
-      cleanupCall();
-    }
-  }, [user, socket, getLocalStream, cleanupCall]);
+  const joinGroupCall = useCallback(
+    async (groupId, groupName, callType = "video") => {
+      if (!user || !socket) return;
+      const isAudio = callType === "audio";
+      try {
+        await getLocalStream(isAudio);
+        setActiveGroupCall({ groupId, groupName, callType });
+        setIncomingGroupCall(null);
+        socket.emit("joinGroupCall", {
+          groupId,
+          joinerName: user.name,
+          joinerAvatar: user.avatar,
+        });
+      } catch (err) {
+        console.error("joinGroupCall error:", err);
+        cleanupCall();
+      }
+    },
+    [user, socket, getLocalStream, cleanupCall],
+  );
 
   // ── Leave the active group call ──────────────────────────────────
   const leaveGroupCall = useCallback(() => {
@@ -170,12 +217,16 @@ export function GroupCallProvider({ children }) {
 
   // ── Toggle controls ──────────────────────────────────────────────
   const toggleMute = useCallback(() => {
-    localStreamRef.current?.getAudioTracks().forEach((t) => { t.enabled = !t.enabled; });
+    localStreamRef.current?.getAudioTracks().forEach((t) => {
+      t.enabled = !t.enabled;
+    });
     setIsMuted((p) => !p);
   }, []);
 
   const toggleCamera = useCallback(() => {
-    localStreamRef.current?.getVideoTracks().forEach((t) => { t.enabled = !t.enabled; });
+    localStreamRef.current?.getVideoTracks().forEach((t) => {
+      t.enabled = !t.enabled;
+    });
     setIsCameraOff((p) => !p);
   }, []);
 
@@ -252,7 +303,9 @@ export function GroupCallProvider({ children }) {
       if (!pcsRef.current.has(fromUserId)) return;
       const pc = pcsRef.current.get(fromUserId);
       if (pc.remoteDescription) {
-        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch {}
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch {}
       } else {
         const pending = pendingCandidatesRef.current.get(fromUserId) || [];
         pending.push(candidate);
@@ -277,15 +330,34 @@ export function GroupCallProvider({ children }) {
       socket.off("webrtcAnswer", onWebrtcAnswer);
       socket.off("iceCandidate", onIceCandidate);
     };
-  }, [socket, activeGroupCall, connectToPeer, addParticipant, removeParticipant, createPC, addLocalTracks, flushCandidates]);
+  }, [
+    socket,
+    activeGroupCall,
+    connectToPeer,
+    addParticipant,
+    removeParticipant,
+    createPC,
+    addLocalTracks,
+    flushCandidates,
+  ]);
 
   return (
-    <GroupCallContext.Provider value={{
-      activeGroupCall, incomingGroupCall, participants,
-      localStreamRef, isMuted, isCameraOff,
-      startGroupCall, joinGroupCall, leaveGroupCall,
-      toggleMute, toggleCamera, dismissIncoming,
-    }}>
+    <GroupCallContext.Provider
+      value={{
+        activeGroupCall,
+        incomingGroupCall,
+        participants,
+        localStreamRef,
+        isMuted,
+        isCameraOff,
+        startGroupCall,
+        joinGroupCall,
+        leaveGroupCall,
+        toggleMute,
+        toggleCamera,
+        dismissIncoming,
+      }}
+    >
       {children}
     </GroupCallContext.Provider>
   );
@@ -293,6 +365,7 @@ export function GroupCallProvider({ children }) {
 
 export function useGroupCall() {
   const ctx = useContext(GroupCallContext);
-  if (!ctx) throw new Error("useGroupCall must be used within GroupCallProvider");
+  if (!ctx)
+    throw new Error("useGroupCall must be used within GroupCallProvider");
   return ctx;
 }

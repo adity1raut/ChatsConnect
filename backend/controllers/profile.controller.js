@@ -25,7 +25,9 @@ export const getUserProfile = async (req, res) => {
 // @access  Private
 export const getCurrentUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-refreshToken -password");
+    const user = await User.findById(req.user._id).select(
+      "-refreshToken -password",
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -63,8 +65,8 @@ export const updateProfile = async (req, res) => {
         folder: "avatars",
         transformation: [
           { width: 400, height: 400, crop: "fill", gravity: "face" },
-          { quality: "auto" }
-        ]
+          { quality: "auto" },
+        ],
       });
 
       user.avatar = uploadResponse.secure_url;
@@ -108,7 +110,7 @@ export const updateEmail = async (req, res) => {
     // Check if email is already taken
     const existingUser = await User.findOne({
       email,
-      _id: { $ne: req.user._id }
+      _id: { $ne: req.user._id },
     });
 
     if (existingUser) {
@@ -118,10 +120,12 @@ export const updateEmail = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { email },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-refreshToken -password");
 
-    res.status(200).json({ success: true, message: "Email updated successfully", user });
+    res
+      .status(200)
+      .json({ success: true, message: "Email updated successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -136,14 +140,12 @@ export const updateOnlineStatus = async (req, res) => {
 
     const updateFields = {
       isOnline,
-      lastSeen: isOnline ? undefined : new Date()
+      lastSeen: isOnline ? undefined : new Date(),
     };
 
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      updateFields,
-      { new: true }
-    ).select("-refreshToken -password");
+    const user = await User.findByIdAndUpdate(req.user._id, updateFields, {
+      new: true,
+    }).select("-refreshToken -password");
 
     res.status(200).json({ success: true, user });
   } catch (error) {
@@ -158,7 +160,9 @@ export const deleteProfile = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.user._id);
 
-    res.status(200).json({ success: true, message: "Profile deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Profile deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -178,8 +182,8 @@ export const searchUsers = async (req, res) => {
     const users = await User.find({
       $or: [
         { username: { $regex: query, $options: "i" } },
-        { name: { $regex: query, $options: "i" } }
-      ]
+        { name: { $regex: query, $options: "i" } },
+      ],
     })
       .select("-refreshToken -password")
       .limit(parseInt(limit));
@@ -211,8 +215,8 @@ export const getAllUsers = async (req, res) => {
       pagination: {
         total,
         page: parseInt(page),
-        pages: Math.ceil(total / parseInt(limit))
-      }
+        pages: Math.ceil(total / parseInt(limit)),
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

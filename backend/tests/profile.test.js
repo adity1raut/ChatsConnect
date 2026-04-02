@@ -15,7 +15,9 @@ vi.mock("../models/user.model.js", () => ({
 vi.mock("../config/cloudinary.js", () => ({
   cloudinary: {
     uploader: {
-      upload: vi.fn().mockResolvedValue({ secure_url: "https://cloudinary.com/avatar.jpg" }),
+      upload: vi
+        .fn()
+        .mockResolvedValue({ secure_url: "https://cloudinary.com/avatar.jpg" }),
       destroy: vi.fn().mockResolvedValue({}),
     },
   },
@@ -45,20 +47,28 @@ describe("getUserProfile", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns 404 when user not found", async () => {
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(null) });
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(null),
+    });
     const { req, res } = mockReqRes({}, { userId: "nonexistent" });
     await getUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
   });
 
   it("returns 200 with user on success", async () => {
-    const mockUser = { _id: "user123", name: "Test User", username: "testuser" };
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    const mockUser = {
+      _id: "user123",
+      name: "Test User",
+      username: "testuser",
+    };
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     const { req, res } = mockReqRes({}, { userId: "user123" });
     await getUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, user: mockUser })
+      expect.objectContaining({ success: true, user: mockUser }),
     );
   });
 });
@@ -68,7 +78,9 @@ describe("getCurrentUserProfile", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns 404 when user not found", async () => {
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(null) });
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(null),
+    });
     const { req, res } = mockReqRes({}, {}, {}, { _id: "user123" });
     await getCurrentUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
@@ -76,7 +88,9 @@ describe("getCurrentUserProfile", () => {
 
   it("returns 200 with current user", async () => {
     const mockUser = { _id: "user123", name: "Test User" };
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     const { req, res } = mockReqRes({}, {}, {}, { _id: "user123" });
     await getCurrentUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -93,7 +107,7 @@ describe("updateProfile", () => {
       { name: "New Name", username: "newuser", bio: "hello" },
       {},
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await updateProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
@@ -114,7 +128,7 @@ describe("updateProfile", () => {
       { name: "New Name", username: "newuser", bio: "Updated bio" },
       {},
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await updateProfile(req, res);
     expect(mockUser.name).toBe("New Name");
@@ -138,7 +152,7 @@ describe("updateProfile", () => {
       { username: "testuser", avatar: "data:image/png;base64,abc123" },
       {},
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await updateProfile(req, res);
     expect(mockUser.avatar).toBe("https://cloudinary.com/avatar.jpg");
@@ -162,7 +176,7 @@ describe("updateEmail", () => {
       { email: "taken@example.com" },
       {},
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await updateEmail(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
@@ -178,7 +192,7 @@ describe("updateEmail", () => {
       { email: "new@example.com" },
       {},
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await updateEmail(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
@@ -218,7 +232,7 @@ describe("searchUsers", () => {
     await searchUsers(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, users: mockUsers })
+      expect.objectContaining({ success: true, users: mockUsers }),
     );
   });
 });

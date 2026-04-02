@@ -17,7 +17,7 @@ export const createGroup = async (req, res) => {
 
     if (Array.isArray(memberIds) && memberIds.length > 0) {
       const uniqueIds = [...new Set(memberIds)].filter(
-        (id) => id.toString() !== creatorId.toString()
+        (id) => id.toString() !== creatorId.toString(),
       );
 
       for (const uid of uniqueIds) {
@@ -92,7 +92,9 @@ export const getGroupDetails = async (req, res) => {
       .populate("createdBy", "name username avatar");
 
     if (!group) {
-      return res.status(404).json({ message: "Group not found or not a member" });
+      return res
+        .status(404)
+        .json({ message: "Group not found or not a member" });
     }
 
     res.status(200).json({ group });
@@ -124,7 +126,7 @@ export const addMembers = async (req, res) => {
 
     // Check admin role
     const myMembership = group.members.find(
-      (m) => m.user.toString() === myId.toString()
+      (m) => m.user.toString() === myId.toString(),
     );
     if (myMembership?.role !== "admin") {
       return res.status(403).json({ message: "Only admins can add members" });
@@ -137,7 +139,11 @@ export const addMembers = async (req, res) => {
       if (!existingIds.includes(uid.toString())) {
         const userExists = await User.exists({ _id: uid });
         if (userExists) {
-          group.members.push({ user: uid, role: "member", joinedAt: new Date() });
+          group.members.push({
+            user: uid,
+            role: "member",
+            joinedAt: new Date(),
+          });
           added++;
         }
       }
@@ -147,7 +153,7 @@ export const addMembers = async (req, res) => {
 
     const updated = await Group.findById(groupId).populate(
       "members.user",
-      "name username avatar isOnline"
+      "name username avatar isOnline",
     );
 
     // Notify newly added members via socket
@@ -157,7 +163,9 @@ export const addMembers = async (req, res) => {
         const newMemberIds = memberIds.map((id) => id.toString());
         updated.members.forEach((m) => {
           if (newMemberIds.includes(m.user._id.toString())) {
-            io.to(m.user._id.toString()).emit("groupCreated", { group: updated });
+            io.to(m.user._id.toString()).emit("groupCreated", {
+              group: updated,
+            });
           }
         });
       }
@@ -186,18 +194,22 @@ export const removeMember = async (req, res) => {
     }
 
     const myMembership = group.members.find(
-      (m) => m.user.toString() === myId.toString()
+      (m) => m.user.toString() === myId.toString(),
     );
     if (myMembership?.role !== "admin") {
-      return res.status(403).json({ message: "Only admins can remove members" });
+      return res
+        .status(403)
+        .json({ message: "Only admins can remove members" });
     }
 
     if (userId.toString() === myId.toString()) {
-      return res.status(400).json({ message: "Use the leave endpoint instead" });
+      return res
+        .status(400)
+        .json({ message: "Use the leave endpoint instead" });
     }
 
     group.members = group.members.filter(
-      (m) => m.user.toString() !== userId.toString()
+      (m) => m.user.toString() !== userId.toString(),
     );
     await group.save();
 
@@ -225,20 +237,22 @@ export const leaveGroup = async (req, res) => {
 
     // If leaving user is the only admin, promote the next member
     const myMembership = group.members.find(
-      (m) => m.user.toString() === myId.toString()
+      (m) => m.user.toString() === myId.toString(),
     );
     const isOnlyAdmin =
       myMembership?.role === "admin" &&
       group.members.filter((m) => m.role === "admin").length === 1;
 
     group.members = group.members.filter(
-      (m) => m.user.toString() !== myId.toString()
+      (m) => m.user.toString() !== myId.toString(),
     );
 
     if (group.members.length === 0) {
       // Delete group if no members left
       await Group.findByIdAndDelete(groupId);
-      return res.status(200).json({ message: "Group deleted (no members left)" });
+      return res
+        .status(200)
+        .json({ message: "Group deleted (no members left)" });
     }
 
     if (isOnlyAdmin) {

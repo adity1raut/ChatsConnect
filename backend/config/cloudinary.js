@@ -14,13 +14,13 @@ cloudinary.config({
 // Validate configuration
 const validateCloudinaryConfig = () => {
   const { cloud_name, api_key, api_secret } = cloudinary.config();
-  
+
   if (!cloud_name || !api_key || !api_secret) {
     throw new Error(
-      "Cloudinary configuration is incomplete. Please check your environment variables."
+      "Cloudinary configuration is incomplete. Please check your environment variables.",
     );
   }
-  
+
   return true;
 };
 

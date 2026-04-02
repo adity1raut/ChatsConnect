@@ -69,6 +69,8 @@ export const healthCheck = async (req, res) => {
     const data = await response.json();
     res.json(data);
   } catch {
-    res.status(503).json({ status: "unavailable", message: "AI service is not reachable" });
+    res
+      .status(503)
+      .json({ status: "unavailable", message: "AI service is not reachable" });
   }
 };

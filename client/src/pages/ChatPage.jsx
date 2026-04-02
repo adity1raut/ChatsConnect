@@ -37,7 +37,14 @@ function ChatPage() {
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [showAIPanel, setShowAIPanel] = useState(false);
-  const { aiEnabled, fetchSmartReplies, clearSmartReplies, autoTranslate, preferredLanguage, translateMessage } = useAI();
+  const {
+    aiEnabled,
+    fetchSmartReplies,
+    clearSmartReplies,
+    autoTranslate,
+    preferredLanguage,
+    translateMessage,
+  } = useAI();
   const { startCall } = useCall();
   const { startGroupCall } = useGroupCall();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -89,7 +96,8 @@ function ChatPage() {
 
       // Merge and sort by last activity
       const all = [...dmContacts, ...groupContacts].sort(
-        (a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0)
+        (a, b) =>
+          new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0),
       );
 
       setContacts(all);
@@ -117,7 +125,7 @@ function ChatPage() {
     if (openChat) {
       // Try to find existing contact; if not, create a transient one
       const existing = contacts.find(
-        (c) => c.type === "user" && c.id === openChat.id
+        (c) => c.type === "user" && c.id === openChat.id,
       );
       setSelectedChat(
         existing || {
@@ -127,13 +135,13 @@ function ChatPage() {
           avatar: openChat.avatar || null,
           type: "user",
           isOnline: onlineUsers.has(openChat.id),
-        }
+        },
       );
       // Clear state so re-renders don't re-trigger
       window.history.replaceState({}, "");
     } else if (openGroup) {
       const existing = contacts.find(
-        (c) => c.type === "group" && c.groupId === openGroup.groupId
+        (c) => c.type === "group" && c.groupId === openGroup.groupId,
       );
       if (existing) {
         setSelectedChat(existing);
@@ -146,7 +154,10 @@ function ChatPage() {
 
   // ── Load message history when chat is selected ──────────────────
   useEffect(() => {
-    if (!selectedChat) { setMessages([]); return; }
+    if (!selectedChat) {
+      setMessages([]);
+      return;
+    }
 
     const fetchHistory = async () => {
       setLoadingMessages(true);
@@ -178,7 +189,7 @@ function ChatPage() {
               if (m.sender !== "them") return m;
               const t = await translateMessage(m.text, preferredLanguage);
               return t ? { ...m, text: t, originalText: m.text } : m;
-            })
+            }),
           );
           setMessages(translated);
         } else {
@@ -232,10 +243,12 @@ function ChatPage() {
       // Update contact's last message in-place (fast, no API call)
       setContacts((prev) =>
         prev.map((c) =>
-          c.type === "user" && (c.conversationId?.toString() === conversationId?.toString() || c.id === msg.senderId._id)
+          c.type === "user" &&
+          (c.conversationId?.toString() === conversationId?.toString() ||
+            c.id === msg.senderId._id)
             ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt }
-            : c
-        )
+            : c,
+        ),
       );
     };
 
@@ -276,8 +289,8 @@ function ChatPage() {
         prev.map((c) =>
           c.type === "group" && c.groupId === groupId
             ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt }
-            : c
-        )
+            : c,
+        ),
       );
     };
 
@@ -325,10 +338,8 @@ function ChatPage() {
   useEffect(() => {
     setContacts((prev) =>
       prev.map((c) =>
-        c.type === "user"
-          ? { ...c, isOnline: onlineUsers.has(c.id) }
-          : c
-      )
+        c.type === "user" ? { ...c, isOnline: onlineUsers.has(c.id) } : c,
+      ),
     );
   }, [onlineUsers]);
 
@@ -398,7 +409,7 @@ function ChatPage() {
   const handleNewDM = (userProfile) => {
     // Check if we already have a conversation with this user
     const existing = contacts.find(
-      (c) => c.type === "user" && c.id === userProfile._id
+      (c) => c.type === "user" && c.id === userProfile._id,
     );
     handleSelectChat(
       existing || {
@@ -408,7 +419,7 @@ function ChatPage() {
         avatar: userProfile.avatar || null,
         type: "user",
         isOnline: onlineUsers.has(userProfile._id),
-      }
+      },
     );
   };
 
@@ -455,12 +466,21 @@ function ChatPage() {
         currentUser={user}
         onStartVideoCall={(chat) => startCall(chat, false)}
         onStartAudioCall={(chat) => startCall(chat, true)}
-        onManageGroup={(chat) => { setManagingGroup(chat); setShowManageGroup(true); }}
-        onStartGroupCall={(chat) => startGroupCall(chat.groupId, chat.name, "video")}
+        onManageGroup={(chat) => {
+          setManagingGroup(chat);
+          setShowManageGroup(true);
+        }}
+        onStartGroupCall={(chat) =>
+          startGroupCall(chat.groupId, chat.name, "video")
+        }
         onToggleAIPanel={() => setShowAIPanel((v) => !v)}
         onViewProfile={(uid) => navigate(`/profile/${uid}`)}
         smartReplySlot={
-          <SmartReply onSelect={(reply) => { handleMessageChange(reply); }} />
+          <SmartReply
+            onSelect={(reply) => {
+              handleMessageChange(reply);
+            }}
+          />
         }
       />
       {showAIPanel && aiEnabled && (
@@ -484,7 +504,10 @@ function ChatPage() {
         <ManageGroupModal
           group={managingGroup}
           currentUser={user}
-          onClose={() => { setShowManageGroup(false); setManagingGroup(null); }}
+          onClose={() => {
+            setShowManageGroup(false);
+            setManagingGroup(null);
+          }}
           onGroupUpdated={loadContacts}
         />
       )}

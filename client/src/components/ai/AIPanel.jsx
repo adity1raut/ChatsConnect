@@ -27,9 +27,15 @@ export default function AIPanel({ onClose }) {
     }
   };
 
-  const bg = isDark ? "bg-gray-900 border-white/10" : "bg-white border-gray-200";
-  const msgUser = isDark ? "bg-violet-600 text-white" : "bg-violet-500 text-white";
-  const msgAI = isDark ? "bg-white/8 text-gray-200" : "bg-gray-100 text-gray-800";
+  const bg = isDark
+    ? "bg-gray-900 border-white/10"
+    : "bg-white border-gray-200";
+  const msgUser = isDark
+    ? "bg-violet-600 text-white"
+    : "bg-violet-500 text-white";
+  const msgAI = isDark
+    ? "bg-white/8 text-gray-200"
+    : "bg-gray-100 text-gray-800";
   const inputBg = isDark
     ? "bg-white/5 border-white/10 text-white placeholder-gray-600 focus:border-violet-500"
     : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400";
@@ -37,16 +43,28 @@ export default function AIPanel({ onClose }) {
   const displayMessages = chatHistory.filter((m) => m.role !== "system");
 
   return (
-    <div className={`flex flex-col h-full border-l ${bg} transition-colors duration-300`}>
+    <div
+      className={`flex flex-col h-full border-l ${bg} transition-colors duration-300`}
+    >
       {/* Header */}
-      <div className={`flex items-center justify-between px-4 py-3 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}>
+      <div
+        className={`flex items-center justify-between px-4 py-3 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}
+      >
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
             <Bot size={16} className="text-white" />
           </div>
           <div>
-            <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>ChatBot</p>
-            <p className={`text-[10px] ${isDark ? "text-gray-500" : "text-gray-400"}`}>Powered by LangGraph</p>
+            <p
+              className={`text-sm font-semibold ${isDark ? "text-white" : "text-gray-800"}`}
+            >
+              ChatBot
+            </p>
+            <p
+              className={`text-[10px] ${isDark ? "text-gray-500" : "text-gray-400"}`}
+            >
+              Powered by LangGraph
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -77,14 +95,23 @@ export default function AIPanel({ onClose }) {
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 flex items-center justify-center">
               <Sparkles size={24} className="text-violet-500" />
             </div>
-            <p className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+            <p
+              className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+            >
               Ask me anything!
             </p>
-            <p className={`text-xs ${isDark ? "text-gray-600" : "text-gray-400"}`}>
-              I can help draft messages, summarise conversations, translate text, and more.
+            <p
+              className={`text-xs ${isDark ? "text-gray-600" : "text-gray-400"}`}
+            >
+              I can help draft messages, summarise conversations, translate
+              text, and more.
             </p>
             <div className="flex flex-col gap-2 w-full mt-2">
-              {["Summarise this chat", "Help me reply politely", "Translate to Spanish"].map((hint) => (
+              {[
+                "Summarise this chat",
+                "Help me reply politely",
+                "Translate to Spanish",
+              ].map((hint) => (
                 <button
                   key={hint}
                   onClick={() => setInput(hint)}
@@ -102,7 +129,10 @@ export default function AIPanel({ onClose }) {
         )}
 
         {displayMessages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={i}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
             {msg.role === "assistant" && (
               <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 mr-2 mt-0.5">
                 <Bot size={12} className="text-white" />
@@ -137,7 +167,9 @@ export default function AIPanel({ onClose }) {
       </div>
 
       {/* Input */}
-      <div className={`px-3 pb-3 pt-2 border-t ${isDark ? "border-white/8" : "border-gray-100"}`}>
+      <div
+        className={`px-3 pb-3 pt-2 border-t ${isDark ? "border-white/8" : "border-gray-100"}`}
+      >
         <div className="flex items-end gap-2">
           <textarea
             value={input}
@@ -156,7 +188,9 @@ export default function AIPanel({ onClose }) {
             <Send size={15} className="text-white" />
           </button>
         </div>
-        <p className={`text-[10px] mt-1.5 text-center ${isDark ? "text-gray-700" : "text-gray-400"}`}>
+        <p
+          className={`text-[10px] mt-1.5 text-center ${isDark ? "text-gray-700" : "text-gray-400"}`}
+        >
           Enter to send · Shift+Enter for new line
         </p>
       </div>

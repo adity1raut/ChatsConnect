@@ -6,8 +6,12 @@ const AIContext = createContext(null);
 
 export function AIProvider({ children }) {
   const [aiEnabled, setAiEnabled] = useState(false);
-  const [autoTranslate, setAutoTranslate] = useState(() => localStorage.getItem("autoTranslate") === "true");
-  const [preferredLanguage, setPreferredLanguage] = useState(() => localStorage.getItem("preferredLanguage") || "English");
+  const [autoTranslate, setAutoTranslate] = useState(
+    () => localStorage.getItem("autoTranslate") === "true",
+  );
+  const [preferredLanguage, setPreferredLanguage] = useState(
+    () => localStorage.getItem("preferredLanguage") || "English",
+  );
   const [smartReplies, setSmartReplies] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,49 +31,55 @@ export function AIProvider({ children }) {
     Authorization: `Bearer ${localStorage.getItem("accessToken") || localStorage.getItem("authToken")}`,
   });
 
-  const fetchSmartReplies = useCallback(async (messages) => {
-    if (!aiEnabled || !messages?.length) return;
-    try {
-      const { data } = await axios.post(
-        `${AI_API_URL}/smart-reply`,
-        { messages },
-        { headers: authHeader() }
-      );
-      setSmartReplies(data.replies || []);
-    } catch {
-      setSmartReplies([]);
-    }
-  }, [aiEnabled]);
+  const fetchSmartReplies = useCallback(
+    async (messages) => {
+      if (!aiEnabled || !messages?.length) return;
+      try {
+        const { data } = await axios.post(
+          `${AI_API_URL}/smart-reply`,
+          { messages },
+          { headers: authHeader() },
+        );
+        setSmartReplies(data.replies || []);
+      } catch {
+        setSmartReplies([]);
+      }
+    },
+    [aiEnabled],
+  );
 
   const clearSmartReplies = useCallback(() => setSmartReplies([]), []);
 
-  const sendAIMessage = useCallback(async (message) => {
-    if (!message.trim()) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data } = await axios.post(
-        `${AI_API_URL}/chat`,
-        { message, history: chatHistory },
-        { headers: authHeader() }
-      );
-      setChatHistory(data.history || []);
-      return data.reply;
-    } catch (err) {
-      const msg = err.response?.data?.message || "AI service unavailable";
-      setError(msg);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [chatHistory]);
+  const sendAIMessage = useCallback(
+    async (message) => {
+      if (!message.trim()) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const { data } = await axios.post(
+          `${AI_API_URL}/chat`,
+          { message, history: chatHistory },
+          { headers: authHeader() },
+        );
+        setChatHistory(data.history || []);
+        return data.reply;
+      } catch (err) {
+        const msg = err.response?.data?.message || "AI service unavailable";
+        setError(msg);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [chatHistory],
+  );
 
   const summarizeMessages = useCallback(async (messages) => {
     try {
       const { data } = await axios.post(
         `${AI_API_URL}/summarize`,
         { messages },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
       return data.summary;
     } catch {
@@ -82,7 +92,7 @@ export function AIProvider({ children }) {
       const { data } = await axios.post(
         `${AI_API_URL}/translate`,
         { text, target_language: targetLanguage, source_language: "auto" },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
       return data.translated_text;
     } catch {
@@ -95,7 +105,7 @@ export function AIProvider({ children }) {
       const { data } = await axios.post(
         `${AI_API_URL}/sentiment`,
         { text },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
       return data;
     } catch {
@@ -109,15 +119,27 @@ export function AIProvider({ children }) {
   }, []);
 
   return (
-    <AIContext.Provider value={{
-      aiEnabled, setAiEnabled,
-      autoTranslate, setAutoTranslate: handleSetAutoTranslate,
-      preferredLanguage, setPreferredLanguage: handleSetPreferredLanguage,
-      smartReplies, fetchSmartReplies, clearSmartReplies,
-      chatHistory, sendAIMessage, clearChat,
-      summarizeMessages, translateMessage, analyzeSentiment,
-      isLoading, error,
-    }}>
+    <AIContext.Provider
+      value={{
+        aiEnabled,
+        setAiEnabled,
+        autoTranslate,
+        setAutoTranslate: handleSetAutoTranslate,
+        preferredLanguage,
+        setPreferredLanguage: handleSetPreferredLanguage,
+        smartReplies,
+        fetchSmartReplies,
+        clearSmartReplies,
+        chatHistory,
+        sendAIMessage,
+        clearChat,
+        summarizeMessages,
+        translateMessage,
+        analyzeSentiment,
+        isLoading,
+        error,
+      }}
+    >
       {children}
     </AIContext.Provider>
   );

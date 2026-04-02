@@ -5,64 +5,64 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     username: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     email: {
       type: String,
       sparse: true,
       lowercase: true,
-      trim: true
+      trim: true,
     },
     password: {
       type: String,
-      select: false
+      select: false,
     },
     authProvider: {
       type: String,
       enum: ["LOCAL", "GITHUB"],
-      required: true
+      required: true,
     },
     githubId: {
       type: String,
-      sparse: true
+      sparse: true,
     },
     avatar: {
-      type: String
+      type: String,
     },
     bio: {
       type: String,
-      maxlength: 300
+      maxlength: 300,
     },
     isOnline: {
       type: Boolean,
-      default: false
+      default: false,
     },
     lastSeen: {
-      type: Date
+      type: Date,
     },
     refreshToken: {
       type: String,
-      select: false
+      select: false,
     },
     twoFactorEnabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     twoFactorToken: {
       type: String,
-      select: false
+      select: false,
     },
     twoFactorTokenExpiry: {
       type: Date,
-      select: false
-    }
+      select: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("User", userSchema);

@@ -9,7 +9,9 @@ export const getDashboardStats = async (req, res) => {
 
   try {
     // Find all conversations this user is part of
-    const conversations = await Conversation.find({ participants: userId }).lean();
+    const conversations = await Conversation.find({
+      participants: userId,
+    }).lean();
     const conversationIds = conversations.map((c) => c._id);
 
     // Find all groups this user is part of
@@ -41,7 +43,9 @@ export const getDashboardStats = async (req, res) => {
     const recentActivity = recentMessages.map((msg) => ({
       user: msg.senderId?.name || "Unknown",
       avatar: msg.senderId?.avatar || null,
-      action: msg.groupId ? `sent a message in ${msg.groupId.name}` : "sent you a message",
+      action: msg.groupId
+        ? `sent a message in ${msg.groupId.name}`
+        : "sent you a message",
       time: msg.createdAt,
       type: msg.groupId ? "group" : "dm",
     }));

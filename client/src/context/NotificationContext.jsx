@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
 
@@ -19,7 +26,7 @@ export function NotificationProvider({ children }) {
     // Mark notifications for this chat as read
     if (chatId) {
       setNotifications((prev) =>
-        prev.map((n) => (n.chatId === chatId ? { ...n, read: true } : n))
+        prev.map((n) => (n.chatId === chatId ? { ...n, read: true } : n)),
       );
     }
   }, []);
@@ -123,7 +130,13 @@ export function NotificationProvider({ children }) {
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, setActiveChat, markAllRead, dismiss }}
+      value={{
+        notifications,
+        unreadCount,
+        setActiveChat,
+        markAllRead,
+        dismiss,
+      }}
     >
       {children}
     </NotificationContext.Provider>
@@ -132,6 +145,9 @@ export function NotificationProvider({ children }) {
 
 export function useNotifications() {
   const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error("useNotifications must be used within NotificationProvider");
+  if (!ctx)
+    throw new Error(
+      "useNotifications must be used within NotificationProvider",
+    );
   return ctx;
 }

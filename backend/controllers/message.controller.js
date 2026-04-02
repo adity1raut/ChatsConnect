@@ -84,7 +84,7 @@ export const getConversations = async (req, res) => {
     // Reshape: for each conversation, return the other participant as "contact"
     const result = conversations.map((conv) => {
       const other = conv.participants.find(
-        (p) => p._id.toString() !== myId.toString()
+        (p) => p._id.toString() !== myId.toString(),
       );
       return {
         conversationId: conv._id,

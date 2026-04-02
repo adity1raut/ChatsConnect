@@ -31,7 +31,7 @@ router.put("/change-password", protect, changePassword);
 // GitHub OAuth routes
 router.get(
   "/github",
-  passport.authenticate("github", { scope: ["user:email"] })
+  passport.authenticate("github", { scope: ["user:email"] }),
 );
 
 router.get(
@@ -40,7 +40,7 @@ router.get(
     failureRedirect: `${process.env.CLIENT_URL}/login?error=Authentication failed`,
     session: false,
   }),
-  githubCallback
+  githubCallback,
 );
 
 export default router;
