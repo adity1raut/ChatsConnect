@@ -1,4 +1,11 @@
-import { createContext, useContext, useRef, useState, useCallback, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
 
@@ -75,7 +82,7 @@ export function CallProvider({ children }) {
         remoteStreamRef.current = event.streams[0];
         setIsConnecting(false);
         // Trigger re-render so VideoCallModal picks up new stream
-        setActiveCall((prev) => prev ? { ...prev, _ts: Date.now() } : prev);
+        setActiveCall((prev) => (prev ? { ...prev, _ts: Date.now() } : prev));
       };
 
       pc.onconnectionstatechange = () => {
@@ -91,7 +98,7 @@ export function CallProvider({ children }) {
       pcRef.current = pc;
       return pc;
     },
-    [sendIceCandidate, cleanup]
+    [sendIceCandidate, cleanup],
   );
 
   // ── Get local media stream ────────────────────────────────────────
@@ -127,7 +134,12 @@ export function CallProvider({ children }) {
         });
 
         // Signal the callee
-        initiateCall(chat.id, user.name, user.avatar, isAudio ? "audio" : "video");
+        initiateCall(
+          chat.id,
+          user.name,
+          user.avatar,
+          isAudio ? "audio" : "video",
+        );
 
         // Create PC and add tracks (offer will be sent after callAccepted)
         const pc = createPC(chat.id);
@@ -136,7 +148,15 @@ export function CallProvider({ children }) {
         cleanup();
       }
     },
-    [user, activeCall, incomingCall, getLocalStream, initiateCall, createPC, cleanup]
+    [
+      user,
+      activeCall,
+      incomingCall,
+      getLocalStream,
+      initiateCall,
+      createPC,
+      cleanup,
+    ],
   );
 
   // ── Callee: accept incoming call ──────────────────────────────────

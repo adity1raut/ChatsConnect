@@ -76,69 +76,70 @@ export const requestOTP = async (req, res) => {
 
     // Validation
     if (!email || !username || !password || !name) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "All fields are required (name, username, email, password)" 
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required (name, username, email, password)",
       });
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Please provide a valid email address" 
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
       });
     }
 
     // Validate username format
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
     if (!usernameRegex.test(username)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Username must be 3-20 characters (letters, numbers, underscore only)" 
+      return res.status(400).json({
+        success: false,
+        message:
+          "Username must be 3-20 characters (letters, numbers, underscore only)",
       });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }] 
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
     });
 
     if (existingUser) {
       if (existingUser.email === email) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Email already exists" 
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
         });
       }
       if (existingUser.username === username) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Username already taken" 
+        return res.status(400).json({
+          success: false,
+          message: "Username already taken",
         });
       }
     }
 
     // Validate password strength
     if (password.length < 6) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Password must be at least 6 characters long" 
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
       });
     }
 
     // Validate name
     if (name.trim().length < 2) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Name must be at least 2 characters long" 
+      return res.status(400).json({
+        success: false,
+        message: "Name must be at least 2 characters long",
       });
     }
 
     // Generate OTP
     const otp = generateOTP();
-    
+
     // Store OTP with user data (expires in 10 minutes)
     otpStore.set(email, {
       otp,
@@ -153,15 +154,15 @@ export const requestOTP = async (req, res) => {
 
     console.log(`OTP sent to ${email}: ${otp}`); // For development - remove in production
 
-    res.status(200).json({ 
-      success: true, 
-      message: "OTP sent to your email. Please check your inbox." 
+    res.status(200).json({
+      success: true,
+      message: "OTP sent to your email. Please check your inbox.",
     });
   } catch (error) {
     console.error("Error in requestOTP:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: error.message || "Failed to send OTP. Please try again." 
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to send OTP. Please try again.",
     });
   }
 };
@@ -173,9 +174,9 @@ export const verifyOTPAndRegister = async (req, res) => {
 
     // Validation
     if (!email || !otp) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email and OTP are required" 
+      return res.status(400).json({
+        success: false,
+        message: "Email and OTP are required",
       });
     }
 
@@ -183,39 +184,39 @@ export const verifyOTPAndRegister = async (req, res) => {
     const storedData = otpStore.get(email);
 
     if (!storedData) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "OTP expired or not found. Please request a new OTP" 
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired or not found. Please request a new OTP",
       });
     }
 
     // Check if OTP is expired
     if (Date.now() > storedData.expiresAt) {
       otpStore.delete(email);
-      return res.status(400).json({ 
-        success: false, 
-        message: "OTP has expired. Please request a new OTP" 
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new OTP",
       });
     }
 
     // Verify OTP
     if (storedData.otp !== otp.toString()) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid OTP. Please try again." 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP. Please try again.",
       });
     }
 
     // Check if user was created in the meantime
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username: storedData.username }] 
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username: storedData.username }],
     });
 
     if (existingUser) {
       otpStore.delete(email);
-      return res.status(400).json({ 
-        success: false, 
-        message: "User already exists with this email or username" 
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this email or username",
       });
     }
 
@@ -244,13 +245,13 @@ export const verifyOTPAndRegister = async (req, res) => {
     const accessToken = jwt.sign(
       { userId: newUser._id },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     const refreshToken = jwt.sign(
       { userId: newUser._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     // Save refresh token
@@ -280,18 +281,18 @@ export const verifyOTPAndRegister = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in verifyOTPAndRegister:", error);
-    
+
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0];
-      return res.status(400).json({ 
-        success: false, 
-        message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists` 
+      return res.status(400).json({
+        success: false,
+        message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
       });
     }
-    
-    res.status(500).json({ 
-      success: false, 
-      message: error.message || "Failed to create account. Please try again." 
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create account. Please try again.",
     });
   }
 };
@@ -308,9 +309,9 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select(
-      "+password +refreshToken"
-    );
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    }).select("+password +refreshToken");
 
     if (!user) {
       return res.status(401).json({
@@ -338,7 +339,10 @@ export const login = async (req, res) => {
     // 2FA: generate a verification link instead of issuing JWT
     if (user.twoFactorEnabled) {
       const rawToken = crypto.randomBytes(32).toString("hex");
-      const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(rawToken)
+        .digest("hex");
 
       user.twoFactorToken = hashedToken;
       user.twoFactorTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -351,7 +355,8 @@ export const login = async (req, res) => {
       return res.status(200).json({
         success: true,
         twoFactorRequired: true,
-        message: "A verification link has been sent to your email. It expires in 10 minutes.",
+        message:
+          "A verification link has been sent to your email. It expires in 10 minutes.",
       });
     }
 
@@ -360,9 +365,13 @@ export const login = async (req, res) => {
       expiresIn: "15m",
     });
 
-    const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: "7d",
-    });
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
 
     user.refreshToken = refreshToken;
     user.isOnline = true;
@@ -410,9 +419,9 @@ export const verify2FA = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select(
-      "+twoFactorToken +twoFactorTokenExpiry +refreshToken"
-    );
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    }).select("+twoFactorToken +twoFactorTokenExpiry +refreshToken");
 
     if (!user || !user.twoFactorToken || !user.twoFactorTokenExpiry) {
       return res.status(400).json({
@@ -433,7 +442,10 @@ export const verify2FA = async (req, res) => {
     }
 
     // Hash the incoming raw token and compare with the stored hash
-    const incomingHash = crypto.createHash("sha256").update(token).digest("hex");
+    const incomingHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
     const storedHash = user.twoFactorToken;
 
     // Constant-time comparison to prevent timing attacks
@@ -459,9 +471,13 @@ export const verify2FA = async (req, res) => {
       expiresIn: "15m",
     });
 
-    const refreshToken = jwt.sign({ userId: user._id }, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: "7d",
-    });
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_REFRESH_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
 
     user.refreshToken = refreshToken;
     user.isOnline = true;
@@ -505,21 +521,19 @@ export const githubCallback = async (req, res) => {
 
     if (!user) {
       return res.redirect(
-        `${process.env.CLIENT_URL}/login?error=Authentication failed`
+        `${process.env.CLIENT_URL}/login?error=Authentication failed`,
       );
     }
 
     // Generate tokens
-    const accessToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     // Update user status
@@ -530,13 +544,11 @@ export const githubCallback = async (req, res) => {
 
     // Redirect to frontend with tokens
     res.redirect(
-      `${process.env.CLIENT_URL}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
+      `${process.env.CLIENT_URL}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
   } catch (error) {
     console.error("Error in githubCallback:", error);
-    res.redirect(
-      `${process.env.CLIENT_URL}/login?error=Authentication failed`
-    );
+    res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication failed`);
   }
 };
 
@@ -557,9 +569,9 @@ export const logout = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in logout:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Logout failed" 
+    res.status(500).json({
+      success: false,
+      message: "Logout failed",
     });
   }
 };
@@ -570,9 +582,9 @@ export const refreshToken = async (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Refresh token required" 
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token required",
       });
     }
 
@@ -581,17 +593,15 @@ export const refreshToken = async (req, res) => {
     const user = await User.findById(decoded.userId).select("+refreshToken");
 
     if (!user || user.refreshToken !== refreshToken) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Invalid refresh token" 
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token",
       });
     }
 
-    const accessToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
-    );
+    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     res.status(200).json({
       success: true,
@@ -599,9 +609,9 @@ export const refreshToken = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in refreshToken:", error);
-    res.status(401).json({ 
-      success: false, 
-      message: "Invalid or expired refresh token" 
+    res.status(401).json({
+      success: false,
+      message: "Invalid or expired refresh token",
     });
   }
 };
@@ -612,35 +622,55 @@ export const changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, message: "Both passwords are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Both passwords are required" });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: "New password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "New password must be at least 6 characters",
+        });
     }
 
     const user = await User.findById(req.user._id).select("+password");
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     if (user.authProvider !== "LOCAL") {
-      return res.status(400).json({ success: false, message: "Cannot change password for OAuth accounts" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Cannot change password for OAuth accounts",
+        });
     }
 
     const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
-      return res.status(401).json({ success: false, message: "Current password is incorrect" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Current password is incorrect" });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    res.status(200).json({ success: true, message: "Password changed successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Password changed successfully" });
   } catch (error) {
     console.error("Error in changePassword:", error);
-    res.status(500).json({ success: false, message: "Failed to change password" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to change password" });
   }
 };
 
@@ -650,9 +680,9 @@ export const resendOTP = async (req, res) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Email is required" 
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
       });
     }
 
@@ -660,15 +690,15 @@ export const resendOTP = async (req, res) => {
     const storedData = otpStore.get(email);
 
     if (!storedData) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "No registration in progress for this email" 
+      return res.status(400).json({
+        success: false,
+        message: "No registration in progress for this email",
       });
     }
 
     // Generate new OTP
     const otp = generateOTP();
-    
+
     // Update stored data with new OTP and expiry
     otpStore.set(email, {
       ...storedData,
@@ -681,15 +711,15 @@ export const resendOTP = async (req, res) => {
 
     console.log(`New OTP sent to ${email}: ${otp}`); // For development - remove in production
 
-    res.status(200).json({ 
-      success: true, 
-      message: "New OTP sent to your email" 
+    res.status(200).json({
+      success: true,
+      message: "New OTP sent to your email",
     });
   } catch (error) {
     console.error("Error in resendOTP:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "Failed to resend OTP. Please try again." 
+    res.status(500).json({
+      success: false,
+      message: "Failed to resend OTP. Please try again.",
     });
   }
 };

@@ -18,7 +18,7 @@ const friendRequestSchema = new mongoose.Schema(
       default: "pending",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Prevent duplicate requests between the same pair

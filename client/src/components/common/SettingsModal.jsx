@@ -1,7 +1,19 @@
 import React, { useState } from "react";
 import {
-  X, Bot, Bell, Shield, HelpCircle, ChevronDown, Eye, EyeOff,
-  Lock, Mail, AtSign, ShieldCheck, Check, AlertCircle,
+  X,
+  Bot,
+  Bell,
+  Shield,
+  HelpCircle,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  AtSign,
+  ShieldCheck,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 import axios from "axios";
 import { useTheme } from "../../context/ThemeContext";
@@ -29,9 +41,17 @@ function SectionRow({ label, description, right }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2">
       <div>
-        <p className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}>{label}</p>
+        <p
+          className={`text-sm font-medium ${isDark ? "text-gray-200" : "text-gray-700"}`}
+        >
+          {label}
+        </p>
         {description && (
-          <p className={`text-xs mt-0.5 ${isDark ? "text-gray-500" : "text-gray-400"}`}>{description}</p>
+          <p
+            className={`text-xs mt-0.5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {description}
+          </p>
         )}
       </div>
       {right}
@@ -43,22 +63,36 @@ function InlineMsg({ msg }) {
   if (!msg) return null;
   const isError = msg.type === "error";
   return (
-    <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${isError ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}>
+    <div
+      className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${isError ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"}`}
+    >
       {isError ? <AlertCircle size={13} /> : <Check size={13} />}
       {msg.text}
     </div>
   );
 }
 
-function ExpandSection({ label, icon: Icon, color, isOpen, onToggle, isDark, children }) {
+function ExpandSection({
+  label,
+  icon: Icon,
+  color,
+  isOpen,
+  onToggle,
+  isDark,
+  children,
+}) {
   return (
-    <div className={`rounded-xl border transition-colors duration-200 ${isDark ? "border-white/8 bg-white/[0.02]" : "border-gray-100 bg-gray-50/60"}`}>
+    <div
+      className={`rounded-xl border transition-colors duration-200 ${isDark ? "border-white/8 bg-white/[0.02]" : "border-gray-100 bg-gray-50/60"}`}
+    >
       <button
         onClick={onToggle}
         className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}
       >
         <span className="flex items-center gap-2.5">
-          <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
+          <span
+            className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}
+          >
             <Icon size={13} className="text-white" />
           </span>
           {label}
@@ -69,10 +103,10 @@ function ExpandSection({ label, icon: Icon, color, isOpen, onToggle, isDark, chi
         />
       </button>
       {isOpen && (
-        <div className={`px-4 pb-4 border-t ${isDark ? "border-white/5" : "border-gray-100"}`}>
-          <div className="pt-4 flex flex-col gap-3">
-            {children}
-          </div>
+        <div
+          className={`px-4 pb-4 border-t ${isDark ? "border-white/5" : "border-gray-100"}`}
+        >
+          <div className="pt-4 flex flex-col gap-3">{children}</div>
         </div>
       )}
     </div>
@@ -80,8 +114,19 @@ function ExpandSection({ label, icon: Icon, color, isOpen, onToggle, isDark, chi
 }
 
 const LANGUAGES = [
-  "English", "Spanish", "French", "German", "Portuguese", "Italian",
-  "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Arabic", "Hindi",
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Portuguese",
+  "Italian",
+  "Dutch",
+  "Russian",
+  "Japanese",
+  "Korean",
+  "Chinese",
+  "Arabic",
+  "Hindi",
 ];
 
 export default function SettingsModal({
@@ -132,60 +177,101 @@ export default function SettingsModal({
   };
 
   const handleChangePassword = async () => {
-    if (!currentPwd || !newPwd || !confirmPwd) return setPwdMsg({ type: "error", text: "All fields are required" });
-    if (newPwd !== confirmPwd) return setPwdMsg({ type: "error", text: "Passwords don't match" });
-    if (newPwd.length < 6) return setPwdMsg({ type: "error", text: "Password must be at least 6 characters" });
+    if (!currentPwd || !newPwd || !confirmPwd)
+      return setPwdMsg({ type: "error", text: "All fields are required" });
+    if (newPwd !== confirmPwd)
+      return setPwdMsg({ type: "error", text: "Passwords don't match" });
+    if (newPwd.length < 6)
+      return setPwdMsg({
+        type: "error",
+        text: "Password must be at least 6 characters",
+      });
     setPwdLoading(true);
     setPwdMsg(null);
     try {
-      await axios.put(`${API_URL}/auth/change-password`, { currentPassword: currentPwd, newPassword: newPwd }, { headers: authHeader() });
+      await axios.put(
+        `${API_URL}/auth/change-password`,
+        { currentPassword: currentPwd, newPassword: newPwd },
+        { headers: authHeader() },
+      );
       setPwdMsg({ type: "success", text: "Password changed successfully!" });
-      setCurrentPwd(""); setNewPwd(""); setConfirmPwd("");
+      setCurrentPwd("");
+      setNewPwd("");
+      setConfirmPwd("");
     } catch (err) {
-      setPwdMsg({ type: "error", text: err.response?.data?.message || "Failed to change password" });
+      setPwdMsg({
+        type: "error",
+        text: err.response?.data?.message || "Failed to change password",
+      });
     } finally {
       setPwdLoading(false);
     }
   };
 
   const handleChangeEmail = async () => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) return setEmailMsg({ type: "error", text: "Enter a valid email address" });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail))
+      return setEmailMsg({
+        type: "error",
+        text: "Enter a valid email address",
+      });
     setEmailLoading(true);
     setEmailMsg(null);
     try {
-      const { data } = await axios.put(`${API_URL}/profile/update-email`, { email: newEmail }, { headers: authHeader() });
+      const { data } = await axios.put(
+        `${API_URL}/profile/update-email`,
+        { email: newEmail },
+        { headers: authHeader() },
+      );
       updateUser(data.user);
       setEmailMsg({ type: "success", text: "Email updated successfully!" });
       setNewEmail("");
     } catch (err) {
-      setEmailMsg({ type: "error", text: err.response?.data?.message || "Failed to update email" });
+      setEmailMsg({
+        type: "error",
+        text: err.response?.data?.message || "Failed to update email",
+      });
     } finally {
       setEmailLoading(false);
     }
   };
 
   const handleChangeUsername = async () => {
-    if (!newUsername) return setUsernameMsg({ type: "error", text: "Username is required" });
+    if (!newUsername)
+      return setUsernameMsg({ type: "error", text: "Username is required" });
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(newUsername))
-      return setUsernameMsg({ type: "error", text: "3–20 chars: letters, numbers, underscore" });
+      return setUsernameMsg({
+        type: "error",
+        text: "3–20 chars: letters, numbers, underscore",
+      });
     setUsernameLoading(true);
     setUsernameMsg(null);
     try {
-      const { data } = await axios.put(`${API_URL}/profile/update`, { username: newUsername }, { headers: authHeader() });
+      const { data } = await axios.put(
+        `${API_URL}/profile/update`,
+        { username: newUsername },
+        { headers: authHeader() },
+      );
       updateUser(data.user);
-      setUsernameMsg({ type: "success", text: "Username updated successfully!" });
+      setUsernameMsg({
+        type: "success",
+        text: "Username updated successfully!",
+      });
       setNewUsername("");
     } catch (err) {
-      setUsernameMsg({ type: "error", text: err.response?.data?.message || "Failed to update username" });
+      setUsernameMsg({
+        type: "error",
+        text: err.response?.data?.message || "Failed to update username",
+      });
     } finally {
       setUsernameLoading(false);
     }
   };
 
-  const inputClass = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all duration-200 ${isDark
-    ? "bg-white/[0.04] border-white/8 text-white placeholder-gray-600 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/15"
-    : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/10"
-    }`;
+  const inputClass = `w-full px-3 py-2.5 text-sm rounded-xl border outline-none transition-all duration-200 ${
+    isDark
+      ? "bg-white/[0.04] border-white/8 text-white placeholder-gray-600 focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/15"
+      : "bg-white border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:ring-2 focus:ring-violet-500/10"
+  }`;
 
   const btnPrimary = `w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed`;
 
@@ -193,11 +279,18 @@ export default function SettingsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`${isDark ? "bg-gray-900 border border-white/8" : "bg-white border border-gray-100"} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl`}>
-
+      <div
+        className={`${isDark ? "bg-gray-900 border border-white/8" : "bg-white border border-gray-100"} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl`}
+      >
         {/* Header */}
-        <div className={`p-6 border-b flex items-center justify-between sticky top-0 z-10 ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-100 bg-white"}`}>
-          <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}>Settings</h2>
+        <div
+          className={`p-6 border-b flex items-center justify-between sticky top-0 z-10 ${isDark ? "border-gray-800 bg-gray-900" : "border-gray-100 bg-white"}`}
+        >
+          <h2
+            className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-800"}`}
+          >
+            Settings
+          </h2>
           <button
             onClick={() => setShowSettingsModal(false)}
             className={`p-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/8 text-gray-400" : "hover:bg-gray-100 text-gray-500"}`}
@@ -207,28 +300,46 @@ export default function SettingsModal({
         </div>
 
         <div className="p-6 space-y-7">
-
           {/* ── AI Enhancement ── */}
-          <div className={`pb-7 border-b ${isDark ? "border-white/5" : "border-gray-100"}`}>
+          <div
+            className={`pb-7 border-b ${isDark ? "border-white/5" : "border-gray-100"}`}
+          >
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-purple-500/15" : "bg-purple-50"}`}>
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-purple-500/15" : "bg-purple-50"}`}
+              >
                 <Bot size={20} className="text-purple-500" />
               </div>
               <div>
-                <h3 className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>AI Enhancement</h3>
-                <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Intelligent chat assistance</p>
+                <h3
+                  className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}
+                >
+                  AI Enhancement
+                </h3>
+                <p
+                  className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                >
+                  Intelligent chat assistance
+                </p>
               </div>
             </div>
             <div className="space-y-1">
-              <SectionRow label="Enable AI Suggestions" right={<Toggle checked={aiEnabled} onChange={setAiEnabled} />} />
+              <SectionRow
+                label="Enable AI Suggestions"
+                right={<Toggle checked={aiEnabled} onChange={setAiEnabled} />}
+              />
               <SectionRow
                 label="Auto-translate Messages"
                 description="Translate received messages to your language"
-                right={<Toggle checked={autoTranslate} onChange={setAutoTranslate} />}
+                right={
+                  <Toggle checked={autoTranslate} onChange={setAutoTranslate} />
+                }
               />
               {autoTranslate && (
                 <div className="pt-1 pb-0.5">
-                  <p className={`text-xs font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                  <p
+                    className={`text-xs font-medium mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                  >
                     Translate to
                   </p>
                   <select
@@ -241,55 +352,116 @@ export default function SettingsModal({
                     }`}
                   >
                     {LANGUAGES.map((lang) => (
-                      <option key={lang} value={lang}>{lang}</option>
+                      <option key={lang} value={lang}>
+                        {lang}
+                      </option>
                     ))}
                   </select>
                 </div>
               )}
-              <SectionRow label="Smart Reply" right={<Toggle checked={true} onChange={() => { }} />} />
+              <SectionRow
+                label="Smart Reply"
+                right={<Toggle checked={true} onChange={() => {}} />}
+              />
             </div>
           </div>
 
           {/* ── Notifications ── */}
-          <div className={`pb-7 border-b ${isDark ? "border-white/5" : "border-gray-100"}`}>
+          <div
+            className={`pb-7 border-b ${isDark ? "border-white/5" : "border-gray-100"}`}
+          >
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-blue-500/15" : "bg-blue-50"}`}>
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-blue-500/15" : "bg-blue-50"}`}
+              >
                 <Bell size={20} className="text-blue-500" />
               </div>
               <div>
-                <h3 className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>Notifications</h3>
-                <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Manage your alerts</p>
+                <h3
+                  className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}
+                >
+                  Notifications
+                </h3>
+                <p
+                  className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                >
+                  Manage your alerts
+                </p>
               </div>
             </div>
             <div className="space-y-1">
-              <SectionRow label="Push Notifications" right={<Toggle checked={notifications} onChange={setNotifications} />} />
-              <SectionRow label="Email Notifications" right={<Toggle checked={false} onChange={() => { }} />} />
-              <SectionRow label="Sound Alerts" right={<Toggle checked={true} onChange={() => { }} />} />
+              <SectionRow
+                label="Push Notifications"
+                right={
+                  <Toggle checked={notifications} onChange={setNotifications} />
+                }
+              />
+              <SectionRow
+                label="Email Notifications"
+                right={<Toggle checked={false} onChange={() => {}} />}
+              />
+              <SectionRow
+                label="Sound Alerts"
+                right={<Toggle checked={true} onChange={() => {}} />}
+              />
             </div>
           </div>
 
           {/* ── Privacy & Security ── */}
-          <div className={`pb-7 border-b ${isDark ? "border-white/5" : "border-gray-100"}`}>
+          <div
+            className={`pb-7 border-b ${isDark ? "border-white/5" : "border-gray-100"}`}
+          >
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-emerald-500/15" : "bg-emerald-50"}`}>
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-emerald-500/15" : "bg-emerald-50"}`}
+              >
                 <Shield size={20} className="text-emerald-500" />
               </div>
               <div>
-                <h3 className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>Privacy & Security</h3>
-                <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Control your data and account security</p>
+                <h3
+                  className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}
+                >
+                  Privacy & Security
+                </h3>
+                <p
+                  className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                >
+                  Control your data and account security
+                </p>
               </div>
             </div>
 
             <div className="space-y-3">
               {/* Two-Step Verification */}
-              <div className={`flex items-center justify-between px-4 py-3 rounded-xl border ${isDark ? "border-white/8 bg-white/[0.02]" : "border-gray-100 bg-gray-50/60"}`}>
+              <div
+                className={`flex items-center justify-between px-4 py-3 rounded-xl border ${isDark ? "border-white/8 bg-white/[0.02]" : "border-gray-100 bg-gray-50/60"}`}
+              >
                 <div className="flex items-center gap-2.5">
-                  <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${twoFaEnabled ? "bg-emerald-500" : isDark ? "bg-white/8" : "bg-gray-200"}`}>
-                    <ShieldCheck size={13} className={twoFaEnabled ? "text-white" : isDark ? "text-gray-400" : "text-gray-500"} />
+                  <span
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center ${twoFaEnabled ? "bg-emerald-500" : isDark ? "bg-white/8" : "bg-gray-200"}`}
+                  >
+                    <ShieldCheck
+                      size={13}
+                      className={
+                        twoFaEnabled
+                          ? "text-white"
+                          : isDark
+                            ? "text-gray-400"
+                            : "text-gray-500"
+                      }
+                    />
                   </span>
                   <div>
-                    <p className={`text-sm font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}>Two-Step Verification</p>
-                    <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Add an extra layer of security</p>
+                    <p
+                      className={`text-sm font-semibold ${isDark ? "text-gray-200" : "text-gray-700"}`}
+                    >
+                      Two-Step Verification
+                    </p>
+                    <p
+                      className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    >
+                      Add an extra layer of security
+                    </p>
                   </div>
                 </div>
                 <Toggle checked={twoFaEnabled} onChange={setTwoFaEnabled} />
@@ -312,7 +484,11 @@ export default function SettingsModal({
                     placeholder="Current password"
                     className={inputClass}
                   />
-                  <button type="button" onClick={() => setShowCurrentPwd((v) => !v)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPwd((v) => !v)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                  >
                     {showCurrentPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
@@ -324,7 +500,11 @@ export default function SettingsModal({
                     placeholder="New password"
                     className={inputClass}
                   />
-                  <button type="button" onClick={() => setShowNewPwd((v) => !v)} className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPwd((v) => !v)}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                  >
                     {showNewPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
@@ -340,7 +520,9 @@ export default function SettingsModal({
                   onClick={handleChangePassword}
                   disabled={pwdLoading}
                   className={btnPrimary}
-                  style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
+                  style={{
+                    background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+                  }}
                 >
                   {pwdLoading ? "Updating…" : "Update Password"}
                 </button>
@@ -355,7 +537,9 @@ export default function SettingsModal({
                 onToggle={() => toggleSection("email")}
                 isDark={isDark}
               >
-                <div className={`text-xs px-3 py-2 rounded-lg ${isDark ? "bg-white/[0.04] text-gray-400" : "bg-gray-100 text-gray-500"}`}>
+                <div
+                  className={`text-xs px-3 py-2 rounded-lg ${isDark ? "bg-white/[0.04] text-gray-400" : "bg-gray-100 text-gray-500"}`}
+                >
                   Current: <span className="font-medium">{user?.email}</span>
                 </div>
                 <input
@@ -370,7 +554,9 @@ export default function SettingsModal({
                   onClick={handleChangeEmail}
                   disabled={emailLoading}
                   className={btnPrimary}
-                  style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+                  style={{
+                    background: "linear-gradient(135deg, #3b82f6, #06b6d4)",
+                  }}
                 >
                   {emailLoading ? "Updating…" : "Update Email"}
                 </button>
@@ -385,8 +571,11 @@ export default function SettingsModal({
                 onToggle={() => toggleSection("username")}
                 isDark={isDark}
               >
-                <div className={`text-xs px-3 py-2 rounded-lg ${isDark ? "bg-white/[0.04] text-gray-400" : "bg-gray-100 text-gray-500"}`}>
-                  Current: <span className="font-medium">@{user?.username}</span>
+                <div
+                  className={`text-xs px-3 py-2 rounded-lg ${isDark ? "bg-white/[0.04] text-gray-400" : "bg-gray-100 text-gray-500"}`}
+                >
+                  Current:{" "}
+                  <span className="font-medium">@{user?.username}</span>
                 </div>
                 <input
                   type="text"
@@ -400,7 +589,9 @@ export default function SettingsModal({
                   onClick={handleChangeUsername}
                   disabled={usernameLoading}
                   className={btnPrimary}
-                  style={{ background: "linear-gradient(135deg, #ec4899, #f43f5e)" }}
+                  style={{
+                    background: "linear-gradient(135deg, #ec4899, #f43f5e)",
+                  }}
                 >
                   {usernameLoading ? "Updating…" : "Update Username"}
                 </button>
@@ -411,23 +602,35 @@ export default function SettingsModal({
           {/* ── Help & Support ── */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-yellow-500/15" : "bg-yellow-50"}`}>
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? "bg-yellow-500/15" : "bg-yellow-50"}`}
+              >
                 <HelpCircle size={20} className="text-yellow-500" />
               </div>
               <div>
-                <h3 className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}>Help & Support</h3>
-                <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>Get assistance</p>
+                <h3
+                  className={`font-semibold ${isDark ? "text-white" : "text-gray-800"}`}
+                >
+                  Help & Support
+                </h3>
+                <p
+                  className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                >
+                  Get assistance
+                </p>
               </div>
             </div>
             <div className="space-y-1">
-              {["Help Center", "Contact Support", "Terms of Service"].map((item) => (
-                <button
-                  key={item}
-                  className={`w-full text-left text-sm px-3 py-2.5 rounded-xl transition-colors ${isDark ? "text-gray-400 hover:text-violet-400 hover:bg-white/5" : "text-gray-600 hover:text-violet-600 hover:bg-violet-50"}`}
-                >
-                  {item}
-                </button>
-              ))}
+              {["Help Center", "Contact Support", "Terms of Service"].map(
+                (item) => (
+                  <button
+                    key={item}
+                    className={`w-full text-left text-sm px-3 py-2.5 rounded-xl transition-colors ${isDark ? "text-gray-400 hover:text-violet-400 hover:bg-white/5" : "text-gray-600 hover:text-violet-600 hover:bg-violet-50"}`}
+                  >
+                    {item}
+                  </button>
+                ),
+              )}
             </div>
           </div>
         </div>

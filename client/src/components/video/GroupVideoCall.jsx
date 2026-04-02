@@ -1,11 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, Maximize2, Minimize2 } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  PhoneOff,
+  Users,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { useGroupCall } from "../../context/GroupCallContext";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
 // Single video tile for one participant
-function VideoTile({ stream, name, avatar, isMuted: tileIsMuted, isLocal = false }) {
+function VideoTile({
+  stream,
+  name,
+  avatar,
+  isMuted: tileIsMuted,
+  isLocal = false,
+}) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -14,7 +29,9 @@ function VideoTile({ stream, name, avatar, isMuted: tileIsMuted, isLocal = false
     }
   }, [stream]);
 
-  const hasVideo = stream?.getVideoTracks().some((t) => t.enabled && t.readyState === "live");
+  const hasVideo = stream
+    ?.getVideoTracks()
+    .some((t) => t.enabled && t.readyState === "live");
 
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-900 flex items-center justify-center group">
@@ -29,19 +46,27 @@ function VideoTile({ stream, name, avatar, isMuted: tileIsMuted, isLocal = false
       ) : (
         <div className="flex flex-col items-center gap-2">
           {avatar && avatar.startsWith("http") ? (
-            <img src={avatar} alt={name} className="w-16 h-16 rounded-full object-cover ring-4 ring-violet-500/40" />
+            <img
+              src={avatar}
+              alt={name}
+              className="w-16 h-16 rounded-full object-cover ring-4 ring-violet-500/40"
+            />
           ) : (
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl ring-4 ring-violet-500/40">
               {name?.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="text-white text-xs font-medium opacity-70">{isLocal ? "You (camera off)" : "Camera off"}</span>
+          <span className="text-white text-xs font-medium opacity-70">
+            {isLocal ? "You (camera off)" : "Camera off"}
+          </span>
         </div>
       )}
 
       {/* Name tag */}
       <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-lg">
-        <span className="text-white text-xs font-semibold">{isLocal ? `${name} (You)` : name}</span>
+        <span className="text-white text-xs font-semibold">
+          {isLocal ? `${name} (You)` : name}
+        </span>
         {tileIsMuted && <MicOff size={11} className="text-red-400" />}
       </div>
     </div>
@@ -53,15 +78,21 @@ function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
   const { isDark } = useTheme();
 
   return (
-    <div className={`fixed top-4 right-4 z-[200] w-80 rounded-2xl shadow-2xl border p-4 ${isDark ? "bg-gray-900/95 border-white/10 text-white" : "bg-white/95 border-gray-200 text-gray-900"}`}
-      style={{ backdropFilter: "blur(20px)" }}>
+    <div
+      className={`fixed top-4 right-4 z-[200] w-80 rounded-2xl shadow-2xl border p-4 ${isDark ? "bg-gray-900/95 border-white/10 text-white" : "bg-white/95 border-gray-200 text-gray-900"}`}
+      style={{ backdropFilter: "blur(20px)" }}
+    >
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
           <Users size={18} className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">Group Call</p>
-          <p className="text-sm font-bold truncate">{call.callerName} started a call</p>
+          <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">
+            Group Call
+          </p>
+          <p className="text-sm font-bold truncate">
+            {call.callerName} started a call
+          </p>
         </div>
       </div>
       <div className="flex gap-2">
@@ -87,10 +118,17 @@ export default function GroupVideoCall() {
   const { user } = useAuth();
   const { isDark } = useTheme();
   const {
-    activeGroupCall, incomingGroupCall, participants,
-    localStreamRef, isMuted, isCameraOff,
-    leaveGroupCall, toggleMute, toggleCamera,
-    joinGroupCall, dismissIncoming,
+    activeGroupCall,
+    incomingGroupCall,
+    participants,
+    localStreamRef,
+    isMuted,
+    isCameraOff,
+    leaveGroupCall,
+    toggleMute,
+    toggleCamera,
+    joinGroupCall,
+    dismissIncoming,
   } = useGroupCall();
 
   const localVideoRef = useRef(null);
@@ -110,14 +148,18 @@ export default function GroupVideoCall() {
 
   // Grid layout based on count
   const gridClass =
-    totalTiles === 1 ? "grid-cols-1" :
-    totalTiles === 2 ? "grid-cols-2" :
-    totalTiles <= 4 ? "grid-cols-2" :
-    totalTiles <= 6 ? "grid-cols-3" : "grid-cols-3";
+    totalTiles === 1
+      ? "grid-cols-1"
+      : totalTiles === 2
+        ? "grid-cols-2"
+        : totalTiles <= 4
+          ? "grid-cols-2"
+          : totalTiles <= 6
+            ? "grid-cols-3"
+            : "grid-cols-3";
 
   const tileHeight =
-    totalTiles <= 2 ? "h-full" :
-    totalTiles <= 4 ? "h-1/2" : "h-1/3";
+    totalTiles <= 2 ? "h-full" : totalTiles <= 4 ? "h-1/2" : "h-1/3";
 
   return (
     <>
@@ -125,7 +167,13 @@ export default function GroupVideoCall() {
       {incomingGroupCall && !activeGroupCall && (
         <IncomingGroupCallBanner
           call={incomingGroupCall}
-          onJoin={() => joinGroupCall(incomingGroupCall.groupId, incomingGroupCall.groupName || "Group", incomingGroupCall.callType)}
+          onJoin={() =>
+            joinGroupCall(
+              incomingGroupCall.groupId,
+              incomingGroupCall.groupName || "Group",
+              incomingGroupCall.callType,
+            )
+          }
           onDismiss={dismissIncoming}
         />
       )}
@@ -143,8 +191,13 @@ export default function GroupVideoCall() {
                 <Users size={15} className="text-violet-400" />
               </div>
               <div>
-                <p className="text-white font-bold text-sm leading-none">{activeGroupCall.groupName}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{participants.size + 1} participant{participants.size !== 0 ? "s" : ""}</p>
+                <p className="text-white font-bold text-sm leading-none">
+                  {activeGroupCall.groupName}
+                </p>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  {participants.size + 1} participant
+                  {participants.size !== 0 ? "s" : ""}
+                </p>
               </div>
             </div>
             <button

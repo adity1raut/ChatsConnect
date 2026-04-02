@@ -29,9 +29,10 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     if (!name) return setError("Name is required");
 
     withFeedback(async () => {
-      const { data } = await axios.put(`${API_URL}/profile/update`,
+      const { data } = await axios.put(
+        `${API_URL}/profile/update`,
         { username, bio, avatar: avatarFile, name },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
       updateUser(data.user);
     }, "Profile updated!");
@@ -39,38 +40,52 @@ export function useProfileActions({ updateUser, logout, navigate }) {
 
   const updateUsername = (username) => {
     if (!username) return setError("Username is required");
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return setError("Username must be 3–20 chars (letters, numbers, underscore)");
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username))
+      return setError(
+        "Username must be 3–20 chars (letters, numbers, underscore)",
+      );
 
     withFeedback(async () => {
-      const { data } = await axios.put(`${API_URL}/profile/update`,
+      const { data } = await axios.put(
+        `${API_URL}/profile/update`,
         { username },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
       updateUser(data.user);
     }, "Username updated!");
   };
 
   const updateEmail = (email) => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Enter a valid email address");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return setError("Enter a valid email address");
 
     withFeedback(async () => {
-      const { data } = await axios.put(`${API_URL}/profile/update-email`,
+      const { data } = await axios.put(
+        `${API_URL}/profile/update-email`,
         { email },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
       updateUser(data.user);
     }, "Email updated!");
   };
 
-  const updatePassword = ({ currentPassword, newPassword, confirmPassword }) => {
-    if (!currentPassword || !newPassword || !confirmPassword) return setError("All fields are required");
-    if (newPassword !== confirmPassword) return setError("Passwords don't match");
-    if (newPassword.length < 6) return setError("Password must be at least 6 characters");
+  const updatePassword = ({
+    currentPassword,
+    newPassword,
+    confirmPassword,
+  }) => {
+    if (!currentPassword || !newPassword || !confirmPassword)
+      return setError("All fields are required");
+    if (newPassword !== confirmPassword)
+      return setError("Passwords don't match");
+    if (newPassword.length < 6)
+      return setError("Password must be at least 6 characters");
 
     withFeedback(async () => {
-      await axios.put(`${API_URL}/auth/change-password`,
+      await axios.put(
+        `${API_URL}/auth/change-password`,
         { currentPassword, newPassword },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
     }, "Password changed!");
   };
@@ -79,7 +94,9 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     if (confirmText !== "DELETE") return setError("Type DELETE to confirm");
     setLoading(true);
     try {
-      await axios.delete(`${API_URL}/profile/delete`, { headers: authHeader() });
+      await axios.delete(`${API_URL}/profile/delete`, {
+        headers: authHeader(),
+      });
       logout();
       navigate("/login");
     } catch (err) {
@@ -89,5 +106,16 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     }
   };
 
-  return { loading, error, success, setError, setSuccess, updateProfile, updateUsername, updateEmail, updatePassword, deleteAccount };
+  return {
+    loading,
+    error,
+    success,
+    setError,
+    setSuccess,
+    updateProfile,
+    updateUsername,
+    updateEmail,
+    updatePassword,
+    deleteAccount,
+  };
 }

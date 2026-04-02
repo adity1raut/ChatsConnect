@@ -48,7 +48,9 @@ export default function NewDMModal({ onClose, onSelectUser }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <div className={`w-full max-w-md rounded-2xl border shadow-2xl ${base}`}>
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/6" : "border-gray-100"}`}>
+        <div
+          className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/6" : "border-gray-100"}`}
+        >
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-linear-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <MessageSquare size={14} className="text-white" />
@@ -65,9 +67,14 @@ export default function NewDMModal({ onClose, onSelectUser }) {
 
         <div className="p-5 space-y-3">
           {/* Search input */}
-          <div className={`relative flex items-center rounded-xl border ${isDark ? "bg-white/4 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+          <div
+            className={`relative flex items-center rounded-xl border ${isDark ? "bg-white/4 border-white/10" : "bg-gray-50 border-gray-200"}`}
+          >
             {loading ? (
-              <Loader2 size={15} className="absolute left-3.5 text-gray-500 animate-spin" />
+              <Loader2
+                size={15}
+                className="absolute left-3.5 text-gray-500 animate-spin"
+              />
             ) : (
               <Search size={15} className="absolute left-3.5 text-gray-500" />
             )}
@@ -83,34 +90,52 @@ export default function NewDMModal({ onClose, onSelectUser }) {
           </div>
 
           {/* Results list */}
-          <div className={`rounded-xl border max-h-72 overflow-y-auto ${isDark ? "border-white/6" : "border-gray-100"}`}>
+          <div
+            className={`rounded-xl border max-h-72 overflow-y-auto ${isDark ? "border-white/6" : "border-gray-100"}`}
+          >
             {searchResults.length === 0 && !loading ? (
-              <p className={`text-center py-8 text-sm ${isDark ? "text-gray-600" : "text-gray-400"}`}>
+              <p
+                className={`text-center py-8 text-sm ${isDark ? "text-gray-600" : "text-gray-400"}`}
+              >
                 {search.trim() ? "No users found" : "No users available"}
               </p>
             ) : (
               searchResults.map((u) => (
                 <button
                   key={u._id}
-                  onClick={() => { onSelectUser(u); onClose(); }}
+                  onClick={() => {
+                    onSelectUser(u);
+                    onClose();
+                  }}
                   className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}
                 >
                   <div className="w-10 h-10 rounded-full bg-linear-to-br from-violet-400 to-pink-400 flex items-center justify-center text-white font-bold shrink-0 overflow-hidden">
                     {u.avatar && u.avatar.startsWith("http") ? (
-                      <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={u.avatar}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       u.name?.charAt(0).toUpperCase()
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}>
+                    <p
+                      className={`text-sm font-semibold truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}
+                    >
                       {u.name}
                     </p>
-                    <p className={`text-xs truncate ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                    <p
+                      className={`text-xs truncate ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    >
                       @{u.username}
                     </p>
                   </div>
-                  <MessageSquare size={15} className={isDark ? "text-gray-600" : "text-gray-300"} />
+                  <MessageSquare
+                    size={15}
+                    className={isDark ? "text-gray-600" : "text-gray-300"}
+                  />
                 </button>
               ))
             )}

@@ -29,30 +29,35 @@ passport.use(
 
         // Check if email already exists with different auth provider
         if (profile.emails?.[0]?.value) {
-          const existingUser = await User.findOne({ 
-            email: profile.emails[0].value 
+          const existingUser = await User.findOne({
+            email: profile.emails[0].value,
           });
-          
+
           if (existingUser && existingUser.authProvider !== "GITHUB") {
             return done(
               new Error(
-                `An account with this email already exists using ${existingUser.authProvider} login`
+                `An account with this email already exists using ${existingUser.authProvider} login`,
               ),
-              null
+              null,
             );
           }
         }
 
         // Create new user
-        const username = profile.username || profile.displayName?.replace(/\s+/g, "").toLowerCase() || `user${profile.id}`;
-        
+        const username =
+          profile.username ||
+          profile.displayName?.replace(/\s+/g, "").toLowerCase() ||
+          `user${profile.id}`;
+
         user = await User.create({
           name: profile.displayName || profile.username || "GitHub User",
           username: username,
           email: profile.emails?.[0]?.value || null,
           githubId: profile.id,
           authProvider: "GITHUB",
-          avatar: profile.photos?.[0]?.value || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=200`,
+          avatar:
+            profile.photos?.[0]?.value ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=8b5cf6&color=fff&size=200`,
           bio: profile.bio || "",
           isOnline: true,
           lastSeen: new Date(),
@@ -62,8 +67,8 @@ passport.use(
       } catch (error) {
         done(error, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 passport.serializeUser((user, done) => {

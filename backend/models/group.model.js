@@ -49,7 +49,7 @@ const groupSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Group = mongoose.model("Group", groupSchema);

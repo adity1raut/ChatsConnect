@@ -29,17 +29,17 @@ app.use(cookieParser());
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "https://www.chatsconnect.tech",
-  ...(process.env.NODE_ENV !== "production"
-    ? ["http://localhost:5173"]
-    : []),
+  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : []),
 ].filter(Boolean);
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 ConnectDB();
 

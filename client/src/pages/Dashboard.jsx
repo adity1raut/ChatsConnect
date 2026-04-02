@@ -40,7 +40,7 @@ function Dashboard() {
           ...a,
           time: timeAgo(a.time),
           avatar: a.avatar || "👤",
-        }))
+        })),
       );
     } catch (err) {
       console.error("Failed to fetch dashboard stats:", err);
@@ -58,7 +58,10 @@ function Dashboard() {
 
     const handleNewMessage = ({ message }) => {
       // Increment message count
-      setStatsData((prev) => ({ ...prev, totalMessages: prev.totalMessages + 1 }));
+      setStatsData((prev) => ({
+        ...prev,
+        totalMessages: prev.totalMessages + 1,
+      }));
 
       // Prepend to recent activity (messages from others only)
       setRecentActivity((prev) => {
@@ -74,7 +77,10 @@ function Dashboard() {
     };
 
     const handleNewGroupMessage = ({ message }) => {
-      setStatsData((prev) => ({ ...prev, totalMessages: prev.totalMessages + 1 }));
+      setStatsData((prev) => ({
+        ...prev,
+        totalMessages: prev.totalMessages + 1,
+      }));
 
       setRecentActivity((prev) => {
         const newEntry = {

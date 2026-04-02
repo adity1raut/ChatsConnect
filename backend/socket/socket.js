@@ -83,7 +83,7 @@ export function initSocket(httpServer) {
 
         const populatedMessage = await Message.findById(message._id).populate(
           "senderId",
-          "name username avatar"
+          "name username avatar",
         );
 
         // Emit to receiver's room
@@ -133,7 +133,7 @@ export function initSocket(httpServer) {
 
         const populatedMessage = await Message.findById(message._id).populate(
           "senderId",
-          "name username avatar"
+          "name username avatar",
         );
 
         // Emit to the group room (all members who have joined it)
@@ -167,14 +167,17 @@ export function initSocket(httpServer) {
     // ── WebRTC Signaling ─────────────────────────────────────────
 
     // Caller → Callee: ring the callee
-    socket.on("callUser", ({ toUserId, callerName, callerAvatar, callType }) => {
-      io.to(toUserId).emit("incomingCall", {
-        callerId: userId,
-        callerName,
-        callerAvatar,
-        callType, // "video" | "audio"
-      });
-    });
+    socket.on(
+      "callUser",
+      ({ toUserId, callerName, callerAvatar, callType }) => {
+        io.to(toUserId).emit("incomingCall", {
+          callerId: userId,
+          callerName,
+          callerAvatar,
+          callType, // "video" | "audio"
+        });
+      },
+    );
 
     // Callee → Caller: call accepted
     socket.on("callAccepted", ({ toUserId }) => {

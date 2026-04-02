@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 const AuthContext = createContext(null);
 
@@ -7,8 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('userData');
+    const token = localStorage.getItem("authToken");
+    const userData = localStorage.getItem("userData");
 
     if (token && userData) {
       setUser(JSON.parse(userData));
@@ -17,20 +17,20 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, token) => {
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userData', JSON.stringify(userData));
+    localStorage.setItem("authToken", token);
+    localStorage.setItem("userData", JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
     setUser(null);
   };
 
   const updateUser = (updatedData) => {
     const merged = { ...user, ...updatedData };
-    localStorage.setItem('userData', JSON.stringify(merged));
+    localStorage.setItem("userData", JSON.stringify(merged));
     setUser(merged);
   };
 
@@ -39,7 +39,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, updateUser, isAuthenticated, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

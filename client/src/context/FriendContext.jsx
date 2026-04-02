@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
@@ -86,31 +92,56 @@ export function FriendProvider({ children }) {
 
   // ── Actions ───────────────────────────────────────────────────────
   const sendRequest = useCallback(async (userId) => {
-    const res = await axios.post(`${API}/friends/request/${userId}`, {}, { headers: authHeader() });
+    const res = await axios.post(
+      `${API}/friends/request/${userId}`,
+      {},
+      { headers: authHeader() },
+    );
     const req = res.data.request;
     setSentRequests((prev) => [req, ...prev]);
-    setRelationships((prev) => ({ ...prev, [userId]: { status: "sent", requestId: req._id } }));
+    setRelationships((prev) => ({
+      ...prev,
+      [userId]: { status: "sent", requestId: req._id },
+    }));
     return req;
   }, []);
 
-  const acceptRequest = useCallback(async (requestId, senderId) => {
-    await axios.put(`${API}/friends/request/${requestId}/accept`, {}, { headers: authHeader() });
-    const accepted = incomingRequests.find((r) => r._id === requestId)?.sender;
-    setIncomingRequests((prev) => prev.filter((r) => r._id !== requestId));
-    if (accepted) {
-      setFriends((prev) => [...prev, accepted]);
-      setRelationships((prev) => ({ ...prev, [senderId]: { status: "friends" } }));
-    }
-  }, [incomingRequests]);
+  const acceptRequest = useCallback(
+    async (requestId, senderId) => {
+      await axios.put(
+        `${API}/friends/request/${requestId}/accept`,
+        {},
+        { headers: authHeader() },
+      );
+      const accepted = incomingRequests.find(
+        (r) => r._id === requestId,
+      )?.sender;
+      setIncomingRequests((prev) => prev.filter((r) => r._id !== requestId));
+      if (accepted) {
+        setFriends((prev) => [...prev, accepted]);
+        setRelationships((prev) => ({
+          ...prev,
+          [senderId]: { status: "friends" },
+        }));
+      }
+    },
+    [incomingRequests],
+  );
 
   const rejectRequest = useCallback(async (requestId, senderId) => {
-    await axios.put(`${API}/friends/request/${requestId}/reject`, {}, { headers: authHeader() });
+    await axios.put(
+      `${API}/friends/request/${requestId}/reject`,
+      {},
+      { headers: authHeader() },
+    );
     setIncomingRequests((prev) => prev.filter((r) => r._id !== requestId));
     setRelationships((prev) => ({ ...prev, [senderId]: { status: "none" } }));
   }, []);
 
   const cancelRequest = useCallback(async (requestId, receiverId) => {
-    await axios.delete(`${API}/friends/request/${requestId}/cancel`, { headers: authHeader() });
+    await axios.delete(`${API}/friends/request/${requestId}/cancel`, {
+      headers: authHeader(),
+    });
     setSentRequests((prev) => prev.filter((r) => r._id !== requestId));
     setRelationships((prev) => ({ ...prev, [receiverId]: { status: "none" } }));
   }, []);
@@ -124,7 +155,7 @@ export function FriendProvider({ children }) {
   // Get relationship for a single user (with cache)
   const getRelationship = useCallback(
     (userId) => relationships[userId] || { status: "none" },
-    [relationships]
+    [relationships],
   );
 
   const incomingCount = incomingRequests.length;

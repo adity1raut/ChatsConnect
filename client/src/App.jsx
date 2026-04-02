@@ -11,7 +11,10 @@ import {
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
-import { NotificationProvider, useNotifications } from "./context/NotificationContext";
+import {
+  NotificationProvider,
+  useNotifications,
+} from "./context/NotificationContext";
 import { FriendProvider } from "./context/FriendContext";
 import { CallProvider } from "./context/CallContext";
 import { GroupCallProvider } from "./context/GroupCallContext";
@@ -45,7 +48,13 @@ function MobileNav() {
     { label: "Home", icon: Home, path: "/" },
     { label: "Search", icon: Search, path: "/search" },
     { label: "Chats", icon: MessageSquare, path: "/chat" },
-    { label: "Alerts", icon: Bell, path: "/notifications", badge: unreadCount > 0 ? (unreadCount > 9 ? "9+" : String(unreadCount)) : null },
+    {
+      label: "Alerts",
+      icon: Bell,
+      path: "/notifications",
+      badge:
+        unreadCount > 0 ? (unreadCount > 9 ? "9+" : String(unreadCount)) : null,
+    },
     { label: "Profile", icon: User, path: "/profile" },
   ];
 
@@ -54,10 +63,14 @@ function MobileNav() {
   return (
     <nav
       className={`fixed bottom-0 inset-x-0 z-50 flex items-center justify-around h-14 border-t transition-colors duration-300 md:hidden ${isDark ? "bg-gray-950/95 border-white/[0.07]" : "bg-white/95 border-gray-200"}`}
-      style={{ backdropFilter: "blur(20px)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      style={{
+        backdropFilter: "blur(20px)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
     >
       {items.map(({ label, icon: Icon, path, badge }) => {
-        const isActive = activePath === path || (activePath.startsWith(path) && path !== "/");
+        const isActive =
+          activePath === path || (activePath.startsWith(path) && path !== "/");
         return (
           <button
             key={path}
@@ -67,7 +80,9 @@ function MobileNav() {
             {isActive && (
               <span className="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-violet-500" />
             )}
-            <div className={`relative ${isActive ? "scale-110" : ""} transition-transform duration-200`}>
+            <div
+              className={`relative ${isActive ? "scale-110" : ""} transition-transform duration-200`}
+            >
               <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
               {badge && (
                 <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-white text-[9px] font-bold shadow-md">
@@ -75,7 +90,9 @@ function MobileNav() {
                 </span>
               )}
             </div>
-            <span className={`text-[10px] font-semibold tracking-tight ${isActive ? "text-violet-500" : ""}`}>
+            <span
+              className={`text-[10px] font-semibold tracking-tight ${isActive ? "text-violet-500" : ""}`}
+            >
               {label}
             </span>
           </button>
@@ -92,7 +109,14 @@ function MainLayout({ children }) {
   const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
-  const { aiEnabled, setAiEnabled, autoTranslate, setAutoTranslate, preferredLanguage, setPreferredLanguage } = useAI();
+  const {
+    aiEnabled,
+    setAiEnabled,
+    autoTranslate,
+    setAutoTranslate,
+    preferredLanguage,
+    setPreferredLanguage,
+  } = useAI();
 
   const handleLogout = () => {
     logout();
@@ -112,9 +136,7 @@ function MainLayout({ children }) {
           unreadNotifications={unreadCount}
         />
       </div>
-      <div className="flex-1 overflow-y-auto pb-14 md:pb-0">
-        {children}
-      </div>
+      <div className="flex-1 overflow-y-auto pb-14 md:pb-0">{children}</div>
       <MobileNav />
       <SettingsModal
         showSettingsModal={showSettingsModal}
@@ -140,7 +162,14 @@ function ChatLayout({ children }) {
   const [notifications, setNotifications] = useState(true);
   const { logout } = useAuth();
   const { unreadCount } = useNotifications();
-  const { aiEnabled, setAiEnabled, autoTranslate, setAutoTranslate, preferredLanguage, setPreferredLanguage } = useAI();
+  const {
+    aiEnabled,
+    setAiEnabled,
+    autoTranslate,
+    setAutoTranslate,
+    preferredLanguage,
+    setPreferredLanguage,
+  } = useAI();
 
   const handleLogout = () => {
     logout();
@@ -161,9 +190,7 @@ function ChatLayout({ children }) {
         />
       </div>
       <div className="flex-1 overflow-hidden h-[calc(100dvh-56px)] md:h-full">
-        <div className="h-full overflow-hidden">
-          {children}
-        </div>
+        <div className="h-full overflow-hidden">{children}</div>
       </div>
       <MobileNav />
       <SettingsModal
@@ -188,33 +215,101 @@ function App() {
       <AuthProvider>
         <SocketProvider>
           <AIProvider>
-          <CallProvider>
-          <GroupCallProvider>
-          <FriendProvider>
-          <NotificationProvider>
-            <Router>
-              {/* Global call overlays — visible from any page */}
-              <IncomingCallModal />
-              <VideoCallModal />
-              <GroupVideoCall />
-              <Routes>
-                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                <Route path="/registration" element={<PublicRoute><Registration /></PublicRoute>} />
+            <CallProvider>
+              <GroupCallProvider>
+                <FriendProvider>
+                  <NotificationProvider>
+                    <Router>
+                      {/* Global call overlays — visible from any page */}
+                      <IncomingCallModal />
+                      <VideoCallModal />
+                      <GroupVideoCall />
+                      <Routes>
+                        <Route
+                          path="/login"
+                          element={
+                            <PublicRoute>
+                              <Login />
+                            </PublicRoute>
+                          }
+                        />
+                        <Route
+                          path="/registration"
+                          element={
+                            <PublicRoute>
+                              <Registration />
+                            </PublicRoute>
+                          }
+                        />
 
-                <Route path="/" element={<ProtectedRoute><MainLayout><Dashboard /></MainLayout></ProtectedRoute>} />
-                <Route path="/notifications" element={<ProtectedRoute><MainLayout><Notification /></MainLayout></ProtectedRoute>} />
-                <Route path="/chat" element={<ProtectedRoute><ChatLayout><ChatPage /></ChatLayout></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><MainLayout><Profile /></MainLayout></ProtectedRoute>} />
-                <Route path="/profile/:userId" element={<ProtectedRoute><MainLayout><UserProfile /></MainLayout></ProtectedRoute>} />
-                <Route path="/search" element={<ProtectedRoute><MainLayout><SearchPage /></MainLayout></ProtectedRoute>} />
+                        <Route
+                          path="/"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <Dashboard />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/notifications"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <Notification />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/chat"
+                          element={
+                            <ProtectedRoute>
+                              <ChatLayout>
+                                <ChatPage />
+                              </ChatLayout>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/profile"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <Profile />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/profile/:userId"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <UserProfile />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/search"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <SearchPage />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          }
+                        />
 
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Router>
-          </NotificationProvider>
-          </FriendProvider>
-          </GroupCallProvider>
-          </CallProvider>
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Routes>
+                    </Router>
+                  </NotificationProvider>
+                </FriendProvider>
+              </GroupCallProvider>
+            </CallProvider>
           </AIProvider>
         </SocketProvider>
       </AuthProvider>

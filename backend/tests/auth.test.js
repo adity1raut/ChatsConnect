@@ -58,7 +58,7 @@ describe("requestOTP", () => {
     await requestOTP(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: false })
+      expect.objectContaining({ success: false }),
     );
   });
 
@@ -85,7 +85,10 @@ describe("requestOTP", () => {
   });
 
   it("returns 400 if email already exists", async () => {
-    User.findOne.mockResolvedValueOnce({ email: "test@example.com", username: "other" });
+    User.findOne.mockResolvedValueOnce({
+      email: "test@example.com",
+      username: "other",
+    });
     const { req, res } = mockReqRes({
       email: "test@example.com",
       username: "newuser",
@@ -95,12 +98,15 @@ describe("requestOTP", () => {
     await requestOTP(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Email already exists" })
+      expect.objectContaining({ message: "Email already exists" }),
     );
   });
 
   it("returns 400 if username already taken", async () => {
-    User.findOne.mockResolvedValueOnce({ email: "other@example.com", username: "newuser" });
+    User.findOne.mockResolvedValueOnce({
+      email: "other@example.com",
+      username: "newuser",
+    });
     const { req, res } = mockReqRes({
       email: "test@example.com",
       username: "newuser",
@@ -110,7 +116,7 @@ describe("requestOTP", () => {
     await requestOTP(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Username already taken" })
+      expect.objectContaining({ message: "Username already taken" }),
     );
   });
 
@@ -137,7 +143,7 @@ describe("requestOTP", () => {
     await requestOTP(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true })
+      expect.objectContaining({ success: true }),
     );
   });
 });
@@ -153,16 +159,26 @@ describe("login", () => {
   });
 
   it("returns 401 when user not found", async () => {
-    User.findOne.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(null) });
-    const { req, res } = mockReqRes({ email: "test@example.com", password: "pass123" });
+    User.findOne.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(null),
+    });
+    const { req, res } = mockReqRes({
+      email: "test@example.com",
+      password: "pass123",
+    });
     await login(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
   });
 
   it("returns 401 for OAuth account trying local login", async () => {
     const mockUser = { authProvider: "GITHUB", email: "test@example.com" };
-    User.findOne.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
-    const { req, res } = mockReqRes({ email: "test@example.com", password: "pass123" });
+    User.findOne.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
+    const { req, res } = mockReqRes({
+      email: "test@example.com",
+      password: "pass123",
+    });
     await login(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
   });
@@ -175,9 +191,14 @@ describe("login", () => {
       password: "hashed",
       save: vi.fn(),
     };
-    User.findOne.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    User.findOne.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     bcrypt.compare.mockResolvedValueOnce(false);
-    const { req, res } = mockReqRes({ email: "test@example.com", password: "wrongpass" });
+    const { req, res } = mockReqRes({
+      email: "test@example.com",
+      password: "wrongpass",
+    });
     await login(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
   });
@@ -197,13 +218,18 @@ describe("login", () => {
       createdAt: new Date(),
       save: vi.fn().mockResolvedValue(true),
     };
-    User.findOne.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    User.findOne.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     bcrypt.compare.mockResolvedValueOnce(true);
-    const { req, res } = mockReqRes({ email: "test@example.com", password: "pass123" });
+    const { req, res } = mockReqRes({
+      email: "test@example.com",
+      password: "pass123",
+    });
     await login(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, accessToken: "mock_token" })
+      expect.objectContaining({ success: true, accessToken: "mock_token" }),
     );
   });
 });
@@ -216,7 +242,10 @@ describe("logout", () => {
     User.findByIdAndUpdate.mockResolvedValueOnce({});
     const { req, res } = mockReqRes({}, {}, { _id: "user123" });
     await logout(req, res);
-    expect(User.findByIdAndUpdate).toHaveBeenCalledWith("user123", expect.any(Object));
+    expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
+      "user123",
+      expect.any(Object),
+    );
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });
@@ -226,7 +255,11 @@ describe("changePassword", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns 400 when fields are missing", async () => {
-    const { req, res } = mockReqRes({ currentPassword: "old" }, {}, { _id: "user123" });
+    const { req, res } = mockReqRes(
+      { currentPassword: "old" },
+      {},
+      { _id: "user123" },
+    );
     await changePassword(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
@@ -235,32 +268,44 @@ describe("changePassword", () => {
     const { req, res } = mockReqRes(
       { currentPassword: "old123", newPassword: "ab" },
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await changePassword(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
   it("returns 400 for OAuth user trying to change password", async () => {
-    const mockUser = { _id: "user123", authProvider: "GITHUB", password: "hashed" };
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    const mockUser = {
+      _id: "user123",
+      authProvider: "GITHUB",
+      password: "hashed",
+    };
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     const { req, res } = mockReqRes(
       { currentPassword: "old123", newPassword: "newpass123" },
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await changePassword(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
 
   it("returns 401 when current password is wrong", async () => {
-    const mockUser = { _id: "user123", authProvider: "LOCAL", password: "hashed" };
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    const mockUser = {
+      _id: "user123",
+      authProvider: "LOCAL",
+      password: "hashed",
+    };
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     bcrypt.compare.mockResolvedValueOnce(false);
     const { req, res } = mockReqRes(
       { currentPassword: "wrongold", newPassword: "newpass123" },
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await changePassword(req, res);
     expect(res.status).toHaveBeenCalledWith(401);
@@ -273,17 +318,19 @@ describe("changePassword", () => {
       password: "hashed",
       save: vi.fn().mockResolvedValue(true),
     };
-    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(mockUser) });
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(mockUser),
+    });
     bcrypt.compare.mockResolvedValueOnce(true);
     const { req, res } = mockReqRes(
       { currentPassword: "old123", newPassword: "newpass123" },
       {},
-      { _id: "user123" }
+      { _id: "user123" },
     );
     await changePassword(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true })
+      expect.objectContaining({ success: true }),
     );
   });
 });

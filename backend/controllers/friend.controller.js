@@ -27,11 +27,16 @@ export const sendRequest = async (req, res) => {
         return res.status(400).json({ message: "Request already pending" });
       }
       // If previously rejected, allow re-sending by updating
-      if (existing.sender.toString() === myId.toString() && existing.status === "rejected") {
+      if (
+        existing.sender.toString() === myId.toString() &&
+        existing.status === "rejected"
+      ) {
         existing.status = "pending";
         await existing.save();
-        const populated = await FriendRequest.findById(existing._id)
-          .populate("sender", "name username avatar isOnline");
+        const populated = await FriendRequest.findById(existing._id).populate(
+          "sender",
+          "name username avatar isOnline",
+        );
         // Notify receiver via socket
         getIO()?.to(targetId).emit("friendRequest", { request: populated });
         return res.status(200).json({ request: populated });
@@ -39,9 +44,14 @@ export const sendRequest = async (req, res) => {
       return res.status(400).json({ message: "Cannot send request" });
     }
 
-    const request = await FriendRequest.create({ sender: myId, receiver: targetId });
-    const populated = await FriendRequest.findById(request._id)
-      .populate("sender", "name username avatar isOnline");
+    const request = await FriendRequest.create({
+      sender: myId,
+      receiver: targetId,
+    });
+    const populated = await FriendRequest.findById(request._id).populate(
+      "sender",
+      "name username avatar isOnline",
+    );
 
     // Real-time notification to receiver
     getIO()?.to(targetId).emit("friendRequest", { request: populated });
@@ -73,10 +83,17 @@ export const acceptRequest = async (req, res) => {
     await request.save();
 
     // Notify the original sender in real-time
-    getIO()?.to(request.sender._id.toString()).emit("friendRequestAccepted", {
-      request,
-      acceptedBy: { _id: myId, name: req.user.name, username: req.user.username, avatar: req.user.avatar },
-    });
+    getIO()
+      ?.to(request.sender._id.toString())
+      .emit("friendRequestAccepted", {
+        request,
+        acceptedBy: {
+          _id: myId,
+          name: req.user.name,
+          username: req.user.username,
+          avatar: req.user.avatar,
+        },
+      });
 
     res.status(200).json({ request });
   } catch (err) {
@@ -148,7 +165,7 @@ export const getFriends = async (req, res) => {
       .lean();
 
     const friends = requests.map((r) =>
-      r.sender._id.toString() === myId.toString() ? r.receiver : r.sender
+      r.sender._id.toString() === myId.toString() ? r.receiver : r.sender,
     );
 
     res.status(200).json({ friends });
@@ -240,7 +257,9 @@ export const getRelationship = async (req, res) => {
     }
 
     if (request.status === "accepted") {
-      return res.status(200).json({ status: "friends", requestId: request._id });
+      return res
+        .status(200)
+        .json({ status: "friends", requestId: request._id });
     }
 
     if (request.status === "pending") {

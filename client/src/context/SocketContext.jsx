@@ -91,7 +91,12 @@ export function SocketProvider({ children }) {
 
   // ── Call signaling helpers ─────────────────────────────────────
   const initiateCall = (toUserId, callerName, callerAvatar, callType) => {
-    socketRef.current?.emit("callUser", { toUserId, callerName, callerAvatar, callType });
+    socketRef.current?.emit("callUser", {
+      toUserId,
+      callerName,
+      callerAvatar,
+      callType,
+    });
   };
 
   const acceptCall = (toUserId) => {
