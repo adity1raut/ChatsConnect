@@ -1,54 +1,68 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
+import { SOCKET_URL } from "../config/api.js";
 
 const SocketContext = createContext(null);
-
-import { SOCKET_URL } from "../config/api.js";
 
 export function SocketProvider({ children }) {
   const { user } = useAuth();
   const socketRef = useRef(null);
+  // Expose socket as state so consumers always get a reactive reference
+  const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    // Read both token keys — auth controller stores as "authToken"
+    const token =
+      localStorage.getItem("authToken") || localStorage.getItem("accessToken");
 
     if (!user || !token) {
-      // Disconnect if logged out
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
+        setSocket(null);
         setIsConnected(false);
         setOnlineUsers(new Set());
       }
       return;
     }
 
-    // Already connected
+    // Already connected with same token — skip
     if (socketRef.current?.connected) return;
 
-    const socket = io(SOCKET_URL, {
+    const s = io(SOCKET_URL, {
       auth: { token },
+      // Force WebSocket immediately — skip HTTP long-polling round-trip
+      transports: ["websocket"],
+      upgrade: false,
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 3000,
+      timeout: 10000,
     });
 
-    socket.on("connect", () => {
+    s.on("connect", () => {
       setIsConnected(true);
+      setSocket(s); // expose to consumers only after connection is live
     });
 
-    socket.on("disconnect", () => {
+    s.on("disconnect", () => {
       setIsConnected(false);
     });
 
-    socket.on("userOnline", ({ userId }) => {
+    s.on("reconnect", () => {
+      setIsConnected(true);
+      setSocket(s);
+    });
+
+    s.on("userOnline", ({ userId }) => {
       setOnlineUsers((prev) => new Set([...prev, userId]));
     });
 
-    socket.on("userOffline", ({ userId }) => {
+    s.on("userOffline", ({ userId }) => {
       setOnlineUsers((prev) => {
         const next = new Set(prev);
         next.delete(userId);
@@ -56,11 +70,12 @@ export function SocketProvider({ children }) {
       });
     });
 
-    socketRef.current = socket;
+    socketRef.current = s;
 
     return () => {
-      socket.disconnect();
+      s.disconnect();
       socketRef.current = null;
+      setSocket(null);
       setIsConnected(false);
     };
   }, [user]);
@@ -126,7 +141,7 @@ export function SocketProvider({ children }) {
   return (
     <SocketContext.Provider
       value={{
-        socket: socketRef.current,
+        socket,
         isConnected,
         onlineUsers,
         joinGroup,

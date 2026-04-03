@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Search, Users, Check, Loader2 } from "lucide-react";
-import axios from "axios";
+import axios from "../../config/axiosInstance.js";
 import { useTheme } from "../../context/ThemeContext";
 
 import { API_URL as API } from "../../config/api.js";
@@ -24,12 +24,8 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
     }
     setLoading(true);
     try {
-      const token = localStorage.getItem("authToken");
       const res = await axios.get(
         `${API}/profile/search?query=${encodeURIComponent(q)}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
       );
       setSearchResults(res.data.users || []);
     } catch {
@@ -60,16 +56,11 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
     setCreating(true);
     setError("");
     try {
-      const token = localStorage.getItem("authToken");
-      const res = await axios.post(
-        `${API}/groups`,
-        {
-          name: groupName.trim(),
-          description: description.trim(),
-          memberIds: selectedUsers.map((u) => u._id),
-        },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const res = await axios.post(`${API}/groups`, {
+        name: groupName.trim(),
+        description: description.trim(),
+        memberIds: selectedUsers.map((u) => u._id),
+      });
       onGroupCreated(res.data.group);
       onClose();
     } catch (err) {

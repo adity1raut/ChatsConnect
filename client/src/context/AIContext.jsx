@@ -1,11 +1,20 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import axios from "axios";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
+import axios from "../config/axiosInstance.js";
 import { AI_API_URL } from "../config/api.js";
+import { useAuth } from "./AuthContext.jsx";
 
 const AIContext = createContext(null);
 
 export function AIProvider({ children }) {
-  const [aiEnabled, setAiEnabled] = useState(false);
+  const { user } = useAuth();
+
+  const [aiEnabled, setAiEnabledState] = useState(false);
   const [autoTranslate, setAutoTranslate] = useState(
     () => localStorage.getItem("autoTranslate") === "true",
   );
@@ -17,6 +26,29 @@ export function AIProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ── Load persistent aiEnabled from DB whenever user logs in/out ──
+  useEffect(() => {
+    if (!user) {
+      setAiEnabledState(false);
+      return;
+    }
+    axios
+      .get(`${AI_API_URL}/status`)
+      .then(({ data }) => setAiEnabledState(data.aiEnabled ?? false))
+      .catch(() => {});
+  }, [user]);
+
+  // ── Toggle AI: persists to DB, returns actual new state ─────────
+  const setAiEnabled = useCallback(async () => {
+    try {
+      const { data } = await axios.put(`${AI_API_URL}/toggle`, {});
+      setAiEnabledState(data.aiEnabled);
+    } catch {
+      // Optimistic fallback
+      setAiEnabledState((prev) => !prev);
+    }
+  }, []);
+
   const handleSetAutoTranslate = useCallback((val) => {
     setAutoTranslate(val);
     localStorage.setItem("autoTranslate", val);
@@ -27,19 +59,13 @@ export function AIProvider({ children }) {
     localStorage.setItem("preferredLanguage", lang);
   }, []);
 
-  const authHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("accessToken") || localStorage.getItem("authToken")}`,
-  });
-
   const fetchSmartReplies = useCallback(
     async (messages) => {
       if (!aiEnabled || !messages?.length) return;
       try {
-        const { data } = await axios.post(
-          `${AI_API_URL}/smart-reply`,
-          { messages },
-          { headers: authHeader() },
-        );
+        const { data } = await axios.post(`${AI_API_URL}/smart-reply`, {
+          messages,
+        });
         setSmartReplies(data.replies || []);
       } catch {
         setSmartReplies([]);
@@ -56,11 +82,10 @@ export function AIProvider({ children }) {
       setIsLoading(true);
       setError(null);
       try {
-        const { data } = await axios.post(
-          `${AI_API_URL}/chat`,
-          { message, history: chatHistory },
-          { headers: authHeader() },
-        );
+        const { data } = await axios.post(`${AI_API_URL}/chat`, {
+          message,
+          history: chatHistory,
+        });
         setChatHistory(data.history || []);
         return data.reply;
       } catch (err) {
@@ -76,11 +101,9 @@ export function AIProvider({ children }) {
 
   const summarizeMessages = useCallback(async (messages) => {
     try {
-      const { data } = await axios.post(
-        `${AI_API_URL}/summarize`,
-        { messages },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.post(`${AI_API_URL}/summarize`, {
+        messages,
+      });
       return data.summary;
     } catch {
       return null;
@@ -89,11 +112,11 @@ export function AIProvider({ children }) {
 
   const translateMessage = useCallback(async (text, targetLanguage) => {
     try {
-      const { data } = await axios.post(
-        `${AI_API_URL}/translate`,
-        { text, target_language: targetLanguage, source_language: "auto" },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.post(`${AI_API_URL}/translate`, {
+        text,
+        target_language: targetLanguage,
+        source_language: "auto",
+      });
       return data.translated_text;
     } catch {
       return null;
@@ -102,11 +125,7 @@ export function AIProvider({ children }) {
 
   const analyzeSentiment = useCallback(async (text) => {
     try {
-      const { data } = await axios.post(
-        `${AI_API_URL}/sentiment`,
-        { text },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.post(`${AI_API_URL}/sentiment`, { text });
       return data;
     } catch {
       return null;
@@ -128,6 +147,7 @@ export function AIProvider({ children }) {
         preferredLanguage,
         setPreferredLanguage: handleSetPreferredLanguage,
         smartReplies,
+        setSmartReplies,
         fetchSmartReplies,
         clearSmartReplies,
         chatHistory,

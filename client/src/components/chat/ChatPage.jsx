@@ -29,6 +29,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 export default function ChatPage({
   contacts,
+  allUsers = [],
   selectedChat,
   setSelectedChat,
   message,
@@ -51,6 +52,7 @@ export default function ChatPage({
   onViewProfile,
   onManageGroup,
   onStartGroupCall,
+  onStartChatWithUser,
 }) {
   const { isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
@@ -201,41 +203,102 @@ export default function ChatPage({
         {/* Contact list */}
         <div className="flex-1 overflow-y-auto py-1 min-h-0">
           {filteredContacts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 px-6 text-center">
-              <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 ${isDark ? "bg-white/4" : "bg-gray-100"}`}
-              >
-                {activeTab === "groups" ? (
-                  <Users
-                    size={22}
-                    className={isDark ? "text-gray-600" : "text-gray-300"}
-                  />
-                ) : (
-                  <Search
-                    size={22}
-                    className={isDark ? "text-gray-600" : "text-gray-300"}
-                  />
+            <div className="flex flex-col w-full">
+              {/* No results message */}
+              {searchQuery || activeTab === "groups" ? (
+                <div className="flex flex-col items-center justify-center h-36 px-6 text-center">
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 ${isDark ? "bg-white/4" : "bg-gray-100"}`}
+                  >
+                    {activeTab === "groups" ? (
+                      <Users
+                        size={20}
+                        className={isDark ? "text-gray-600" : "text-gray-300"}
+                      />
+                    ) : (
+                      <Search
+                        size={20}
+                        className={isDark ? "text-gray-600" : "text-gray-300"}
+                      />
+                    )}
+                  </div>
+                  <p
+                    className={`text-sm font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                  >
+                    {searchQuery
+                      ? `No results for "${searchQuery}"`
+                      : "No groups yet"}
+                  </p>
+                  {activeTab === "groups" && !searchQuery && (
+                    <button
+                      onClick={onCreateGroup}
+                      className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-violet-500 hover:text-violet-400"
+                    >
+                      <Plus size={13} /> Create a group
+                    </button>
+                  )}
+                </div>
+              ) : null}
+
+              {/* ── People you can message ── */}
+              {!searchQuery &&
+                activeTab !== "groups" &&
+                allUsers.length > 0 && (
+                  <div className="px-4 pt-3 pb-1">
+                    <p
+                      className={`text-[11px] font-bold uppercase tracking-widest mb-2 ${isDark ? "text-gray-600" : "text-gray-400"}`}
+                    >
+                      People you can message
+                    </p>
+                    {allUsers.map((u) => {
+                      const isOnline = onlineUsers.has(u._id);
+                      return (
+                        <button
+                          key={u._id}
+                          onClick={() => onStartChatWithUser?.(u)}
+                          className={`w-full flex items-center gap-3 px-2 py-3 rounded-xl transition-all duration-200 text-left ${isDark ? "hover:bg-white/4" : "hover:bg-gray-50"}`}
+                        >
+                          <div className="relative shrink-0">
+                            {u.avatar && u.avatar.startsWith("http") ? (
+                              <img
+                                src={u.avatar}
+                                alt={u.name}
+                                className="w-11 h-11 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div
+                                className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-white text-base bg-linear-to-br from-violet-400 via-purple-400 to-pink-400`}
+                              >
+                                {u.name?.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div
+                              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 ${isOnline ? "bg-emerald-500" : "bg-gray-400"} ${isDark ? "border-gray-950" : "border-white"}`}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-sm font-semibold truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}
+                            >
+                              {u.name}
+                            </p>
+                            <p
+                              className={`text-xs truncate ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                            >
+                              @{u.username}
+                            </p>
+                          </div>
+                          <MessageSquare
+                            size={14}
+                            className={
+                              isDark ? "text-gray-700" : "text-gray-300"
+                            }
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </div>
-              <p
-                className={`text-sm font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}
-              >
-                {searchQuery
-                  ? `No results for "${searchQuery}"`
-                  : activeTab === "groups"
-                    ? "No groups yet"
-                    : activeTab === "users"
-                      ? "No conversations yet"
-                      : "No conversations"}
-              </p>
-              {activeTab === "groups" && !searchQuery && (
-                <button
-                  onClick={onCreateGroup}
-                  className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-violet-500 hover:text-violet-400"
-                >
-                  <Plus size={13} /> Create a group
-                </button>
-              )}
             </div>
           ) : (
             filteredContacts.map((contact) => {

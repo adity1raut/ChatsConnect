@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { MessageSquare, Video, Users, Layers } from "lucide-react";
-import axios from "axios";
+import axios from "../config/axiosInstance.js";
 import MainDashboard from "../components/chat/MainDashboard";
 import { API_URL } from "../config/api.js";
 import { useSocket } from "../context/SocketContext";
+import { useAI } from "../context/AIContext";
 
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -14,7 +15,7 @@ function timeAgo(dateStr) {
 }
 
 function Dashboard() {
-  const [aiEnabled, setAiEnabled] = useState(true);
+  const { aiEnabled, setAiEnabled } = useAI();
   const [_currentView, setCurrentView] = useState("dashboard");
   const [_showSettingsModal, setShowSettingsModal] = useState(false);
 
@@ -30,10 +31,7 @@ function Dashboard() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem("authToken");
-      const { data } = await axios.get(`${API_URL}/dashboard/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(`${API_URL}/dashboard/stats`);
       setStatsData(data.stats);
       setRecentActivity(
         data.recentActivity.map((a) => ({

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../config/axiosInstance.js";
 import ChatPageComponent from "../components/chat/ChatPage";
 import CreateGroupModal from "../components/chat/CreateGroupModal";
 import NewDMModal from "../components/chat/NewDMModal";
@@ -32,6 +32,7 @@ function ChatPage() {
   } = useSocket();
 
   const [contacts, setContacts] = useState([]);
+  const [allUsers, setAllUsers] = useState([]); // every user on the platform
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
@@ -39,6 +40,7 @@ function ChatPage() {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const {
     aiEnabled,
+    setSmartReplies,
     fetchSmartReplies,
     clearSmartReplies,
     autoTranslate,
@@ -56,16 +58,13 @@ function ChatPage() {
   const typingTimerRef = useRef(null);
   const [typingUsers, setTypingUsers] = useState(new Set());
 
-  const authHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-  });
-
-  // ── Load conversations + groups ──────────────────────────────────
+  // ── Load conversations + groups (no onlineUsers dependency) ─────
   const loadContacts = useCallback(async () => {
+    if (!user) return;
     try {
       const [convRes, groupRes] = await Promise.all([
-        axios.get(`${API}/messages/conversations`, { headers: authHeader() }),
-        axios.get(`${API}/groups/my`, { headers: authHeader() }),
+        axios.get(`${API}/messages/conversations`),
+        axios.get(`${API}/groups/my`),
       ]);
 
       const dmContacts = (convRes.data.conversations || []).map((c) => ({
@@ -74,7 +73,7 @@ function ChatPage() {
         name: c.contact.name,
         username: c.contact.username,
         avatar: c.contact.avatar,
-        isOnline: onlineUsers.has(c.contact._id) || c.contact.isOnline,
+        isOnline: c.contact.isOnline, // resolved at render time via onlineUsers
         lastMessage: c.lastMessage?.content || "",
         lastMessageAt: c.lastMessageAt,
         type: "user",
@@ -94,7 +93,6 @@ function ChatPage() {
         unread: 0,
       }));
 
-      // Merge and sort by last activity
       const all = [...dmContacts, ...groupContacts].sort(
         (a, b) =>
           new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0),
@@ -104,11 +102,25 @@ function ChatPage() {
     } catch (err) {
       console.error("loadContacts error:", err);
     }
-  }, [onlineUsers]);
+  }, [user]);
+
+  // ── Load ALL users for discovery sidebar ────────────────────────
+  const loadAllUsers = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await axios.get(`${API}/profile/all?limit=50`);
+      // Exclude self
+      const others = (res.data.users || []).filter((u) => u._id !== user._id);
+      setAllUsers(others);
+    } catch (err) {
+      console.error("loadAllUsers error:", err);
+    }
+  }, [user]);
 
   useEffect(() => {
-    if (user) loadContacts();
-  }, [user, loadContacts]);
+    loadContacts();
+    loadAllUsers();
+  }, [loadContacts, loadAllUsers]);
 
   // ── Join group socket rooms when contacts load ───────────────────
   useEffect(() => {
@@ -117,13 +129,12 @@ function ChatPage() {
     });
   }, [contacts, joinGroup]);
 
-  // ── Deep-link: open a chat from navigation state (Search / Notifications) ─
+  // ── Deep-link: open a chat from navigation state ─────────────────
   useEffect(() => {
     if (!contacts.length) return;
     const { openChat, openGroup } = location.state || {};
 
     if (openChat) {
-      // Try to find existing contact; if not, create a transient one
       const existing = contacts.find(
         (c) => c.type === "user" && c.id === openChat.id,
       );
@@ -137,7 +148,6 @@ function ChatPage() {
           isOnline: onlineUsers.has(openChat.id),
         },
       );
-      // Clear state so re-renders don't re-trigger
       window.history.replaceState({}, "");
     } else if (openGroup) {
       const existing = contacts.find(
@@ -148,7 +158,6 @@ function ChatPage() {
         window.history.replaceState({}, "");
       }
     }
-    // Only run once after contacts first load, or when navigation state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contacts.length, location.state]);
 
@@ -167,8 +176,15 @@ function ChatPage() {
             ? `${API}/messages/group/${selectedChat.groupId}`
             : `${API}/messages/dm/${selectedChat.id}`;
 
-        const res = await axios.get(url, { headers: authHeader() });
+        const res = await axios.get(url);
         const raw = res.data.messages || [];
+
+        // If this is first message (new conversation), store conversationId
+        if (res.data.conversationId && !selectedChat.conversationId) {
+          setSelectedChat((prev) =>
+            prev ? { ...prev, conversationId: res.data.conversationId } : prev,
+          );
+        }
 
         const mapped = raw.map((m) => ({
           id: m._id,
@@ -184,14 +200,16 @@ function ChatPage() {
         }));
 
         if (autoTranslate) {
-          const translated = await Promise.all(
+          const results = await Promise.allSettled(
             mapped.map(async (m) => {
               if (m.sender !== "them") return m;
               const t = await translateMessage(m.text, preferredLanguage);
               return t ? { ...m, text: t, originalText: m.text } : m;
             }),
           );
-          setMessages(translated);
+          setMessages(
+            results.map((r) => (r.status === "fulfilled" ? r.value : r.reason)),
+          );
         } else {
           setMessages(mapped);
         }
@@ -203,7 +221,7 @@ function ChatPage() {
     };
 
     fetchHistory();
-  }, [selectedChat, user]);
+  }, [selectedChat?.id, selectedChat?.groupId, user]); // only re-run when the actual chat changes
 
   // ── Socket: incoming DM ──────────────────────────────────────────
   useEffect(() => {
@@ -223,7 +241,6 @@ function ChatPage() {
         status: "sent",
       };
 
-      // Append if we're viewing this conversation
       setSelectedChat((prev) => {
         if (
           prev &&
@@ -232,24 +249,53 @@ function ChatPage() {
             prev.id === msg.senderId._id)
         ) {
           setMessages((msgs) => {
-            // Deduplicate by id
             if (msgs.find((m) => m.id === newMsg.id)) return msgs;
             return [...msgs, newMsg];
           });
+          // Attach conversationId to transient chats after first message
+          if (!prev.conversationId) {
+            return { ...prev, conversationId };
+          }
         }
         return prev;
       });
 
-      // Update contact's last message in-place (fast, no API call)
-      setContacts((prev) =>
-        prev.map((c) =>
-          c.type === "user" &&
-          (c.conversationId?.toString() === conversationId?.toString() ||
-            c.id === msg.senderId._id)
-            ? { ...c, lastMessage: msg.content, lastMessageAt: msg.createdAt }
-            : c,
-        ),
-      );
+      setContacts((prev) => {
+        const exists = prev.find(
+          (c) =>
+            c.type === "user" &&
+            (c.conversationId?.toString() === conversationId?.toString() ||
+              c.id === msg.senderId._id),
+        );
+        if (exists) {
+          return prev.map((c) =>
+            c === exists
+              ? {
+                  ...c,
+                  lastMessage: msg.content,
+                  lastMessageAt: msg.createdAt,
+                  conversationId,
+                }
+              : c,
+          );
+        }
+        // New conversation — add sender to contact list immediately
+        return [
+          {
+            id: msg.senderId._id,
+            conversationId,
+            name: msg.senderId.name,
+            username: msg.senderId.username,
+            avatar: msg.senderId.avatar,
+            isOnline: true,
+            lastMessage: msg.content,
+            lastMessageAt: msg.createdAt,
+            type: "user",
+            unread: 1,
+          },
+          ...prev,
+        ];
+      });
     };
 
     socket.on("newMessage", handleNewMessage);
@@ -284,7 +330,6 @@ function ChatPage() {
         return prev;
       });
 
-      // Update group contact's last message in-place
       setContacts((prev) =>
         prev.map((c) =>
           c.type === "group" && c.groupId === groupId
@@ -298,43 +343,70 @@ function ChatPage() {
     return () => socket.off("newGroupMessage", handleGroupMessage);
   }, [socket, user]);
 
-  // ── Socket: another user added this user to a group ─────────────
+  // ── Socket: added to a new group ────────────────────────────────
   useEffect(() => {
     if (!socket) return;
-
     const handleGroupCreated = ({ group }) => {
-      // Join the socket room for the new group and refresh contact list
       joinGroup(group._id);
       loadContacts();
     };
-
     socket.on("groupCreated", handleGroupCreated);
     return () => socket.off("groupCreated", handleGroupCreated);
   }, [socket, joinGroup, loadContacts]);
 
-  // ── Socket: typing indicators ─────────────────────────────────────
+  // ── Socket: typing indicators (only for the active chat) ─────────
   useEffect(() => {
     if (!socket) return;
-
-    socket.on("typing", ({ senderId }) => {
-      setTypingUsers((prev) => new Set([...prev, senderId]));
-    });
-
-    socket.on("stopTyping", ({ senderId }) => {
-      setTypingUsers((prev) => {
-        const next = new Set(prev);
-        next.delete(senderId);
-        return next;
+    const handleTyping = ({ senderId, groupId }) => {
+      setSelectedChat((prev) => {
+        if (!prev) return prev;
+        const isDM = prev.type === "user" && prev.id === senderId;
+        const isGroup = prev.type === "group" && prev.groupId === groupId;
+        if (isDM || isGroup) setTypingUsers((p) => new Set([...p, senderId]));
+        return prev;
       });
-    });
-
+    };
+    const handleStopTyping = ({ senderId, groupId }) => {
+      setSelectedChat((prev) => {
+        if (!prev) return prev;
+        const isDM = prev.type === "user" && prev.id === senderId;
+        const isGroup = prev.type === "group" && prev.groupId === groupId;
+        if (isDM || isGroup)
+          setTypingUsers((p) => {
+            const next = new Set(p);
+            next.delete(senderId);
+            return next;
+          });
+        return prev;
+      });
+    };
+    socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
     return () => {
-      socket.off("typing");
-      socket.off("stopTyping");
+      socket.off("typing", handleTyping);
+      socket.off("stopTyping", handleStopTyping);
     };
   }, [socket]);
 
-  // ── Online status: update contacts when users come/go online ────
+  // ── Socket: real-time AI smart replies ──────────────────────────
+  useEffect(() => {
+    if (!socket || !aiEnabled) return;
+    const handleAISmartReplies = ({ conversationId, groupId, replies }) => {
+      setSelectedChat((prev) => {
+        if (!prev) return prev;
+        const matchDM =
+          prev.type === "user" &&
+          prev.conversationId?.toString() === conversationId?.toString();
+        const matchGroup = prev.type === "group" && prev.groupId === groupId;
+        if (matchDM || matchGroup) setSmartReplies(replies);
+        return prev;
+      });
+    };
+    socket.on("aiSmartReplies", handleAISmartReplies);
+    return () => socket.off("aiSmartReplies", handleAISmartReplies);
+  }, [socket, aiEnabled, setSmartReplies]);
+
+  // ── Online status: update contacts reactively ───────────────────
   useEffect(() => {
     setContacts((prev) =>
       prev.map((c) =>
@@ -353,10 +425,9 @@ function ChatPage() {
     } else {
       sendMessage(selectedChat.id, content);
     }
-
     setMessage("");
+    clearSmartReplies(); // hide suggestions once message is sent
 
-    // Stop typing
     if (selectedChat.type === "group") {
       emitStopTyping(null, selectedChat.groupId);
     } else {
@@ -364,29 +435,33 @@ function ChatPage() {
     }
   };
 
-  // ── Typing detection ──────────────────────────────────────────────
+  // ── Typing detection (with unmount cleanup) ──────────────────────
+  useEffect(() => {
+    return () => clearTimeout(typingTimerRef.current);
+  }, []);
+
   const handleMessageChange = (val) => {
     setMessage(val);
-
     if (!selectedChat) return;
-
     const receiverId = selectedChat.type === "user" ? selectedChat.id : null;
     const groupId = selectedChat.type === "group" ? selectedChat.groupId : null;
-
     emitTyping(receiverId, groupId);
-
     clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
       emitStopTyping(receiverId, groupId);
     }, 1500);
   };
 
-  // ── AI: fetch smart replies when last message arrives ────────────
+  // ── AI: auto smart replies when OTHER person sends a message ──────
   useEffect(() => {
     if (!aiEnabled || !messages.length || !selectedChat) {
       clearSmartReplies();
       return;
     }
+    // Only suggest replies when the last message is from the other person
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.sender !== "them") return;
+
     const aiMessages = messages.slice(-6).map((m) => ({
       role: m.sender === "me" ? "user" : "assistant",
       content: m.text,
@@ -394,20 +469,17 @@ function ChatPage() {
     fetchSmartReplies(aiMessages);
   }, [messages, aiEnabled, selectedChat, fetchSmartReplies, clearSmartReplies]);
 
-  // ── AI: clear smart replies when chat changes ──────────────────
   useEffect(() => {
     clearSmartReplies();
   }, [selectedChat, clearSmartReplies]);
 
-  // ── Group created callback ────────────────────────────────────────
+  // ── Callbacks ────────────────────────────────────────────────────
   const handleGroupCreated = (group) => {
     joinGroup(group._id);
     loadContacts();
   };
 
-  // ── New DM: open chat with selected user ──────────────────────────
   const handleNewDM = (userProfile) => {
-    // Check if we already have a conversation with this user
     const existing = contacts.find(
       (c) => c.type === "user" && c.id === userProfile._id,
     );
@@ -423,12 +495,9 @@ function ChatPage() {
     );
   };
 
-  // ── Select a chat: update socket rooms + clear typing + tell notifications ─
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setTypingUsers(new Set());
-
-    // Mark notifications for this chat as read
     if (chat) {
       const chatId =
         chat.type === "group"
@@ -440,6 +509,12 @@ function ChatPage() {
     }
   };
 
+  // Start a DM from the discovery list (allUsers)
+  const handleStartChatWithUser = (u) => {
+    handleNewDM(u);
+    setShowNewDM(false);
+  };
+
   const isTyping =
     selectedChat &&
     selectedChat.type === "user" &&
@@ -449,6 +524,7 @@ function ChatPage() {
     <div className="flex h-full">
       <ChatPageComponent
         contacts={contacts}
+        allUsers={allUsers}
         selectedChat={selectedChat}
         setSelectedChat={handleSelectChat}
         message={message}
@@ -475,16 +551,13 @@ function ChatPage() {
         }
         onToggleAIPanel={() => setShowAIPanel((v) => !v)}
         onViewProfile={(uid) => navigate(`/profile/${uid}`)}
+        onStartChatWithUser={handleStartChatWithUser}
         smartReplySlot={
-          <SmartReply
-            onSelect={(reply) => {
-              handleMessageChange(reply);
-            }}
-          />
+          <SmartReply onSelect={(reply) => handleMessageChange(reply)} />
         }
       />
       {showAIPanel && aiEnabled && (
-        <div className="hidden lg:flex w-72 xl:w-80 flex-shrink-0 h-full">
+        <div className="hidden lg:flex w-72 xl:w-80 shrink-0 h-full">
           <AIPanel onClose={() => setShowAIPanel(false)} />
         </div>
       )}

@@ -628,12 +628,10 @@ export const changePassword = async (req, res) => {
     }
 
     if (newPassword.length < 6) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "New password must be at least 6 characters",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters",
+      });
     }
 
     const user = await User.findById(req.user._id).select("+password");
@@ -645,12 +643,10 @@ export const changePassword = async (req, res) => {
     }
 
     if (user.authProvider !== "LOCAL") {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Cannot change password for OAuth accounts",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Cannot change password for OAuth accounts",
+      });
     }
 
     const isValid = await bcrypt.compare(currentPassword, user.password);

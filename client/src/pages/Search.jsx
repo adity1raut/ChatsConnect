@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../config/axiosInstance.js";
 import { useFriends } from "../context/FriendContext";
 
 import { API_URL as API } from "../config/api.js";
@@ -59,17 +59,13 @@ export default function SearchPage() {
   const [suggested, setSuggested] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
 
-  const authHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-  });
-
   // Load suggested people + my groups on mount
   useEffect(() => {
     const loadDefaults = async () => {
       try {
         const [usersRes, groupsRes] = await Promise.all([
-          axios.get(`${API}/profile/all?limit=6`, { headers: authHeader() }),
-          axios.get(`${API}/groups/my`, { headers: authHeader() }),
+          axios.get(`${API}/profile/all?limit=6`),
+          axios.get(`${API}/groups/my`),
         ]);
         setSuggested(usersRes.data.users || []);
         setMyGroups(groupsRes.data.groups || []);
@@ -90,10 +86,8 @@ export default function SearchPage() {
     setLoading(true);
     try {
       const [usersRes, groupsRes] = await Promise.all([
-        axios.get(`${API}/profile/search?query=${encodeURIComponent(q)}`, {
-          headers: authHeader(),
-        }),
-        axios.get(`${API}/groups/my`, { headers: authHeader() }),
+        axios.get(`${API}/profile/search?query=${encodeURIComponent(q)}`),
+        axios.get(`${API}/groups/my`),
       ]);
       setPeople(usersRes.data.users || []);
       // Filter groups client-side by query

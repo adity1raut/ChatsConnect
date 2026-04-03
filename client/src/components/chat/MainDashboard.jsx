@@ -54,31 +54,17 @@ const STAT_CONFIG = {
   },
 };
 
+// Keyed by activity.type ("dm" | "group") — avoids brittle string matching
 const ACTIVITY_ICONS = {
-  "sent you a message": {
+  dm: {
     icon: MessageSquare,
     color: "text-blue-500",
     bg: "bg-blue-500/15",
   },
-  "started a video call": {
-    icon: Video,
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/15",
-  },
-  "joined the group chat": {
+  group: {
     icon: Users,
     color: "text-violet-500",
     bg: "bg-violet-500/15",
-  },
-  "shared a file": {
-    icon: ArrowUpRight,
-    color: "text-orange-500",
-    bg: "bg-orange-500/15",
-  },
-  "scheduled a meeting": {
-    icon: Calendar,
-    color: "text-pink-500",
-    bg: "bg-pink-500/15",
   },
 };
 
@@ -305,60 +291,91 @@ export default function MainDashboard({
               </div>
 
               <div className="flex flex-col gap-1">
-                {recentActivity.map((activity, index) => {
-                  const actionCfg = ACTIVITY_ICONS[activity.action] || {
-                    icon: MessageSquare,
-                    color: "text-gray-500",
-                    bg: "bg-gray-500/15",
-                  };
-                  const ActionIcon = actionCfg.icon;
-
-                  return (
+                {recentActivity.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-2">
                     <div
-                      key={index}
-                      className={`flex items-center gap-4 p-3.5 rounded-xl transition-all duration-200 group cursor-default ${
-                        isDark ? "hover:bg-white/[0.04]" : "hover:bg-gray-50"
-                      }`}
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? "bg-white/5" : "bg-gray-100"}`}
                     >
-                      {/* Avatar */}
-                      <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center text-lg shadow-md">
-                          {activity.avatar}
-                        </div>
-                        {/* Action badge */}
-                        <div
-                          className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center ${actionCfg.bg} ring-2 ${isDark ? "ring-gray-900" : "ring-white"}`}
-                        >
-                          <ActionIcon
-                            size={10}
-                            className={actionCfg.color}
-                            strokeWidth={2.5}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm font-semibold truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}
-                        >
-                          {activity.user}
-                        </p>
-                        <p
-                          className={`text-xs truncate ${isDark ? "text-gray-500" : "text-gray-400"}`}
-                        >
-                          {activity.action}
-                        </p>
-                      </div>
-
-                      <span
-                        className={`text-xs flex-shrink-0 font-medium tabular-nums ${isDark ? "text-gray-600" : "text-gray-400"}`}
-                      >
-                        {activity.time}
-                      </span>
+                      <Zap
+                        size={20}
+                        className={isDark ? "text-gray-600" : "text-gray-300"}
+                      />
                     </div>
-                  );
-                })}
+                    <p
+                      className={`text-sm font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                    >
+                      No recent activity yet
+                    </p>
+                    <p
+                      className={`text-xs ${isDark ? "text-gray-600" : "text-gray-400"}`}
+                    >
+                      Messages from others will appear here
+                    </p>
+                  </div>
+                ) : (
+                  recentActivity.map((activity, index) => {
+                    const cfg =
+                      ACTIVITY_ICONS[activity.type] || ACTIVITY_ICONS.dm;
+                    const ActionIcon = cfg.icon;
+                    const isImgAvatar =
+                      typeof activity.avatar === "string" &&
+                      activity.avatar.startsWith("http");
+
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-4 p-3.5 rounded-xl transition-all duration-200 group cursor-default ${
+                          isDark ? "hover:bg-white/4" : "hover:bg-gray-50"
+                        }`}
+                      >
+                        {/* Avatar */}
+                        <div className="relative shrink-0">
+                          {isImgAvatar ? (
+                            <img
+                              src={activity.avatar}
+                              alt={activity.user}
+                              className="w-10 h-10 rounded-full object-cover shadow-md"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-base shadow-md">
+                              {activity.user?.charAt(0).toUpperCase() || "?"}
+                            </div>
+                          )}
+                          {/* Action badge */}
+                          <div
+                            className={`absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center ${cfg.bg} ring-2 ${isDark ? "ring-gray-900" : "ring-white"}`}
+                          >
+                            <ActionIcon
+                              size={10}
+                              className={cfg.color}
+                              strokeWidth={2.5}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={`text-sm font-semibold truncate ${isDark ? "text-gray-100" : "text-gray-800"}`}
+                          >
+                            {activity.user}
+                          </p>
+                          <p
+                            className={`text-xs truncate ${isDark ? "text-gray-500" : "text-gray-400"}`}
+                          >
+                            {activity.action}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`text-xs shrink-0 font-medium tabular-nums ${isDark ? "text-gray-600" : "text-gray-400"}`}
+                        >
+                          {activity.time}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
