@@ -15,7 +15,7 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
-import axios from "axios";
+import axios from "../../config/axiosInstance.js";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 
@@ -166,9 +166,6 @@ export default function SettingsModal({
   const [usernameMsg, setUsernameMsg] = useState(null);
   const [usernameLoading, setUsernameLoading] = useState(false);
 
-  const token = () => localStorage.getItem("accessToken");
-  const authHeader = () => ({ Authorization: `Bearer ${token()}` });
-
   const toggleSection = (id) => {
     setActiveSection((prev) => (prev === id ? null : id));
     setPwdMsg(null);
@@ -189,11 +186,10 @@ export default function SettingsModal({
     setPwdLoading(true);
     setPwdMsg(null);
     try {
-      await axios.put(
-        `${API_URL}/auth/change-password`,
-        { currentPassword: currentPwd, newPassword: newPwd },
-        { headers: authHeader() },
-      );
+      await axios.put(`${API_URL}/auth/change-password`, {
+        currentPassword: currentPwd,
+        newPassword: newPwd,
+      });
       setPwdMsg({ type: "success", text: "Password changed successfully!" });
       setCurrentPwd("");
       setNewPwd("");
@@ -217,11 +213,9 @@ export default function SettingsModal({
     setEmailLoading(true);
     setEmailMsg(null);
     try {
-      const { data } = await axios.put(
-        `${API_URL}/profile/update-email`,
-        { email: newEmail },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.put(`${API_URL}/profile/update-email`, {
+        email: newEmail,
+      });
       updateUser(data.user);
       setEmailMsg({ type: "success", text: "Email updated successfully!" });
       setNewEmail("");
@@ -246,11 +240,9 @@ export default function SettingsModal({
     setUsernameLoading(true);
     setUsernameMsg(null);
     try {
-      const { data } = await axios.put(
-        `${API_URL}/profile/update`,
-        { username: newUsername },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.put(`${API_URL}/profile/update`, {
+        username: newUsername,
+      });
       updateUser(data.user);
       setUsernameMsg({
         type: "success",

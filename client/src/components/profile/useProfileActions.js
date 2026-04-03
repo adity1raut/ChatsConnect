@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios from "../../config/axiosInstance.js";
 
 import { API_URL } from "../../config/api.js";
 
@@ -7,9 +7,6 @@ export function useProfileActions({ updateUser, logout, navigate }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  const token = () => localStorage.getItem("authToken");
-  const authHeader = () => ({ Authorization: `Bearer ${token()}` });
 
   const withFeedback = async (fn, successMsg) => {
     setError("");
@@ -29,11 +26,12 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     if (!name) return setError("Name is required");
 
     withFeedback(async () => {
-      const { data } = await axios.put(
-        `${API_URL}/profile/update`,
-        { username, bio, avatar: avatarFile, name },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.put(`${API_URL}/profile/update`, {
+        username,
+        bio,
+        avatar: avatarFile,
+        name,
+      });
       updateUser(data.user);
     }, "Profile updated!");
   };
@@ -46,11 +44,9 @@ export function useProfileActions({ updateUser, logout, navigate }) {
       );
 
     withFeedback(async () => {
-      const { data } = await axios.put(
-        `${API_URL}/profile/update`,
-        { username },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.put(`${API_URL}/profile/update`, {
+        username,
+      });
       updateUser(data.user);
     }, "Username updated!");
   };
@@ -60,11 +56,9 @@ export function useProfileActions({ updateUser, logout, navigate }) {
       return setError("Enter a valid email address");
 
     withFeedback(async () => {
-      const { data } = await axios.put(
-        `${API_URL}/profile/update-email`,
-        { email },
-        { headers: authHeader() },
-      );
+      const { data } = await axios.put(`${API_URL}/profile/update-email`, {
+        email,
+      });
       updateUser(data.user);
     }, "Email updated!");
   };
@@ -82,11 +76,10 @@ export function useProfileActions({ updateUser, logout, navigate }) {
       return setError("Password must be at least 6 characters");
 
     withFeedback(async () => {
-      await axios.put(
-        `${API_URL}/auth/change-password`,
-        { currentPassword, newPassword },
-        { headers: authHeader() },
-      );
+      await axios.put(`${API_URL}/auth/change-password`, {
+        currentPassword,
+        newPassword,
+      });
     }, "Password changed!");
   };
 
@@ -94,9 +87,7 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     if (confirmText !== "DELETE") return setError("Type DELETE to confirm");
     setLoading(true);
     try {
-      await axios.delete(`${API_URL}/profile/delete`, {
-        headers: authHeader(),
-      });
+      await axios.delete(`${API_URL}/profile/delete`);
       logout();
       navigate("/login");
     } catch (err) {

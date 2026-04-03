@@ -63,7 +63,7 @@ export default function AIPanel({ onClose }) {
             <p
               className={`text-[10px] ${isDark ? "text-gray-500" : "text-gray-400"}`}
             >
-              Powered by LangGraph
+              Powered by Claude
             </p>
           </div>
         </div>

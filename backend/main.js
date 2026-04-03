@@ -13,6 +13,7 @@ import aiRoutes from "./routes/ai.routes.js";
 import ConnectDB from "./db/ConnectDB.js";
 import passport from "./config/passport.js";
 import { initSocket } from "./socket/socket.js";
+import { initRedis } from "./cache/redis.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use(
 );
 
 ConnectDB();
+initRedis();
 
 // Socket.io
 initSocket(httpServer);

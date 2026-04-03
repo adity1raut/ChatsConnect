@@ -503,9 +503,7 @@ export default function RegistrationForm() {
                     <input
                       type="text"
                       value={username}
-                      onChange={(e) =>
-                        setUsername(e.target.value.toLowerCase())
-                      }
+                      onChange={(e) => setUsername(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="johndoe"
                       className={`w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base ${

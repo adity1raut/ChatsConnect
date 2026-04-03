@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../config/axiosInstance.js";
 import {
   ArrowLeft,
   MessageSquare,
@@ -43,17 +43,11 @@ export default function UserProfile() {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  const authHeader = () => ({
-    Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-  });
-
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get(`${API_URL}/profile/${userId}`, {
-          headers: authHeader(),
-        });
+        const { data } = await axios.get(`${API_URL}/profile/${userId}`);
         setProfile(data.user);
         setFriendCount(data.friendCount ?? 0);
       } catch {

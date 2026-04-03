@@ -5,16 +5,13 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import axios from "axios";
+import axios from "../config/axiosInstance.js";
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
 
 const FriendContext = createContext(null);
 
 import { API_URL as API } from "../config/api.js";
-const authHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-});
 
 export function FriendProvider({ children }) {
   const { socket } = useSocket();
@@ -31,9 +28,9 @@ export function FriendProvider({ children }) {
     if (!user) return;
     try {
       const [friendsRes, incomingRes, sentRes] = await Promise.all([
-        axios.get(`${API}/friends`, { headers: authHeader() }),
-        axios.get(`${API}/friends/requests`, { headers: authHeader() }),
-        axios.get(`${API}/friends/sent`, { headers: authHeader() }),
+        axios.get(`${API}/friends`, {}),
+        axios.get(`${API}/friends/requests`, {}),
+        axios.get(`${API}/friends/sent`, {}),
       ]);
       setFriends(friendsRes.data.friends || []);
       setIncomingRequests(incomingRes.data.requests || []);
@@ -92,11 +89,7 @@ export function FriendProvider({ children }) {
 
   // ── Actions ───────────────────────────────────────────────────────
   const sendRequest = useCallback(async (userId) => {
-    const res = await axios.post(
-      `${API}/friends/request/${userId}`,
-      {},
-      { headers: authHeader() },
-    );
+    const res = await axios.post(`${API}/friends/request/${userId}`, {}, {});
     const req = res.data.request;
     setSentRequests((prev) => [req, ...prev]);
     setRelationships((prev) => ({
@@ -108,11 +101,7 @@ export function FriendProvider({ children }) {
 
   const acceptRequest = useCallback(
     async (requestId, senderId) => {
-      await axios.put(
-        `${API}/friends/request/${requestId}/accept`,
-        {},
-        { headers: authHeader() },
-      );
+      await axios.put(`${API}/friends/request/${requestId}/accept`, {}, {});
       const accepted = incomingRequests.find(
         (r) => r._id === requestId,
       )?.sender;
@@ -129,25 +118,19 @@ export function FriendProvider({ children }) {
   );
 
   const rejectRequest = useCallback(async (requestId, senderId) => {
-    await axios.put(
-      `${API}/friends/request/${requestId}/reject`,
-      {},
-      { headers: authHeader() },
-    );
+    await axios.put(`${API}/friends/request/${requestId}/reject`, {}, {});
     setIncomingRequests((prev) => prev.filter((r) => r._id !== requestId));
     setRelationships((prev) => ({ ...prev, [senderId]: { status: "none" } }));
   }, []);
 
   const cancelRequest = useCallback(async (requestId, receiverId) => {
-    await axios.delete(`${API}/friends/request/${requestId}/cancel`, {
-      headers: authHeader(),
-    });
+    await axios.delete(`${API}/friends/request/${requestId}/cancel`);
     setSentRequests((prev) => prev.filter((r) => r._id !== requestId));
     setRelationships((prev) => ({ ...prev, [receiverId]: { status: "none" } }));
   }, []);
 
   const removeFriend = useCallback(async (userId) => {
-    await axios.delete(`${API}/friends/${userId}`, { headers: authHeader() });
+    await axios.delete(`${API}/friends/${userId}`, {});
     setFriends((prev) => prev.filter((f) => f._id !== userId));
     setRelationships((prev) => ({ ...prev, [userId]: { status: "none" } }));
   }, []);

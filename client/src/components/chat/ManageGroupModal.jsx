@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
+import axios from "../../config/axiosInstance.js";
 import {
   X,
   Search,
@@ -12,10 +12,6 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { API_URL } from "../../config/api.js";
-
-const authHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-});
 
 export default function ManageGroupModal({
   group,
@@ -38,9 +34,7 @@ export default function ManageGroupModal({
   // ── Fetch fresh group details ────────────────────────────────────
   const fetchDetails = useCallback(async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/groups/${groupId}`, {
-        headers: authHeader(),
-      });
+      const { data } = await axios.get(`${API_URL}/groups/${groupId}`, {});
       setMembers(data.group?.members || []);
     } catch {
       setError("Failed to load group details");
@@ -64,7 +58,6 @@ export default function ManageGroupModal({
       try {
         const { data } = await axios.get(
           `${API_URL}/profile/search?query=${encodeURIComponent(searchQuery)}&limit=8`,
-          { headers: authHeader() },
         );
         const memberIds = new Set(members.map((m) => m.user?._id || m.user));
         setSearchResults(
@@ -87,11 +80,9 @@ export default function ManageGroupModal({
     setActionLoading(`add-${userId}`);
     setError("");
     try {
-      await axios.post(
-        `${API_URL}/groups/${groupId}/members`,
-        { userIds: [userId] },
-        { headers: authHeader() },
-      );
+      await axios.post(`${API_URL}/groups/${groupId}/members`, {
+        userIds: [userId],
+      });
       setSearchQuery("");
       setSearchResults([]);
       await fetchDetails();
@@ -108,9 +99,7 @@ export default function ManageGroupModal({
     setActionLoading(`remove-${userId}`);
     setError("");
     try {
-      await axios.delete(`${API_URL}/groups/${groupId}/members/${userId}`, {
-        headers: authHeader(),
-      });
+      await axios.delete(`${API_URL}/groups/${groupId}/members/${userId}`, {});
       await fetchDetails();
       onGroupUpdated?.();
     } catch (err) {
@@ -124,9 +113,7 @@ export default function ManageGroupModal({
   const handleLeave = async () => {
     setActionLoading("leave");
     try {
-      await axios.delete(`${API_URL}/groups/${groupId}/leave`, {
-        headers: authHeader(),
-      });
+      await axios.delete(`${API_URL}/groups/${groupId}/leave`, {});
       onGroupUpdated?.();
       onClose();
     } catch (err) {

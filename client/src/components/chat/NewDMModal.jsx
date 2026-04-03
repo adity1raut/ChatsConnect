@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Search, MessageSquare, Loader2 } from "lucide-react";
-import axios from "axios";
+import axios from "../../config/axiosInstance.js";
 import { useTheme } from "../../context/ThemeContext";
 
 import { API_URL as API } from "../../config/api.js";
@@ -14,13 +14,10 @@ export default function NewDMModal({ onClose, onSelectUser }) {
   const searchUsers = useCallback(async (q) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("authToken");
       const url = q.trim()
         ? `${API}/profile/search?query=${encodeURIComponent(q)}`
         : `${API}/profile/all`;
-      const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(url);
       setSearchResults(res.data.users || []);
     } catch {
       setSearchResults([]);
