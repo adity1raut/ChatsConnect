@@ -7,8 +7,7 @@
  *   VITE_BACKEND_URL - e.g. https://miniproject-ckza.onrender.com
  *                       or   http://localhost:5000
  */
-const BASE_URL =
-  import.meta.env.VITE_BACKEND_URL || "https://miniproject-ckza.onrender.com";
+const BASE_URL = "https://miniproject-ckza.onrender.com";
 
 export const API_URL = `${BASE_URL}/api`;
 export const SOCKET_URL = BASE_URL;
