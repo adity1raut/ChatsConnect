@@ -37,7 +37,7 @@ export default function Sidebar({
 
   const getActiveView = () => {
     const path = location.pathname;
-    if (path === "/") return "home";
+    if (path === "/dashboard") return "home";
     if (path === "/chat") return "messages";
     if (path === "/notifications") return "notifications";
     if (path === "/profile") return "profile";
@@ -53,7 +53,7 @@ export default function Sidebar({
   };
 
   const NAV_ITEMS = [
-    { id: "home", label: "Home", icon: Home, path: "/" },
+    { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "search", label: "Search", icon: Search, path: "/search" },
     {
       id: "messages",

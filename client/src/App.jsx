@@ -27,6 +27,7 @@ import { Home, MessageSquare, Bell, User, Search } from "lucide-react";
 
 import Login from "./pages/Login.jsx";
 import Registration from "./pages/Register.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Notification from "./pages/Notification.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
@@ -46,7 +47,7 @@ function MobileNav() {
   const { unreadCount } = useNotifications();
 
   const items = [
-    { label: "Home", icon: Home, path: "/" },
+    { label: "Home", icon: Home, path: "/dashboard" },
     { label: "Search", icon: Search, path: "/search" },
     { label: "Chats", icon: MessageSquare, path: "/chat" },
     {
@@ -243,8 +244,10 @@ function App() {
                           }
                         />
 
+                        <Route path="/" element={<LandingPage />} />
+
                         <Route
-                          path="/"
+                          path="/dashboard"
                           element={
                             <ProtectedRoute>
                               <MainLayout>
@@ -315,7 +318,7 @@ function App() {
                           }
                         />
 
-                        <Route path="*" element={<Navigate to="/" replace />} />
+                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
                       </Routes>
                     </Router>
                   </NotificationProvider>
