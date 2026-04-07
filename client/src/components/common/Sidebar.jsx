@@ -7,6 +7,7 @@ import {
   MessageSquare,
   Bell,
   User,
+  Info,
   MoreHorizontal,
   Settings,
   Activity,
@@ -40,6 +41,7 @@ export default function Sidebar({
     if (path === "/chat") return "messages";
     if (path === "/notifications") return "notifications";
     if (path === "/profile") return "profile";
+    if (path === "/about") return "about";
     return currentView;
   };
 
@@ -73,6 +75,7 @@ export default function Sidebar({
           : null,
     },
     { id: "profile", label: "Profile", icon: User, path: "/profile" },
+    { id: "about", label: "About", icon: Info, path: "/about" },
   ];
 
   const MENU_ITEMS = [
