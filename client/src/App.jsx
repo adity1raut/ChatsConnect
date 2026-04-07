@@ -33,6 +33,7 @@ import ChatPage from "./pages/ChatPage.jsx";
 import Profile from "./pages/Profile.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import SearchPage from "./pages/Search.jsx";
+import About from "./pages/About.jsx";
 import Sidebar from "./components/common/Sidebar.jsx";
 import ProtectedRoute from "./components/routes/ProtectedRoute.jsx";
 import PublicRoute from "./components/routes/PublicRoute.jsx";
@@ -298,6 +299,17 @@ function App() {
                             <ProtectedRoute>
                               <MainLayout>
                                 <SearchPage />
+                              </MainLayout>
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/about"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout>
+                                <About />
                               </MainLayout>
                             </ProtectedRoute>
                           }
