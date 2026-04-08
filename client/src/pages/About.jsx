@@ -97,47 +97,79 @@ const STACK = [
 const COLOR_MAP = {
   violet: { bg: "bg-violet-500/10", text: "text-violet-400", ring: "ring-violet-500/20" },
   purple: { bg: "bg-purple-500/10", text: "text-purple-400", ring: "ring-purple-500/20" },
-  blue:   { bg: "bg-blue-500/10",   text: "text-blue-400",   ring: "ring-blue-500/20"   },
-  green:  { bg: "bg-green-500/10",  text: "text-green-400",  ring: "ring-green-500/20"  },
+  blue: { bg: "bg-blue-500/10", text: "text-blue-400", ring: "ring-blue-500/20" },
+  green: { bg: "bg-green-500/10", text: "text-green-400", ring: "ring-green-500/20" },
   orange: { bg: "bg-orange-500/10", text: "text-orange-400", ring: "ring-orange-500/20" },
-  pink:   { bg: "bg-pink-500/10",   text: "text-pink-400",   ring: "ring-pink-500/20"   },
-  red:    { bg: "bg-red-500/10",    text: "text-red-400",    ring: "ring-red-500/20"    },
+  pink: { bg: "bg-pink-500/10", text: "text-pink-400", ring: "ring-pink-500/20" },
+  red: { bg: "bg-red-500/10", text: "text-red-400", ring: "ring-red-500/20" },
   yellow: { bg: "bg-yellow-500/10", text: "text-yellow-400", ring: "ring-yellow-500/20" },
 };
 
 export default function About() {
   const { isDark } = useTheme();
 
-  const base = isDark
-    ? "bg-gray-950 text-gray-100"
-    : "bg-gray-50 text-gray-900";
-
   const card = isDark
-    ? "bg-gray-900/60 border border-white/[0.06]"
-    : "bg-white border border-gray-200/80";
+    ? "bg-gray-900/70 border border-white/[0.08] backdrop-blur-xl"
+    : "bg-white/90 border border-white shadow-sm backdrop-blur-xl";
 
   const muted = isDark ? "text-gray-400" : "text-gray-500";
   const subtle = isDark ? "text-gray-500" : "text-gray-400";
 
   return (
-    <div className={`min-h-full ${base}`}>
-      <div className="max-w-4xl mx-auto px-4 py-10 pb-20">
+    <div
+      className={`relative min-h-screen overflow-x-hidden transition-colors duration-300 ${isDark ? "bg-[#0a0a14] text-gray-100" : "bg-[#f4f5ff] text-gray-900"}`}
+      style={{
+        backgroundImage: isDark
+          ? "radial-gradient(ellipse at 15% 0%, rgba(139,92,246,0.22) 0%, transparent 50%), radial-gradient(ellipse at 85% 90%, rgba(236,72,153,0.14) 0%, transparent 50%)"
+          : "radial-gradient(ellipse at 15% 0%, rgba(167,139,250,0.28) 0%, transparent 50%), radial-gradient(ellipse at 85% 90%, rgba(244,114,182,0.18) 0%, transparent 50%)",
+      }}
+    >
+      {/* Floating orbs */}
+      <div
+        className={`pointer-events-none absolute top-[-100px] left-[-80px] w-[420px] h-[420px] rounded-full blur-[110px] opacity-25 ${isDark ? "bg-violet-600" : "bg-violet-400"}`}
+        style={{ animation: "float 12s ease-in-out infinite" }}
+      />
+      <div
+        className={`pointer-events-none absolute top-[55%] right-[-80px] w-[320px] h-[320px] rounded-full blur-[90px] opacity-20 ${isDark ? "bg-pink-600" : "bg-pink-300"}`}
+        style={{ animation: "float 16s ease-in-out infinite", animationDelay: "-5s" }}
+      />
+      {/* Fine grid overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)",
+          backgroundSize: "56px 56px",
+        }}
+      />
+
+      <style>{`
+        @keyframes float { 0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(18px,-18px) scale(1.04)}66%{transform:translate(-14px,14px) scale(.96)} }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-10 pb-20">
 
         {/* ── Hero ── */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12" style={{ animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
           <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-xl mb-5"
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-5 border ${isDark ? "bg-violet-500/15 text-violet-400 border-violet-500/25" : "bg-violet-50 text-violet-600 border-violet-200"}`}
+          >
+            <Sparkles size={11} strokeWidth={2.5} /> Platform
+          </div>
+          <div
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-xl mb-5 block mx-auto"
             style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)" }}
           >
             <Sparkles size={28} className="text-white" strokeWidth={2.5} />
           </div>
           <h1
-            className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent mb-3"
+            className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent mb-3"
             style={{ backgroundImage: "linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)" }}
           >
             ChatsConnect
           </h1>
-          <p className={`text-lg max-w-xl mx-auto leading-relaxed ${muted}`}>
+          <p className={`text-base sm:text-lg max-w-xl mx-auto leading-relaxed ${muted}`}>
             A full-stack real-time chat platform with AI-powered smart replies,
             video calls, and group messaging — built as a mini-project by Aditya Raut.
           </p>
@@ -148,11 +180,10 @@ export default function About() {
               href="https://github.com/adity1raut/MiniProject-"
               target="_blank"
               rel="noreferrer"
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ring-1 transition-all duration-200 ${
-                isDark
-                  ? "bg-white/5 ring-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
-                  : "bg-gray-100 ring-gray-200 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${isDark
+                ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
+                }`}
             >
               <Github size={15} /> GitHub Repo
             </a>
@@ -160,7 +191,7 @@ export default function About() {
               href="https://mini-project-omega-ochre.vercel.app"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 hover:scale-105 shadow-md"
               style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)" }}
             >
               <Globe size={15} /> Live Frontend
@@ -169,7 +200,7 @@ export default function About() {
         </div>
 
         {/* ── Features grid ── */}
-        <section className="mb-12">
+        <section className="mb-12" style={{ animation: "slideUp 0.45s 0.06s cubic-bezier(0.16,1,0.3,1) both" }}>
           <h2 className={`text-xs font-bold uppercase tracking-widest mb-5 ${subtle}`}>
             Features
           </h2>
@@ -192,7 +223,7 @@ export default function About() {
         </section>
 
         {/* ── Tech stack ── */}
-        <section className="mb-12">
+        <section className="mb-12" style={{ animation: "slideUp 0.5s 0.1s cubic-bezier(0.16,1,0.3,1) both" }}>
           <h2 className={`text-xs font-bold uppercase tracking-widest mb-5 ${subtle}`}>
             Tech Stack
           </h2>
@@ -219,7 +250,7 @@ export default function About() {
         </section>
 
         {/* ── Architecture note ── */}
-        <section className="mb-12">
+        <section className="mb-12" style={{ animation: "slideUp 0.55s 0.14s cubic-bezier(0.16,1,0.3,1) both" }}>
           <h2 className={`text-xs font-bold uppercase tracking-widest mb-5 ${subtle}`}>
             Architecture
           </h2>
@@ -260,7 +291,7 @@ export default function About() {
         </section>
 
         {/* ── Author ── */}
-        <section>
+        <section style={{ animation: "slideUp 0.6s 0.18s cubic-bezier(0.16,1,0.3,1) both" }}>
           <h2 className={`text-xs font-bold uppercase tracking-widest mb-5 ${subtle}`}>
             Author
           </h2>

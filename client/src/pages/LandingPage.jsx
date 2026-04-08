@@ -68,17 +68,15 @@ export default function LandingPage() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col transition-colors duration-300 ${
-        isDark ? "bg-gray-950 text-gray-100" : "bg-white text-gray-900"
-      }`}
+      className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? "bg-[#0a0a14] text-gray-100" : "bg-[#f4f5ff] text-gray-900"
+        }`}
     >
       {/* ── Navbar ── */}
       <header
-        className={`sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b ${
-          isDark
-            ? "bg-gray-950/90 border-white/[0.06]"
-            : "bg-white/90 border-gray-200"
-        }`}
+        className={`sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b ${isDark
+          ? "bg-[#0a0a14]/90 border-white/[0.06]"
+          : "bg-[#f4f5ff]/90 border-gray-200"
+          }`}
         style={{ backdropFilter: "blur(20px)" }}
       >
         {/* Logo */}
@@ -102,15 +100,14 @@ export default function LandingPage() {
         </div>
 
         {/* Nav actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {/* Theme toggle */}
           <button
             onClick={() => setThemeMode(isDark ? "light" : "dark")}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-              isDark
-                ? "text-gray-400 hover:text-white hover:bg-white/8"
-                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-            }`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isDark
+              ? "text-gray-400 hover:text-white hover:bg-white/8"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              }`}
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
@@ -119,11 +116,10 @@ export default function LandingPage() {
             href="https://github.com/adity1raut/MiniProject-"
             target="_blank"
             rel="noreferrer"
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-              isDark
-                ? "text-gray-400 hover:text-white hover:bg-white/8"
-                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-            }`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isDark
+              ? "text-gray-400 hover:text-white hover:bg-white/8"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              }`}
           >
             <Github size={16} />
           </a>
@@ -142,11 +138,10 @@ export default function LandingPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate("/login")}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                  isDark
-                    ? "text-gray-300 hover:text-white hover:bg-white/8"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${isDark
+                  ? "text-gray-300 hover:text-white hover:bg-white/8"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
               >
                 Login
               </button>
@@ -165,7 +160,7 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-24 relative overflow-hidden">
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-16 sm:py-24 relative overflow-hidden">
         {/* Background blobs */}
         <div
           className="absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-20 blur-3xl pointer-events-none"
@@ -182,17 +177,16 @@ export default function LandingPage() {
 
         {/* Badge */}
         <div
-          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 ring-1 ${
-            isDark
-              ? "bg-violet-500/10 text-violet-300 ring-violet-500/20"
-              : "bg-violet-50 text-violet-600 ring-violet-200"
-          }`}
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 ring-1 ${isDark
+            ? "bg-violet-500/10 text-violet-300 ring-violet-500/20"
+            : "bg-violet-50 text-violet-600 ring-violet-200"
+            }`}
         >
           <Sparkles size={11} />
           AI-Powered Chat Platform
         </div>
 
-        <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-tight mb-5 max-w-2xl">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-5 max-w-2xl">
           Chat smarter,{" "}
           <span
             className="bg-clip-text text-transparent"
@@ -206,18 +200,17 @@ export default function LandingPage() {
         </h1>
 
         <p
-          className={`text-lg max-w-xl leading-relaxed mb-10 ${
-            isDark ? "text-gray-400" : "text-gray-500"
-          }`}
+          className={`text-lg max-w-xl leading-relaxed mb-10 ${isDark ? "text-gray-400" : "text-gray-500"
+            }`}
         >
           Real-time messaging with AI smart replies, group chats, video calls,
           and end-to-end security — all in one beautifully designed platform.
         </p>
 
-        <div className="flex items-center gap-3 flex-wrap justify-center">
+        <div className="flex flex-col xs:flex-row items-center gap-3 flex-wrap justify-center w-full max-w-sm mx-auto sm:max-w-none sm:w-auto">
           <button
             onClick={handleGetStarted}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-100"
+            className="w-full xs:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-100"
             style={{
               background:
                 "linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)",
@@ -229,11 +222,10 @@ export default function LandingPage() {
           </button>
           <button
             onClick={() => navigate("/about")}
-            className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold ring-1 transition-all hover:scale-105 active:scale-100 ${
-              isDark
-                ? "text-gray-300 ring-white/10 hover:bg-white/5"
-                : "text-gray-700 ring-gray-200 hover:bg-gray-50"
-            }`}
+            className={`w-full xs:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold ring-1 transition-all hover:scale-105 active:scale-100 ${isDark
+              ? "text-gray-300 ring-white/10 hover:bg-white/5"
+              : "text-gray-700 ring-gray-200 hover:bg-gray-50"
+              }`}
           >
             Learn More
           </button>
@@ -242,13 +234,12 @@ export default function LandingPage() {
 
       {/* ── Features ── */}
       <section
-        className={`px-4 py-20 ${isDark ? "bg-gray-900/40" : "bg-gray-50"}`}
+        className={`px-4 py-20 ${isDark ? "bg-gray-900/40" : "bg-white/50"}`}
       >
         <div className="max-w-4xl mx-auto">
           <p
-            className={`text-xs font-bold uppercase tracking-widest text-center mb-3 ${
-              isDark ? "text-gray-500" : "text-gray-400"
-            }`}
+            className={`text-xs font-bold uppercase tracking-widest text-center mb-3 ${isDark ? "text-gray-500" : "text-gray-400"
+              }`}
           >
             Everything you need
           </p>
@@ -260,11 +251,10 @@ export default function LandingPage() {
             {FEATURES.map(({ icon: Icon, title, desc, gradient }) => (
               <div
                 key={title}
-                className={`rounded-2xl p-5 transition-all hover:-translate-y-0.5 ${
-                  isDark
-                    ? "bg-gray-900/60 border border-white/[0.06] hover:border-white/10"
-                    : "bg-white border border-gray-200 hover:shadow-md"
-                }`}
+                className={`rounded-2xl p-5 transition-all hover:-translate-y-0.5 ${isDark
+                  ? "bg-gray-900/60 border border-white/[0.06] hover:border-white/10"
+                  : "bg-white/90 border border-gray-200 hover:shadow-md hover:bg-white"
+                  }`}
               >
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-gradient-to-br ${gradient}`}
@@ -273,9 +263,8 @@ export default function LandingPage() {
                 </div>
                 <p className="font-bold text-sm mb-1.5">{title}</p>
                 <p
-                  className={`text-sm leading-relaxed ${
-                    isDark ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  className={`text-sm leading-relaxed ${isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
                 >
                   {desc}
                 </p>
@@ -292,9 +281,8 @@ export default function LandingPage() {
             Ready to connect?
           </h2>
           <p
-            className={`text-base mb-8 ${
-              isDark ? "text-gray-400" : "text-gray-500"
-            }`}
+            className={`text-base mb-8 ${isDark ? "text-gray-400" : "text-gray-500"
+              }`}
           >
             Join ChatsConnect today and experience the future of team communication.
           </p>
@@ -314,11 +302,10 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer
-        className={`px-6 py-6 border-t text-center text-xs ${
-          isDark
-            ? "border-white/[0.06] text-gray-600"
-            : "border-gray-200 text-gray-400"
-        }`}
+        className={`px-4 sm:px-6 py-6 border-t text-center text-xs ${isDark
+          ? "border-white/[0.06] text-gray-600"
+          : "border-gray-200/60 text-gray-400"
+          }`}
       >
         Built by{" "}
         <a

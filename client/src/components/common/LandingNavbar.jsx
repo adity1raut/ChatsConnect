@@ -12,7 +12,10 @@ export default function LandingNavbar() {
 
   return (
     <header
-      className="absolute top-0 inset-x-0 z-50 flex items-center justify-between px-5 py-3.5"
+      className={`absolute top-0 inset-x-0 z-50 flex items-center justify-between px-5 py-3.5 border-b transition-colors duration-300 ${isDark
+          ? "border-white/[0.06]"
+          : "border-gray-200/80 bg-white/60 backdrop-blur-md"
+        }`}
     >
       {/* Logo */}
       <button
@@ -27,7 +30,10 @@ export default function LandingNavbar() {
         >
           <Sparkles size={14} className="text-white" strokeWidth={2.5} />
         </div>
-        <span className="text-base font-extrabold tracking-tight text-white drop-shadow">
+        <span
+          className={`text-base font-extrabold tracking-tight transition-colors ${isDark ? "text-white drop-shadow" : "text-gray-900"
+            }`}
+        >
           ChatsConnect
         </span>
       </button>
@@ -37,7 +43,10 @@ export default function LandingNavbar() {
         {/* Theme toggle */}
         <button
           onClick={() => setThemeMode(isDark ? "light" : "dark")}
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all"
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isDark
+              ? "text-white/70 hover:text-white hover:bg-white/10"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            }`}
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
@@ -47,7 +56,10 @@ export default function LandingNavbar() {
           href="https://github.com/adity1raut/MiniProject-"
           target="_blank"
           rel="noreferrer"
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all"
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isDark
+              ? "text-white/70 hover:text-white hover:bg-white/10"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            }`}
         >
           <Github size={16} />
         </a>
@@ -56,7 +68,10 @@ export default function LandingNavbar() {
         {isLogin && (
           <button
             onClick={() => navigate("/registration")}
-            className="ml-1 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-white/15 hover:bg-white/25 backdrop-blur border border-white/20 transition-all"
+            className={`ml-1 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark
+                ? "text-white bg-white/15 hover:bg-white/25 backdrop-blur border border-white/20"
+                : "text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200"
+              }`}
           >
             Sign up
           </button>
@@ -64,7 +79,10 @@ export default function LandingNavbar() {
         {isRegister && (
           <button
             onClick={() => navigate("/login")}
-            className="ml-1 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-white/15 hover:bg-white/25 backdrop-blur border border-white/20 transition-all"
+            className={`ml-1 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark
+                ? "text-white bg-white/15 hover:bg-white/25 backdrop-blur border border-white/20"
+                : "text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200"
+              }`}
           >
             Login
           </button>
