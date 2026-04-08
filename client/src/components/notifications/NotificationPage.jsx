@@ -345,19 +345,18 @@ export default function NotificationPage() {
                     <button
                       key={id}
                       onClick={() => setActiveFilter(id)}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 border ${
-                        isActive
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all duration-200 border ${isActive
                           ? "text-white border-transparent shadow-sm"
                           : isDark
                             ? "text-gray-500 border-white/8 hover:text-gray-300 hover:bg-white/[0.05]"
                             : "text-gray-500 border-gray-200 bg-white hover:bg-gray-50 shadow-sm"
-                      }`}
+                        }`}
                       style={
                         isActive
                           ? {
-                              background:
-                                "linear-gradient(135deg,#7c3aed,#a855f7)",
-                            }
+                            background:
+                              "linear-gradient(135deg,#7c3aed,#a855f7)",
+                          }
                           : {}
                       }
                     >
@@ -387,7 +386,7 @@ export default function NotificationPage() {
 
             {/* List */}
             {filtered.length > 0 ? (
-              <div className="divide-y divide-white/[0.035]">
+              <div className={`divide-y ${isDark ? "divide-white/[0.035]" : "divide-gray-100"}`}>
                 {filtered.map((n) => {
                   const cfg = TYPE_CFG[n.type] || TYPE_CFG.message;
                   const Icon = cfg.icon;
@@ -622,7 +621,7 @@ export default function NotificationPage() {
                       label: "Settings",
                       icon: Settings,
                       color: "from-orange-500 to-amber-500",
-                      action: () => {},
+                      action: () => { },
                     },
                   ].map(({ label, icon: Icon, color, action }) => (
                     <button

@@ -144,11 +144,10 @@ export default function ChatPage({
 
           {/* Search */}
           <div
-            className={`relative flex items-center rounded-xl border transition-all duration-200 mb-3 ${
-              isDark
+            className={`relative flex items-center rounded-xl border transition-all duration-200 mb-3 ${isDark
                 ? "bg-white/4 border-white/8 focus-within:border-violet-500/40 focus-within:bg-violet-500/4"
                 : "bg-gray-50 border-gray-200 focus-within:bg-white focus-within:border-violet-400"
-            }`}
+              }`}
           >
             <Search
               className={`absolute left-3.5 w-4 h-4 shrink-0 ${isDark ? "text-gray-600" : "text-gray-400"}`}
@@ -179,18 +178,17 @@ export default function ChatPage({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
-                  activeTab === tab.id
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${activeTab === tab.id
                     ? "text-white shadow-sm"
                     : isDark
                       ? "text-gray-500 hover:text-gray-300"
                       : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
                 style={
                   activeTab === tab.id
                     ? {
-                        background: "linear-gradient(135deg, #7c3aed, #a855f7)",
-                      }
+                      background: "linear-gradient(135deg, #7c3aed, #a855f7)",
+                    }
                     : {}
                 }
               >
@@ -313,15 +311,14 @@ export default function ChatPage({
                 <div
                   key={contact.type === "group" ? contact.groupId : contact.id}
                   onClick={() => setSelectedChat(contact)}
-                  className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all duration-200 relative group ${
-                    isSelected
+                  className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all duration-200 relative group ${isSelected
                       ? isDark
                         ? "bg-violet-500/15"
                         : "bg-violet-50"
                       : isDark
                         ? "hover:bg-white/4"
                         : "hover:bg-gray-50/80"
-                  }`}
+                    }`}
                 >
                   {isSelected && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-9 rounded-full bg-linear-to-b from-violet-500 to-purple-600" />
@@ -337,11 +334,10 @@ export default function ChatPage({
                       />
                     ) : (
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md ring-2 transition-all font-bold text-white text-lg ${
-                          isSelected
+                        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md ring-2 transition-all font-bold text-white text-lg ${isSelected
                             ? "bg-linear-to-br from-violet-500 via-purple-500 to-pink-500 ring-violet-500/40"
                             : "bg-linear-to-br from-blue-400 via-purple-400 to-pink-400 ring-transparent"
-                        }`}
+                          }`}
                       >
                         {contact.type === "group" ? (
                           <Users size={20} />
@@ -361,15 +357,14 @@ export default function ChatPage({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
                       <h3
-                        className={`font-semibold text-sm truncate ${
-                          isSelected
+                        className={`font-semibold text-sm truncate ${isSelected
                             ? isDark
                               ? "text-violet-300"
                               : "text-violet-700"
                             : isDark
                               ? "text-gray-100"
                               : "text-gray-800"
-                        }`}
+                          }`}
                       >
                         {contact.name}
                       </h3>
@@ -378,9 +373,9 @@ export default function ChatPage({
                       >
                         {contact.lastMessageAt
                           ? new Date(contact.lastMessageAt).toLocaleTimeString(
-                              [],
-                              { hour: "2-digit", minute: "2-digit" },
-                            )
+                            [],
+                            { hour: "2-digit", minute: "2-digit" },
+                          )
                           : ""}
                       </span>
                     </div>
@@ -422,7 +417,7 @@ export default function ChatPage({
                   {currentUser.name?.charAt(0).toUpperCase()}
                 </div>
               )}
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-gray-950" />
+              <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 ${isDark ? "border-gray-950" : "border-white"}`} />
             </div>
             <div className="flex-1 min-w-0">
               <p
@@ -463,7 +458,7 @@ export default function ChatPage({
                   className="relative shrink-0"
                 >
                   {selectedChat.avatar &&
-                  selectedChat.avatar.startsWith("http") ? (
+                    selectedChat.avatar.startsWith("http") ? (
                     <img
                       src={selectedChat.avatar}
                       alt=""
@@ -495,8 +490,7 @@ export default function ChatPage({
                     {selectedChat.name}
                   </h2>
                   <p
-                    className={`text-xs font-medium mt-1 ${
-                      selectedChat.type === "group"
+                    className={`text-xs font-medium mt-1 ${selectedChat.type === "group"
                         ? isDark
                           ? "text-gray-400"
                           : "text-gray-500"
@@ -507,7 +501,7 @@ export default function ChatPage({
                             : isDark
                               ? "text-gray-500"
                               : "text-gray-400"
-                    }`}
+                      }`}
                   >
                     {selectedChat.type === "group"
                       ? `${selectedChat.memberCount || selectedChat.members?.length || 0} members`
@@ -691,7 +685,7 @@ export default function ChatPage({
                       {msg.sender === "them" && (
                         <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center text-sm shrink-0 mr-2.5 self-end shadow-md text-white font-bold overflow-hidden">
                           {msg.senderAvatar &&
-                          msg.senderAvatar.startsWith("http") ? (
+                            msg.senderAvatar.startsWith("http") ? (
                             <img
                               src={msg.senderAvatar}
                               alt=""
@@ -713,17 +707,16 @@ export default function ChatPage({
                             </p>
                           )}
                         <div
-                          className={`px-4 py-3 rounded-2xl shadow-sm ${
-                            msg.sender === "me"
+                          className={`px-4 py-3 rounded-2xl shadow-sm ${msg.sender === "me"
                               ? "text-white rounded-br-sm"
                               : `${isDark ? "bg-gray-800/90 text-gray-100 border border-white/6" : "bg-white text-gray-800 border border-gray-100 shadow-sm"} rounded-bl-sm`
-                          }`}
+                            }`}
                           style={
                             msg.sender === "me"
                               ? {
-                                  background:
-                                    "linear-gradient(135deg, #7c3aed, #9333ea)",
-                                }
+                                background:
+                                  "linear-gradient(135deg, #7c3aed, #9333ea)",
+                              }
                               : {}
                           }
                         >
