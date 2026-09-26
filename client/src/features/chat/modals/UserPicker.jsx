@@ -63,15 +63,15 @@ export default function UserPicker({
         aria-label="Search people"
         data-autofocus={autoFocus || undefined}
       />
-      <div className="max-h-72 min-h-24 overflow-y-auto rounded-xl border border-border scrollbar-thin">
+      <div className="max-h-72 min-h-24 overflow-y-auto border border-border scrollbar-thin">
         {loading ? (
           <div className="flex justify-center py-8">
             <Spinner label="Searching" />
           </div>
         ) : !active ? (
-          <p className="px-4 py-8 text-center text-sm text-faint">Type a name to search</p>
+          <p className="eyebrow px-4 py-8 text-center text-faint">Type a name to search</p>
         ) : users.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-faint">
+          <p className="px-4 py-8 text-center text-xs text-faint">
             {trimmed ? `No one found for "${trimmed}"` : "No one to show"}
           </p>
         ) : (
@@ -85,20 +85,20 @@ export default function UserPicker({
                     onClick={() => onPick(u)}
                     aria-pressed={selectedIds ? Boolean(selected) : undefined}
                     className={cn(
-                      "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted",
-                      selected && "bg-primary/10",
+                      "flex w-full items-center gap-3 border-l-2 px-3 py-2.5 text-left transition-colors hover:bg-accent",
+                      selected ? "border-primary bg-primary/10" : "border-transparent",
                     )}
                   >
                     <UserAvatar src={u.avatar} name={u.name} size="sm" online={onlineUsers.has(u._id)} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold">{u.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">@{u.username}</span>
+                      <span className="block truncate text-xs font-bold">{u.name}</span>
+                      <span className="block truncate text-[11px] text-muted-foreground">@{u.username}</span>
                     </span>
                     {selectedIds && (
                       <span
                         className={cn(
-                          "flex size-5 items-center justify-center rounded-full border",
-                          selected ? "border-primary bg-primary text-white" : "border-border-strong",
+                          "flex size-4.5 items-center justify-center border",
+                          selected ? "border-primary bg-primary text-primary-foreground" : "border-border-strong",
                         )}
                       >
                         {selected && <Check className="size-3" aria-hidden="true" />}

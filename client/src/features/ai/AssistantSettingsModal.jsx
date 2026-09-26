@@ -1,6 +1,16 @@
 import { useState } from "react";
+import { AlertCircle } from "lucide-react";
 import { useAI } from "../../context/AIContext";
-import { Button, InputField, Modal, SegmentedControl, SelectField, TextareaField } from "../../components/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  InputField,
+  Modal,
+  SegmentedControl,
+  SelectField,
+  TextareaField,
+} from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { LANGUAGES } from "../../lib/languages";
 import { toast } from "../../lib/toast";
@@ -55,13 +65,14 @@ export default function AssistantSettingsModal({ onClose }) {
     >
       <form onSubmit={save} className="space-y-5">
         {/* Live preview */}
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted p-3">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 text-2xl shadow-md">
+        <div className="relative flex items-center gap-3 border border-border bg-muted/60 p-3">
+          <span className="eyebrow absolute top-2 right-3 text-faint">Preview</span>
+          <span className="flex size-12 items-center justify-center border border-primary/40 bg-primary/10 text-2xl shadow-[0_0_14px_var(--glow)]">
             {form.avatar || "🤖"}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-bold">{form.name || "Your assistant"}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate text-xs font-extrabold tracking-[0.1em] uppercase">{form.name || "Your assistant"}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
               {TONE_OPTIONS.find((t) => t.value === form.tone)?.label} ·{" "}
               {LENGTH_OPTIONS.find((l) => l.value === form.length)?.label} answers ·{" "}
               {form.language === "auto" ? "your language" : form.language}
@@ -69,7 +80,7 @@ export default function AssistantSettingsModal({ onClose }) {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
           <InputField
             label="Name"
             value={form.name}
@@ -96,8 +107,8 @@ export default function AssistantSettingsModal({ onClose }) {
               onClick={() => set("avatar")(emoji)}
               aria-pressed={form.avatar === emoji}
               className={cn(
-                "flex size-9 items-center justify-center rounded-xl border text-lg transition-colors",
-                form.avatar === emoji ? "border-primary bg-primary/10" : "border-border hover:bg-muted",
+                "flex size-9 items-center justify-center border text-lg transition-colors",
+                form.avatar === emoji ? "border-primary bg-primary/10" : "border-border hover:bg-accent",
               )}
             >
               {emoji}
@@ -105,16 +116,16 @@ export default function AssistantSettingsModal({ onClose }) {
           ))}
         </div>
 
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold text-muted-foreground">Tone</p>
+        <div className="space-y-2">
+          <p className="eyebrow text-muted-foreground">Tone</p>
           <div className="overflow-x-auto scrollbar-none">
             <SegmentedControl label="Tone" options={TONE_OPTIONS} value={form.tone} onChange={set("tone")} size="sm" />
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-muted-foreground">Answer length</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <p className="eyebrow text-muted-foreground">Answer length</p>
             <SegmentedControl label="Answer length" options={LENGTH_OPTIONS} value={form.length} onChange={set("length")} size="sm" />
           </div>
           <SelectField label="Reply language" options={LANGUAGE_OPTIONS} value={form.language} onValueChange={set("language")} />
@@ -140,7 +151,7 @@ export default function AssistantSettingsModal({ onClose }) {
                     form.instructions ? `${form.instructions.trimEnd()}\n${example}` : example,
                   )
                 }
-                className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
+                className="border border-dashed border-border-strong px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/60 hover:text-primary"
               >
                 + {example}
               </button>
@@ -149,9 +160,10 @@ export default function AssistantSettingsModal({ onClose }) {
         </div>
 
         {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
+          <Alert variant="destructive">
+            <AlertCircle aria-hidden="true" />
+            <AlertDescription className="text-current">{error}</AlertDescription>
+          </Alert>
         )}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

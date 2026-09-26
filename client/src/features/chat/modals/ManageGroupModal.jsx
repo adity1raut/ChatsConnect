@@ -87,7 +87,7 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
           <Spinner label="Loading group" />
         </div>
       ) : details.error ? (
-        <p className="py-6 text-center text-sm text-red-600 dark:text-red-400">{details.error}</p>
+        <p className="py-6 text-center text-xs text-destructive">{details.error}</p>
       ) : (
         <div className="space-y-4">
           {isAdmin && (
@@ -105,7 +105,7 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
             )
           )}
 
-          <ul className="divide-y divide-border rounded-xl border border-border">
+          <ul className="divide-y divide-border border border-border">
             {members.map((m) => {
               const id = memberId(m);
               const isMe = id === currentUser?._id;
@@ -113,14 +113,14 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
                 <li key={id} className="flex items-center gap-3 px-3 py-2.5">
                   <UserAvatar src={m.user?.avatar} name={m.user?.name ?? "Member"} size="sm" online={onlineUsers.has(id)} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
+                    <span className="block truncate text-xs font-bold">
                       {m.user?.name ?? "Deleted account"}
                       {isMe && <span className="font-normal text-muted-foreground"> (you)</span>}
                     </span>
-                    {m.user?.username && <span className="block truncate text-xs text-muted-foreground">@{m.user.username}</span>}
+                    {m.user?.username && <span className="block truncate text-[11px] text-muted-foreground">@{m.user.username}</span>}
                   </span>
                   {m.role === "admin" && (
-                    <Badge icon={Crown}>
+                    <Badge variant="warning" icon={Crown}>
                       Admin
                     </Badge>
                   )}

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ArrowLeft, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, X } from "lucide-react";
 import axios from "../../../config/axiosInstance.js";
 import { API_URL } from "../../../config/api.js";
-import { Button, InputField, Modal, TextareaField, UserAvatar } from "../../../components/ui";
+import { Alert, AlertDescription, Button, InputField, Modal, TextareaField, UserAvatar } from "../../../components/ui";
 import { toast } from "../../../lib/toast";
 import UserPicker from "./UserPicker";
 
@@ -104,7 +104,7 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
                     type="button"
                     onClick={() => toggle(m)}
                     aria-label={`Remove ${m.name}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-1 pr-2 pl-1 text-xs font-medium text-primary"
+                    className="inline-flex items-center gap-1.5 border border-primary/40 bg-primary/10 py-0.5 pr-2 pl-0.5 text-[11px] font-bold text-primary hover:border-primary"
                   >
                     <UserAvatar src={m.avatar} name={m.name} size="xs" />
                     {m.name.split(" ")[0]}
@@ -116,9 +116,10 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
           )}
           <UserPicker showAllWhenEmpty selectedIds={selectedIds} onPick={toggle} />
           {error && (
-            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-              {error}
-            </p>
+            <Alert variant="destructive">
+              <AlertCircle aria-hidden="true" />
+              <AlertDescription className="text-current">{error}</AlertDescription>
+            </Alert>
           )}
         </div>
       )}

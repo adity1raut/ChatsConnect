@@ -132,7 +132,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={chat.suggestReplies}
                   title="Sends the last few messages of this encrypted chat to the AI"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
+                  className="inline-flex h-7 items-center gap-1.5 border border-border bg-card px-2.5 text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase hover:border-primary/50 hover:text-primary"
                 >
                   <Sparkles className="size-3.5" aria-hidden="true" />
                   Suggest replies
@@ -154,7 +154,7 @@ export default function ChatPage() {
             icon={MessageSquare}
             title="Your messages"
             description="Pick a conversation, or start a new one."
-            className="h-full"
+            className="h-full bg-grid"
             action={
               <div className="flex flex-wrap justify-center gap-2">
                 <Button icon={SquarePen} onClick={() => setModal("newDM")}>
@@ -170,7 +170,7 @@ export default function ChatPage() {
       </section>
 
       {aiPanelOpen && (
-        <div className="hidden h-full w-96 shrink-0 lg:flex">
+        <div className="hidden h-full w-96 shrink-0 border-l border-border lg:flex">
           <AssistantChat compact onClose={() => setAiPanelOpen(false)} />
         </div>
       )}

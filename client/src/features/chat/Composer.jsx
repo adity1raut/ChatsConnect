@@ -47,14 +47,17 @@ export default function Composer({ value, onChange, onSend, onTyping, placeholde
   const tooLong = value.length > MAX_MESSAGE_LENGTH;
 
   return (
-    <div className="shrink-0 border-t border-border bg-card px-3 pt-2.5 pb-3 sm:px-4">
+    <div className="shrink-0 border-t border-border bg-card/80 px-3 pt-2.5 pb-3 sm:px-4">
       <div
         className={cn(
-          "flex items-end gap-2 rounded-2xl border bg-muted p-1.5 pl-3 transition-[border-color,box-shadow]",
-          "focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15",
-          tooLong ? "border-red-500" : "border-border",
+          "flex items-end gap-2 border bg-background p-1.5 pl-3 transition-[border-color,box-shadow]",
+          "focus-within:border-primary focus-within:shadow-[0_0_0_1px_var(--primary),0_0_24px_var(--glow)]",
+          tooLong ? "border-destructive" : "border-border-strong",
         )}
       >
+        <span aria-hidden="true" className="self-center pb-px text-sm font-bold text-primary">
+          &gt;
+        </span>
         <textarea
           ref={ref}
           rows={1}
@@ -66,26 +69,27 @@ export default function Composer({ value, onChange, onSend, onTyping, placeholde
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label="Message"
-          className="max-h-40 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-foreground outline-none placeholder:text-faint"
+          className="max-h-40 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-foreground caret-primary outline-none placeholder:text-faint"
         />
         <button
           type="button"
           onClick={send}
           disabled={!value.trim() || tooLong || sending}
           aria-label="Send message"
-          className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-40"
+          className="flex h-9 shrink-0 items-center justify-center gap-2 border border-primary bg-primary px-3 text-[10px] font-bold tracking-[0.12em] text-primary-foreground uppercase transition-[background-color,box-shadow] hover:bg-primary/90 hover:glow disabled:border-border-strong disabled:bg-transparent disabled:text-faint"
         >
+          <span className="hidden sm:inline">Send</span>
           <SendHorizontal className="size-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="mt-1 hidden justify-between px-1 text-[11px] text-faint sm:flex">
+      <div className="mt-1.5 hidden justify-between px-1 text-[10px] tracking-[0.04em] text-faint sm:flex">
         <span>
-          <kbd className="font-sans font-semibold">Enter</kbd> to send ·{" "}
-          <kbd className="font-sans font-semibold">Shift + Enter</kbd> new line · **bold**, _italic_,
-          `code`, lists and links
+          <kbd className="border border-border px-1 font-bold text-muted-foreground">Enter</kbd> send ·{" "}
+          <kbd className="border border-border px-1 font-bold text-muted-foreground">Shift+Enter</kbd> new line ·
+          **bold** _italic_ `code` lists links
         </span>
         {value.length >= COUNTER_FROM && (
-          <span className={tooLong ? "font-semibold text-red-500" : ""}>
+          <span className={tooLong ? "font-bold text-destructive" : ""}>
             {value.length.toLocaleString()} / {MAX_MESSAGE_LENGTH.toLocaleString()}
           </span>
         )}

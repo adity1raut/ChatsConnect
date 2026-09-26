@@ -56,13 +56,13 @@ export default function ChatHeader({
   const status = statusLine(chat, { typingNames, isPeerOnline });
 
   return (
-    <header className="relative z-20 flex shrink-0 items-center gap-2 border-b border-border bg-card/90 px-2 py-2.5 backdrop-blur-xl sm:px-4">
+    <header className="relative z-20 flex shrink-0 items-center gap-2 border-b border-border bg-card/80 px-2 py-2 backdrop-blur-md sm:px-4">
       <IconButton icon={ArrowLeft} label="Back to conversations" size="sm" className="md:hidden" onClick={onBack} />
 
       <button
         type="button"
         onClick={isGroup ? onManageGroup : onViewProfile}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1 text-left hover:bg-muted"
+        className="flex min-w-0 flex-1 items-center gap-3 border border-transparent p-1 text-left hover:border-border hover:bg-accent"
       >
         <UserAvatar
           src={chat.avatar}
@@ -71,20 +71,21 @@ export default function ChatHeader({
           online={!isGroup && isPeerOnline}
         />
         <span className="min-w-0">
-          <span className="flex items-center gap-1.5 truncate text-sm font-bold">
+          <span className="flex items-center gap-1.5 truncate text-xs font-extrabold tracking-[0.06em] uppercase">
             <span className="truncate">{chat.name}</span>
             {encrypted && (
-              <Lock
-                className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-                aria-label="End-to-end encrypted"
-              />
+              <span className="inline-flex items-center gap-1 border border-primary/40 bg-primary/10 px-1 py-px text-[9px] tracking-[0.12em] text-primary">
+                <Lock className="size-2.5" aria-hidden="true" />
+                E2EE
+                <span className="sr-only">End-to-end encrypted</span>
+              </span>
             )}
           </span>
           <span
             className={cn(
-              "block truncate text-xs",
-              status.tone === "accent" && "font-medium text-primary",
-              status.tone === "online" && "text-emerald-600 dark:text-emerald-400",
+              "mt-0.5 block truncate text-[11px]",
+              status.tone === "accent" && "text-primary",
+              status.tone === "online" && "text-success",
               status.tone === "muted" && "text-muted-foreground",
             )}
           >

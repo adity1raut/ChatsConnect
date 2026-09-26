@@ -14,7 +14,7 @@ export default function SmartReplies({ onSelect }) {
           key={reply}
           type="button"
           onClick={() => onSelect(reply)}
-          className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:border-primary"
+          className="h-7 shrink-0 border border-primary/35 bg-primary/[0.07] px-2.5 text-[11px] text-primary transition-colors hover:border-primary hover:bg-primary/15"
         >
           {reply}
         </button>

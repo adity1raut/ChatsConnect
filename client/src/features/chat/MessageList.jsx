@@ -31,7 +31,7 @@ function MessageBubble({ message, showSender, onTranslate }) {
       )}
       <div className={cn("flex min-w-0 max-w-[85%] flex-col sm:max-w-[70%]", mine ? "items-end" : "items-start")}>
         {showSender && !mine && !continued && (
-          <span className="mb-0.5 ml-1 text-[11px] font-semibold text-muted-foreground">{message.senderName}</span>
+          <span className="mb-1 text-[10px] font-bold tracking-[0.1em] text-info uppercase">{message.senderName}</span>
         )}
         <div className="flex max-w-full min-w-0 items-center gap-1">
           {mine && (
@@ -39,7 +39,7 @@ function MessageBubble({ message, showSender, onTranslate }) {
               type="button"
               onClick={copy}
               aria-label={copied ? "Copied" : "Copy message"}
-              className="flex size-7 items-center justify-center rounded-lg text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100"
+              className="flex size-7 items-center justify-center text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:bg-accent hover:text-foreground focus-visible:opacity-100"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
             </button>
@@ -47,23 +47,23 @@ function MessageBubble({ message, showSender, onTranslate }) {
           <div
             className={cn(
               // min-w-0 lets wide content (code blocks, tables) scroll inside the bubble
-              "min-w-0 rounded-2xl px-3.5 py-2 shadow-sm",
+              "min-w-0 border px-3.5 py-2 text-foreground",
               mine
-                ? "rounded-br-md bg-linear-to-br from-violet-600 to-purple-600 text-white"
-                : "rounded-bl-md border border-border bg-card text-foreground",
+                ? "border-primary/35 border-r-2 border-r-primary bg-primary/[0.09]"
+                : "border-border border-l-2 border-l-border-strong bg-card",
             )}
           >
             {message.undecryptable ? (
-              <p className={cn("flex items-center gap-1.5 text-sm italic", mine ? "text-white/80" : "text-muted-foreground")}>
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground italic">
                 {text}
               </p>
             ) : (
-              <Markdown inverted={mine}>{text}</Markdown>
+              <Markdown>{text}</Markdown>
             )}
             <span
               className={cn(
-                "mt-0.5 flex items-center justify-end gap-1.5 text-[10px]",
-                mine ? "text-white/70" : "text-faint",
+                "mt-1 flex items-center justify-end gap-1.5 text-[10px] tracking-[0.06em]",
+                mine ? "text-primary/70" : "text-faint",
               )}
             >
               {message.originalText && (
@@ -98,7 +98,7 @@ function MessageBubble({ message, showSender, onTranslate }) {
               type="button"
               onClick={copy}
               aria-label={copied ? "Copied" : "Copy message"}
-              className="flex size-7 items-center justify-center rounded-lg text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100"
+              className="flex size-7 items-center justify-center text-faint opacity-0 transition-opacity group-hover:opacity-100 hover:bg-accent hover:text-foreground focus-visible:opacity-100"
             >
               {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
             </button>
@@ -113,12 +113,12 @@ function TypingBubble({ names }) {
   return (
     <li className="mt-3 flex items-end gap-2" aria-live="polite">
       <span className="w-8 shrink-0" />
-      <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3">
+      <div className="flex items-center gap-1 border border-l-2 border-border border-l-border-strong bg-card px-4 py-3">
         <span className="sr-only">{names.join(", ")} typing</span>
         {[0, 150, 300].map((delay) => (
           <span
             key={delay}
-            className="size-1.5 animate-bounce rounded-full bg-faint"
+            className="size-1.5 animate-pulse bg-primary"
             style={{ animationDelay: `${delay}ms` }}
           />
         ))}
@@ -187,10 +187,12 @@ export default function MessageList({ chatKey, messages, loading, isGroup, typin
         ) : (
           sections.map((section) => (
             <section key={section.label} aria-label={section.label}>
-              <div className="sticky top-0 z-10 my-3 flex justify-center">
-                <span className="rounded-full border border-border bg-card/90 px-3 py-0.5 text-[11px] font-semibold text-muted-foreground backdrop-blur">
-                  {section.label}
-                </span>
+              {/* The label sticks while you scroll the day; the dashed rule stays put */}
+              <div className="pointer-events-none sticky top-2 z-10 mt-4 -mb-10 flex h-6 items-center justify-center" aria-hidden="true">
+                <span className="eyebrow border border-border bg-background px-2.5 py-1 text-faint">// {section.label}</span>
+              </div>
+              <div className="my-4 flex h-6 items-center" aria-hidden="true">
+                <span className="h-px flex-1 border-t border-dashed border-border" />
               </div>
               <ul>
                 {section.items.map((m) => (
@@ -212,7 +214,7 @@ export default function MessageList({ chatKey, messages, loading, isGroup, typin
           type="button"
           onClick={() => scrollToBottom()}
           aria-label="Jump to latest messages"
-          className="absolute right-4 bottom-4 flex size-10 items-center justify-center rounded-full border border-border bg-popover text-foreground shadow-lg hover:bg-muted"
+          className="absolute right-4 bottom-4 flex size-10 items-center justify-center border border-primary/50 bg-popover text-primary shadow-float hover:bg-primary/15"
         >
           <ArrowDown className="size-4" aria-hidden="true" />
         </button>

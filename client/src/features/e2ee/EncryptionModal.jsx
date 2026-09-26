@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { AlertTriangle, KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { AlertCircle, AlertTriangle, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useE2EE } from "../../context/E2EEContext";
-import { Button, Modal, PasswordField } from "../../components/ui";
+import { Alert, AlertDescription, Button, Modal, PasswordField } from "../../components/ui";
 import { toast } from "../../lib/toast";
 import { WrongPassphraseError } from "./crypto";
 
@@ -108,7 +108,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
   return (
     <Modal open={open} onClose={close} title={copy.title} description={copy.description} size="md">
       <form onSubmit={submit} className="space-y-4">
-        <div className="flex gap-3 rounded-xl bg-primary/10 p-3 text-sm text-primary">
+        <div className="flex gap-3 border border-primary/35 bg-primary/[0.07] p-3 text-xs leading-relaxed text-primary">
           <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <div className="space-y-1">
             {mode === "setup" && (
@@ -180,9 +180,10 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
         )}
 
         {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
+          <Alert variant="destructive" className="animate-shake">
+            <AlertCircle aria-hidden="true" />
+            <AlertDescription className="text-current">{error}</AlertDescription>
+          </Alert>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -193,7 +194,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
                 setError("");
                 setMode("reset");
               }}
-              className="text-xs font-semibold text-muted-foreground hover:text-foreground hover:underline"
+              className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground uppercase underline-offset-4 hover:text-foreground hover:underline"
             >
               Forgot your passphrase?
             </button>

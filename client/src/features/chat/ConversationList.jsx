@@ -19,8 +19,8 @@ function ContactRow({ contact, selected, onSelect }) {
         onClick={() => onSelect(contact)}
         aria-current={selected ? "true" : undefined}
         className={cn(
-          "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-          selected ? "bg-primary/10" : "hover:bg-muted",
+          "flex w-full items-center gap-3 border-l-2 px-3 py-2.5 text-left transition-colors",
+          selected ? "border-primary bg-primary/10" : "border-transparent hover:bg-accent",
         )}
       >
         <UserAvatar
@@ -33,14 +33,14 @@ function ContactRow({ contact, selected, onSelect }) {
           <span className="flex items-baseline justify-between gap-2">
             <span
               className={cn(
-                "truncate text-sm",
-                contact.unread ? "font-bold text-foreground" : "font-semibold text-foreground",
+                "truncate text-xs text-foreground",
+                contact.unread ? "font-extrabold" : "font-bold",
               )}
             >
               {contact.name}
             </span>
             {contact.lastMessageAt && contact.lastMessage && (
-              <span className="shrink-0 text-[11px] text-faint">
+              <span className="shrink-0 text-[10px] tracking-[0.06em] text-faint uppercase">
                 {timeAgo(contact.lastMessageAt)}
               </span>
             )}
@@ -48,8 +48,8 @@ function ContactRow({ contact, selected, onSelect }) {
           <span className="flex items-center justify-between gap-2">
             <span
               className={cn(
-                "truncate text-xs",
-                contact.unread ? "font-medium text-foreground" : "text-muted-foreground",
+                "mt-0.5 truncate text-[11px]",
+                contact.unread ? "text-foreground" : "text-muted-foreground",
               )}
             >
               {contact.lastMessage ||
@@ -96,14 +96,17 @@ export default function ConversationList({
   return (
     <aside
       className={cn(
-        "h-full w-full shrink-0 flex-col border-r border-border bg-card md:w-80",
+        "h-full w-full shrink-0 flex-col border-r border-border bg-card/50 md:w-80",
         className,
       )}
       aria-label="Conversations"
     >
       <div className="space-y-3 border-b border-border p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-extrabold tracking-tight">Messages</h1>
+          <div>
+            <p className="eyebrow text-faint">Channels</p>
+            <h1 className="mt-1 text-base font-extrabold tracking-[0.12em] uppercase">Messages</h1>
+          </div>
           <div className="flex gap-1">
             <IconButton icon={SquarePen} label="New message" size="sm" variant="secondary" onClick={onNewDM} />
             <IconButton icon={UsersRound} label="New group" size="sm" variant="secondary" onClick={onNewGroup} />
@@ -117,14 +120,14 @@ export default function ConversationList({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search conversations"
             aria-label="Search conversations"
-            className="h-10 w-full rounded-xl border border-border bg-muted pr-9 pl-9 text-sm text-foreground outline-none placeholder:text-faint focus:border-primary focus:ring-4 focus:ring-primary/15"
+            className="h-9 w-full border border-border bg-background pr-9 pl-9 text-xs text-foreground outline-none placeholder:text-faint focus:border-primary focus:shadow-[0_0_0_1px_var(--primary)]"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
               aria-label="Clear search"
-              className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-faint hover:text-foreground"
+              className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center text-faint hover:text-foreground"
             >
               <X className="size-3.5" aria-hidden="true" />
             </button>
@@ -140,9 +143,9 @@ export default function ConversationList({
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto py-2 scrollbar-thin">
         {visible.length > 0 ? (
-          <ul className="space-y-0.5">
+          <ul>
             {visible.map((c) => (
               <ContactRow
                 key={`${c.type}:${c.id}`}
@@ -163,23 +166,23 @@ export default function ConversationList({
 
         {suggestions.length > 0 && (
           <div className="mt-4">
-            <h2 className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-faint uppercase">
-              People you can message
+            <h2 className="eyebrow flex items-center gap-2 px-4 pb-2 text-faint">
+              <span className="text-primary">//</span> People you can message
             </h2>
-            <ul className="space-y-0.5">
+            <ul>
               {suggestions.map((u) => (
                 <li key={u._id}>
                   <button
                     type="button"
                     onClick={() => onStartChatWith(u)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-muted"
+                    className="group flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-accent"
                   >
                     <UserAvatar src={u.avatar} name={u.name} size="sm" online={u.isOnline} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{u.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">@{u.username}</span>
+                      <span className="block truncate text-xs font-bold">{u.name}</span>
+                      <span className="block truncate text-[11px] text-muted-foreground">@{u.username}</span>
                     </span>
-                    <MessageSquare className="size-4 text-faint" aria-hidden="true" />
+                    <MessageSquare className="size-4 text-faint group-hover:text-primary" aria-hidden="true" />
                   </button>
                 </li>
               ))}

@@ -58,10 +58,9 @@ export default function ProfileHeader({
           </span>
         )}
       </div>
-      <div
-        aria-hidden="true"
-        className="h-24 border-b border-border bg-grid bg-[radial-gradient(ellipse_at_top_left,var(--glow),transparent_65%)] sm:h-28"
-      />
+      <div aria-hidden="true" className="relative h-24 border-b border-border bg-grid sm:h-28">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,var(--glow),transparent_65%)]" />
+      </div>
       <div className="px-5 pb-6 sm:px-6">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-3">
           <div className="relative">

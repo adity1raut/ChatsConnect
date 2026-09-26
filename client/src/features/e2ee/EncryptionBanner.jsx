@@ -3,8 +3,8 @@ import { Button } from "../../components/ui";
 import { cn } from "../../lib/utils";
 
 const TONES = {
-  info: "border-border bg-muted text-muted-foreground",
-  warn: "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200",
+  info: "border-border bg-muted/60 text-muted-foreground [&>svg]:text-info",
+  warn: "border-warning/40 bg-warning/[0.07] text-warning",
 };
 
 /**
@@ -45,7 +45,7 @@ export default function EncryptionBanner({ state, peerName, onSetup, onUnlock, o
     <div
       role="status"
       className={cn(
-        "flex shrink-0 items-center gap-3 border-b px-4 py-2 text-xs",
+        "flex shrink-0 items-center gap-3 border-b px-4 py-2 text-[11px] leading-relaxed",
         TONES[content.tone],
       )}
     >

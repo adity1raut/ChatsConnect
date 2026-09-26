@@ -1,16 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  PhoneOff,
-  Users,
-  Maximize2,
-  Minimize2,
-} from "lucide-react";
+import { Maximize2, Mic, MicOff, Minimize2, PhoneOff, Users, Video, VideoOff } from "lucide-react";
 import { useGroupCall } from "../../context/GroupCallContext";
 import { useAuth } from "../../context/AuthContext";
+import { cn } from "../../lib/utils";
+import { Button, Corners, StatusDot, UserAvatar } from "../ui";
+import { CallControl } from "./VideoCallModal";
 
 // Single video tile for one participant
 function VideoTile({
@@ -33,40 +27,25 @@ function VideoTile({
     .some((t) => t.enabled && t.readyState === "live");
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-gray-900 flex items-center justify-center group">
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden border border-border-strong bg-card">
       {stream && hasVideo ? (
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted={isLocal}
-          className={`w-full h-full object-cover ${isLocal ? "scale-x-[-1]" : ""}`}
+          className={cn("h-full w-full object-cover", isLocal && "scale-x-[-1]")}
         />
       ) : (
-        <div className="flex flex-col items-center gap-2">
-          {avatar && avatar.startsWith("http") ? (
-            <img
-              src={avatar}
-              alt={name}
-              className="w-16 h-16 rounded-full object-cover ring-4 ring-violet-500/40"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl ring-4 ring-violet-500/40">
-              {name?.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <span className="text-white text-xs font-medium opacity-70">
-            {isLocal ? "You (camera off)" : "Camera off"}
-          </span>
+        <div className="flex flex-col items-center gap-3">
+          <UserAvatar src={avatar} name={name} size="lg" />
+          <span className="eyebrow text-faint">{isLocal ? "You · camera off" : "Camera off"}</span>
         </div>
       )}
 
-      {/* Name tag */}
-      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-lg">
-        <span className="text-white text-xs font-semibold">
-          {isLocal ? `${name} (You)` : name}
-        </span>
-        {tileIsMuted && <MicOff size={11} className="text-red-400" />}
+      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 border border-border-strong bg-black/60 px-2 py-1 backdrop-blur-sm">
+        <span className="text-[10px] font-bold tracking-[0.1em] text-white uppercase">{isLocal ? `${name} (you)` : name}</span>
+        {tileIsMuted && <MicOff className="size-3 text-destructive" aria-label="Muted" />}
       </div>
     </div>
   );
@@ -74,39 +53,29 @@ function VideoTile({
 
 // Incoming group call notification banner
 function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
-
   return (
     <div
-      className="fixed top-4 right-4 z-[200] w-80 rounded-2xl border border-border bg-popover/95 p-4 text-foreground shadow-2xl backdrop-blur"
-      style={{ backdropFilter: "blur(20px)" }}
+      role="alertdialog"
+      aria-label={`${call.callerName} started a group call`}
+      className="fixed top-4 right-4 left-4 z-200 border border-primary/50 bg-popover text-popover-foreground shadow-panel animate-slide-up sm:left-auto sm:w-84"
     >
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-          <Users size={18} className="text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-violet-400 uppercase tracking-wide">
-            Group Call
-          </p>
-          <p className="text-sm font-bold truncate">
-            {call.callerName} started a call
-          </p>
+      <Corners />
+      <div className="flex items-center gap-3 p-4">
+        <span className="flex size-10 shrink-0 items-center justify-center border border-primary/40 bg-primary/10 text-primary">
+          <Users className="size-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow text-primary">Group call</p>
+          <p className="mt-1 truncate text-xs font-bold">{call.callerName} started a call</p>
         </div>
       </div>
-      <div className="flex gap-2">
-        <button
-          onClick={onJoin}
-          className="flex-1 py-2 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
-          style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)" }}
-        >
-          Join
-        </button>
-        <button
-          onClick={onDismiss}
-          className="flex-1 rounded-xl bg-muted py-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-border"
-        >
+      <div className="grid grid-cols-2 gap-2 border-t border-border p-3">
+        <Button variant="ghost" onClick={onDismiss}>
           Ignore
-        </button>
+        </Button>
+        <Button variant="solid" icon={Video} onClick={onJoin}>
+          Join
+        </Button>
       </div>
     </div>
   );
@@ -168,84 +137,69 @@ export default function GroupVideoCall() {
         />
       )}
 
-      {/* Active call overlay */}
+      {/* Active call overlay — `dark` keeps it on the dark palette in either theme */}
       {activeGroupCall && (
         <div
-          className={`fixed inset-0 z-[150] bg-gray-950 flex flex-col ${isFullscreen ? "" : "p-4"}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Group call in ${activeGroupCall.groupName}`}
+          className={cn("dark fixed inset-0 z-150 flex flex-col bg-black text-foreground", !isFullscreen && "p-3 sm:p-4")}
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-2 py-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                <Users size={15} className="text-violet-400" />
-              </div>
+          <div className="flex shrink-0 items-center justify-between border border-border-strong bg-card px-3 py-2">
+            <div className="flex items-center gap-3">
+              <span className="flex size-8 items-center justify-center border border-primary/40 bg-primary/10 text-primary">
+                <Users className="size-4" aria-hidden="true" />
+              </span>
               <div>
-                <p className="text-white font-bold text-sm leading-none">
-                  {activeGroupCall.groupName}
-                </p>
-                <p className="text-gray-500 text-xs mt-0.5">
-                  {participants.size + 1} participant
-                  {participants.size !== 0 ? "s" : ""}
+                <p className="text-xs font-bold tracking-[0.1em] uppercase">{activeGroupCall.groupName}</p>
+                <p className="eyebrow mt-1 flex items-center gap-1.5 text-faint">
+                  <StatusDot pulse /> {participants.size + 1} participant{participants.size !== 0 ? "s" : ""}
                 </p>
               </div>
             </div>
             <button
+              type="button"
               onClick={() => setIsFullscreen((v) => !v)}
-              className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white"
+              aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
+              title={isFullscreen ? "Exit full screen" : "Full screen"}
+              className="flex size-8 items-center justify-center border border-transparent text-muted-foreground hover:border-border hover:text-foreground"
             >
-              {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
             </button>
           </div>
 
-          {/* Video grid */}
-          <div className={`flex-1 grid gap-2 ${gridClass} min-h-0`}>
-            {/* Local tile */}
+          <div className={cn("mt-2 grid min-h-0 flex-1 gap-2", gridClass)}>
             <div className={tileHeight}>
-              <VideoTile
-                stream={localStream}
-                name={user?.name}
-                avatar={user?.avatar}
-                isMuted={isMuted}
-                isLocal
-              />
+              <VideoTile stream={localStream} name={user?.name} avatar={user?.avatar} isMuted={isMuted} isLocal />
             </div>
-
-            {/* Remote tiles */}
             {remoteTiles.map(([uid, info]) => (
               <div key={uid} className={tileHeight}>
-                <VideoTile
-                  stream={info.stream}
-                  name={info.name}
-                  avatar={info.avatar}
-                  isMuted={false}
-                />
+                <VideoTile stream={info.stream} name={info.name} avatar={info.avatar} isMuted={false} />
               </div>
             ))}
           </div>
 
-          {/* Control bar */}
-          <div className="flex items-center justify-center gap-4 py-4 shrink-0">
-            <button
-              onClick={toggleMute}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg ${isMuted ? "bg-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"}`}
-            >
-              {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
-            </button>
-
-            <button
-              onClick={toggleCamera}
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg ${isCameraOff ? "bg-red-500 text-white" : "bg-white/10 text-white hover:bg-white/20"}`}
-            >
-              {isCameraOff ? <VideoOff size={22} /> : <Video size={22} />}
-            </button>
-
-            <button
-              onClick={leaveGroupCall}
-              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-xl"
-            >
-              <PhoneOff size={24} />
-            </button>
+          <div className="flex shrink-0 justify-center py-4">
+            <div className="flex items-center gap-3 border border-border-strong bg-card p-2">
+              <CallControl label={isMuted ? "Unmute" : "Mute"} icon={isMuted ? MicOff : Mic} active={isMuted} onClick={toggleMute} />
+              <CallControl
+                label={isCameraOff ? "Turn on camera" : "Turn off camera"}
+                icon={isCameraOff ? VideoOff : Video}
+                active={isCameraOff}
+                onClick={toggleCamera}
+              />
+              <button
+                type="button"
+                onClick={leaveGroupCall}
+                aria-label="Leave call"
+                title="Leave call"
+                className="flex h-12 items-center gap-2 border border-destructive bg-destructive px-5 text-[11px] font-bold tracking-[0.12em] text-white uppercase transition-[box-shadow,background-color] hover:bg-destructive/85 hover:shadow-[0_0_24px_rgb(255_105_120/0.45)]"
+              >
+                <PhoneOff className="size-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Leave</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
