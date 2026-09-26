@@ -5,7 +5,7 @@ import axios from "../../config/axiosInstance.js";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
-import { Avatar, Card, EmptyState, IconButton, SegmentedControl, Spinner } from "../../components/ui";
+import { Card, EmptyState, IconButton, SegmentedControl, Spinner, UserAvatar } from "../../components/ui";
 import FriendAction from "../profile/FriendAction";
 
 const FILTERS = [
@@ -38,7 +38,7 @@ function Highlight({ text = "", query }) {
   return (
     <>
       {text.slice(0, i)}
-      <mark className="rounded-sm bg-accent-soft text-accent-fg">{text.slice(i, i + query.length)}</mark>
+      <mark className="rounded-sm bg-primary/10 text-primary">{text.slice(i, i + query.length)}</mark>
       {text.slice(i + query.length)}
     </>
   );
@@ -49,14 +49,14 @@ function PersonRow({ person, query, online }) {
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <Link to={`/profile/${person._id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl hover:opacity-90">
-        <Avatar src={person.avatar} name={person.name} online={online} />
+        <UserAvatar src={person.avatar} name={person.name} online={online} />
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold">
             <Highlight text={person.name} query={query} />
           </span>
-          <span className="block truncate text-xs text-muted">
+          <span className="block truncate text-xs text-muted-foreground">
             @<Highlight text={person.username} query={query} />
-            {person.statusMessage && <span className="text-subtle"> · {person.statusMessage}</span>}
+            {person.statusMessage && <span className="text-faint"> · {person.statusMessage}</span>}
           </span>
         </span>
       </Link>
@@ -64,7 +64,7 @@ function PersonRow({ person, query, online }) {
         icon={MessageCircle}
         label={`Message ${person.name}`}
         size="sm"
-        variant="soft"
+        variant="secondary"
         onClick={() =>
           navigate("/chat", {
             state: { openChat: { id: person._id, name: person.name, username: person.username, avatar: person.avatar } },
@@ -84,14 +84,14 @@ function GroupRow({ group, query }) {
       <Link
         to="/chat"
         state={{ openGroup: { groupId: group._id } }}
-        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2"
+        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted"
       >
-        <Avatar src={group.avatar} name={group.name} shape="square" />
+        <UserAvatar src={group.avatar} name={group.name} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold">
             <Highlight text={group.name} query={query} />
           </span>
-          <span className="block truncate text-xs text-muted">{group.members?.length ?? 0} members</span>
+          <span className="block truncate text-xs text-muted-foreground">{group.members?.length ?? 0} members</span>
         </span>
       </Link>
     </li>
@@ -100,11 +100,11 @@ function GroupRow({ group, query }) {
 
 function ResultSection({ title, children, count }) {
   return (
-    <Card padded={false} className="overflow-hidden">
-      <h2 className="border-b border-line px-4 py-2.5 text-xs font-semibold tracking-wider text-subtle uppercase">
+    <Card className="overflow-hidden">
+      <h2 className="border-b border-border px-4 py-2.5 text-xs font-semibold tracking-wider text-faint uppercase">
         {title} {count !== undefined && <span className="font-normal">({count})</span>}
       </h2>
-      <ul className="divide-y divide-line">{children}</ul>
+      <ul className="divide-y divide-border">{children}</ul>
     </Card>
   );
 }
@@ -174,7 +174,7 @@ export default function SearchPage() {
       <h1 className="text-2xl font-extrabold tracking-tight">Search</h1>
 
       <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-subtle" aria-hidden="true" />
+        <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-faint" aria-hidden="true" />
         <input
           type="search"
           value={query}
@@ -182,14 +182,14 @@ export default function SearchPage() {
           placeholder="Search people and your groups"
           aria-label="Search people and your groups"
           autoFocus
-          className="h-13 w-full rounded-2xl border border-line bg-surface pr-12 pl-12 text-base text-fg shadow-sm outline-none placeholder:text-subtle focus:border-accent focus:ring-4 focus:ring-accent/15"
+          className="h-13 w-full rounded-2xl border border-border bg-card pr-12 pl-12 text-base text-foreground shadow-sm outline-none placeholder:text-faint focus:border-primary focus:ring-4 focus:ring-primary/15"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery("")}
             aria-label="Clear search"
-            className="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-subtle hover:bg-surface-2 hover:text-fg"
+            className="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-faint hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -204,7 +204,7 @@ export default function SearchPage() {
               key={q}
               type="button"
               onClick={() => setQuery(q)}
-              className="inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:border-accent hover:text-accent-fg"
+              className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
             >
               <Clock className="size-3" aria-hidden="true" />
               {q}
@@ -217,7 +217,7 @@ export default function SearchPage() {
               setRecent([]);
               writeRecent([]);
             }}
-            className="text-xs font-semibold text-subtle hover:text-fg hover:underline"
+            className="text-xs font-semibold text-faint hover:text-foreground hover:underline"
           >
             Clear
           </button>
@@ -226,7 +226,7 @@ export default function SearchPage() {
 
       {showPeople &&
         (searching || suggested === null ? (
-          <Card className="flex justify-center py-8">
+          <Card className="p-5 flex justify-center py-8">
             <Spinner label="Searching" />
           </Card>
         ) : people.length ? (
@@ -237,7 +237,7 @@ export default function SearchPage() {
           </ResultSection>
         ) : (
           trimmed && (
-            <Card>
+            <Card className="p-5">
               <EmptyState icon={Search} title={`No people found for "${trimmed}"`} description="Try a different name or username." />
             </Card>
           )
@@ -251,7 +251,7 @@ export default function SearchPage() {
         </ResultSection>
       )}
       {showGroups && filter === "groups" && groups.length === 0 && (
-        <Card>
+        <Card className="p-5">
           <EmptyState
             icon={Users}
             title={trimmed ? `No groups match "${trimmed}"` : "You're not in any groups yet"}

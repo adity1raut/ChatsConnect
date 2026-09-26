@@ -1,13 +1,7 @@
 import { useMemo, useState } from "react";
 import { MessageSquare, Search, SquarePen, Users, UsersRound, X } from "lucide-react";
-import {
-  Avatar,
-  CountBadge,
-  EmptyState,
-  IconButton,
-  SegmentedControl,
-} from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { CountBadge, EmptyState, IconButton, SegmentedControl, UserAvatar } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { timeAgo } from "../../lib/time";
 
 const FILTERS = [
@@ -26,14 +20,13 @@ function ContactRow({ contact, selected, onSelect }) {
         aria-current={selected ? "true" : undefined}
         className={cn(
           "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-          selected ? "bg-accent-soft" : "hover:bg-surface-2",
+          selected ? "bg-primary/10" : "hover:bg-muted",
         )}
       >
-        <Avatar
+        <UserAvatar
           src={contact.avatar}
           name={contact.name}
           size="md"
-          shape={isGroup ? "square" : "circle"}
           online={contact.isOnline}
         />
         <span className="min-w-0 flex-1">
@@ -41,13 +34,13 @@ function ContactRow({ contact, selected, onSelect }) {
             <span
               className={cn(
                 "truncate text-sm",
-                contact.unread ? "font-bold text-fg" : "font-semibold text-fg",
+                contact.unread ? "font-bold text-foreground" : "font-semibold text-foreground",
               )}
             >
               {contact.name}
             </span>
             {contact.lastMessageAt && contact.lastMessage && (
-              <span className="shrink-0 text-[11px] text-subtle">
+              <span className="shrink-0 text-[11px] text-faint">
                 {timeAgo(contact.lastMessageAt)}
               </span>
             )}
@@ -56,7 +49,7 @@ function ContactRow({ contact, selected, onSelect }) {
             <span
               className={cn(
                 "truncate text-xs",
-                contact.unread ? "font-medium text-fg" : "text-muted",
+                contact.unread ? "font-medium text-foreground" : "text-muted-foreground",
               )}
             >
               {contact.lastMessage ||
@@ -103,35 +96,35 @@ export default function ConversationList({
   return (
     <aside
       className={cn(
-        "h-full w-full shrink-0 flex-col border-r border-line bg-surface md:w-80",
+        "h-full w-full shrink-0 flex-col border-r border-border bg-card md:w-80",
         className,
       )}
       aria-label="Conversations"
     >
-      <div className="space-y-3 border-b border-line p-4">
+      <div className="space-y-3 border-b border-border p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-extrabold tracking-tight">Messages</h1>
           <div className="flex gap-1">
-            <IconButton icon={SquarePen} label="New message" size="sm" variant="soft" onClick={onNewDM} />
-            <IconButton icon={UsersRound} label="New group" size="sm" variant="soft" onClick={onNewGroup} />
+            <IconButton icon={SquarePen} label="New message" size="sm" variant="secondary" onClick={onNewDM} />
+            <IconButton icon={UsersRound} label="New group" size="sm" variant="secondary" onClick={onNewGroup} />
           </div>
         </div>
         <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-subtle" aria-hidden="true" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search conversations"
             aria-label="Search conversations"
-            className="h-10 w-full rounded-xl border border-line bg-surface-2 pr-9 pl-9 text-sm text-fg outline-none placeholder:text-subtle focus:border-accent focus:ring-4 focus:ring-accent/15"
+            className="h-10 w-full rounded-xl border border-border bg-muted pr-9 pl-9 text-sm text-foreground outline-none placeholder:text-faint focus:border-primary focus:ring-4 focus:ring-primary/15"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
               aria-label="Clear search"
-              className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-subtle hover:text-fg"
+              className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-faint hover:text-foreground"
             >
               <X className="size-3.5" aria-hidden="true" />
             </button>
@@ -170,7 +163,7 @@ export default function ConversationList({
 
         {suggestions.length > 0 && (
           <div className="mt-4">
-            <h2 className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-subtle uppercase">
+            <h2 className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-faint uppercase">
               People you can message
             </h2>
             <ul className="space-y-0.5">
@@ -179,14 +172,14 @@ export default function ConversationList({
                   <button
                     type="button"
                     onClick={() => onStartChatWith(u)}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-surface-2"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-muted"
                   >
-                    <Avatar src={u.avatar} name={u.name} size="sm" online={u.isOnline} />
+                    <UserAvatar src={u.avatar} name={u.name} size="sm" online={u.isOnline} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{u.name}</span>
-                      <span className="block truncate text-xs text-muted">@{u.username}</span>
+                      <span className="block truncate text-xs text-muted-foreground">@{u.username}</span>
                     </span>
-                    <MessageSquare className="size-4 text-subtle" aria-hidden="true" />
+                    <MessageSquare className="size-4 text-faint" aria-hidden="true" />
                   </button>
                 </li>
               ))}

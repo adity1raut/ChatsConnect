@@ -12,23 +12,16 @@ import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { useCall } from "../../context/CallContext";
-import {
-  Avatar,
-  Button,
-  Card,
-  EmptyState,
-  IconButton,
-  Spinner,
-} from "../../components/ui";
+import { Button, Card, EmptyState, IconButton, Spinner, UserAvatar } from "../../components/ui";
 import ProfileHeader from "./ProfileHeader";
 import FriendAction from "./FriendAction";
 
 function MutualList({ title, count, children }) {
   if (!count) return null;
   return (
-    <Card>
+    <Card className="p-5">
       <h2 className="mb-3 text-sm font-bold">
-        {title} <span className="font-normal text-muted">({count})</span>
+        {title} <span className="font-normal text-muted-foreground">({count})</span>
       </h2>
       {children}
     </Card>
@@ -71,7 +64,7 @@ export default function UserProfilePage() {
         title="User not found"
         description="This account may have been deleted."
         action={
-          <Button variant="secondary" icon={ArrowLeft} onClick={() => navigate(-1)}>
+          <Button variant="outline" icon={ArrowLeft} onClick={() => navigate(-1)}>
             Go back
           </Button>
         }
@@ -116,13 +109,13 @@ export default function UserProfilePage() {
               <IconButton
                 icon={Phone}
                 label={`Voice call ${user.name}`}
-                variant="soft"
+                variant="secondary"
                 onClick={() => startCall(chat, true)}
               />
               <IconButton
                 icon={Video}
                 label={`Video call ${user.name}`}
-                variant="soft"
+                variant="secondary"
                 onClick={() => startCall(chat, false)}
               />
             </div>
@@ -137,12 +130,12 @@ export default function UserProfilePage() {
               <li key={f._id}>
                 <Link
                   to={`/profile/${f._id}`}
-                  className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-surface-2"
+                  className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-muted"
                 >
-                  <Avatar src={f.avatar} name={f.name} size="sm" />
+                  <UserAvatar src={f.avatar} name={f.name} size="sm" />
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold">{f.name}</span>
-                    <span className="block truncate text-xs text-muted">@{f.username}</span>
+                    <span className="block truncate text-xs text-muted-foreground">@{f.username}</span>
                   </span>
                 </Link>
               </li>
@@ -156,9 +149,9 @@ export default function UserProfilePage() {
                 <Link
                   to="/chat"
                   state={{ openGroup: { groupId: g._id } }}
-                  className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-surface-2"
+                  className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-muted"
                 >
-                  <Avatar src={g.avatar} name={g.name} size="sm" shape="square" />
+                  <UserAvatar src={g.avatar} name={g.name} size="sm" />
                   <span className="truncate text-sm font-semibold">{g.name}</span>
                 </Link>
               </li>

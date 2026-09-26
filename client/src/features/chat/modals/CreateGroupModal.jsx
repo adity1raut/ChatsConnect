@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import axios from "../../../config/axiosInstance.js";
 import { API_URL } from "../../../config/api.js";
-import { Avatar, Button, Input, Modal, Textarea } from "../../../components/ui";
+import { Button, InputField, Modal, TextareaField, UserAvatar } from "../../../components/ui";
 import { toast } from "../../../lib/toast";
 import UserPicker from "./UserPicker";
 
@@ -77,7 +77,7 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
             if (name.trim()) setStep(2);
           }}
         >
-          <Input
+          <InputField
             label="Group name"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -86,7 +86,7 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
             data-autofocus
             required
           />
-          <Textarea
+          <TextareaField
             label="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -104,9 +104,9 @@ export default function CreateGroupModal({ onClose, onGroupCreated }) {
                     type="button"
                     onClick={() => toggle(m)}
                     aria-label={`Remove ${m.name}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft py-1 pr-2 pl-1 text-xs font-medium text-accent-fg"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-1 pr-2 pl-1 text-xs font-medium text-primary"
                   >
-                    <Avatar src={m.avatar} name={m.name} size="xs" />
+                    <UserAvatar src={m.avatar} name={m.name} size="xs" />
                     {m.name.split(" ")[0]}
                     <X className="size-3" aria-hidden="true" />
                   </button>

@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import { cn } from "../../lib/cn";
+import { cn } from "../../lib/utils";
 
 export default function Brand({ subtitle, className }) {
   return (
@@ -11,7 +11,7 @@ export default function Brand({ subtitle, className }) {
         <p className="bg-linear-to-r from-violet-600 to-purple-500 bg-clip-text text-lg font-extrabold tracking-tight text-transparent dark:from-violet-400 dark:to-fuchsia-400">
           ChatsConnect
         </p>
-        {subtitle && <p className="-mt-0.5 text-[11px] font-medium text-subtle">{subtitle}</p>}
+        {subtitle && <p className="-mt-0.5 text-[11px] font-medium text-faint">{subtitle}</p>}
       </div>
     </div>
   );

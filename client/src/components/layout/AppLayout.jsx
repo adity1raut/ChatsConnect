@@ -1,5 +1,5 @@
 import { SettingsModalProvider } from "../../context/SettingsModalContext";
-import { cn } from "../../lib/cn";
+import { cn } from "../../lib/utils";
 import MobileNav from "./MobileNav";
 import Sidebar from "./Sidebar";
 
@@ -10,7 +10,7 @@ import Sidebar from "./Sidebar";
 export default function AppLayout({ children, fullHeight = false }) {
   return (
     <SettingsModalProvider>
-      <div className="flex h-dvh overflow-hidden bg-bg text-fg">
+      <div className="flex h-dvh overflow-hidden bg-background text-foreground">
         <Sidebar className="hidden md:flex" />
         <main
           id="main"

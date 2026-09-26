@@ -3,14 +3,7 @@ import { Crown, LogOut, UserMinus, UserPlus } from "lucide-react";
 import axios from "../../../config/axiosInstance.js";
 import { API_URL } from "../../../config/api.js";
 import { useSocket } from "../../../context/SocketContext";
-import {
-  Avatar,
-  Badge,
-  Button,
-  IconButton,
-  Modal,
-  Spinner,
-} from "../../../components/ui";
+import { Badge, Button, IconButton, Modal, Spinner, UserAvatar } from "../../../components/ui";
 import { toast } from "../../../lib/toast";
 import UserPicker from "./UserPicker";
 
@@ -84,7 +77,7 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
       description={details?.members ? `${members.length} member${members.length === 1 ? "" : "s"}` : undefined}
       size="md"
       footer={
-        <Button variant="danger-soft" icon={LogOut} onClick={() => setConfirmLeave(true)}>
+        <Button variant="destructive" icon={LogOut} onClick={() => setConfirmLeave(true)}>
           Leave group
         </Button>
       }
@@ -106,28 +99,28 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
                 </Button>
               </div>
             ) : (
-              <Button variant="secondary" icon={UserPlus} fullWidth onClick={() => setAdding(true)}>
+              <Button variant="outline" icon={UserPlus} fullWidth onClick={() => setAdding(true)}>
                 Add people
               </Button>
             )
           )}
 
-          <ul className="divide-y divide-line rounded-xl border border-line">
+          <ul className="divide-y divide-border rounded-xl border border-border">
             {members.map((m) => {
               const id = memberId(m);
               const isMe = id === currentUser?._id;
               return (
                 <li key={id} className="flex items-center gap-3 px-3 py-2.5">
-                  <Avatar src={m.user?.avatar} name={m.user?.name ?? "Member"} size="sm" online={onlineUsers.has(id)} />
+                  <UserAvatar src={m.user?.avatar} name={m.user?.name ?? "Member"} size="sm" online={onlineUsers.has(id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold">
                       {m.user?.name ?? "Deleted account"}
-                      {isMe && <span className="font-normal text-muted"> (you)</span>}
+                      {isMe && <span className="font-normal text-muted-foreground"> (you)</span>}
                     </span>
-                    {m.user?.username && <span className="block truncate text-xs text-muted">@{m.user.username}</span>}
+                    {m.user?.username && <span className="block truncate text-xs text-muted-foreground">@{m.user.username}</span>}
                   </span>
                   {m.role === "admin" && (
-                    <Badge variant="accent" icon={Crown}>
+                    <Badge icon={Crown}>
                       Admin
                     </Badge>
                   )}
@@ -136,7 +129,7 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
                       icon={UserMinus}
                       label={`Remove ${m.user?.name ?? "member"}`}
                       size="sm"
-                      variant="danger"
+                      variant="destructive"
                       disabled={busy === `remove-${id}`}
                       onClick={() => removeMember(m)}
                     />
@@ -159,7 +152,7 @@ export default function ManageGroupModal({ group, currentUser, onClose, onGroupU
             <Button variant="ghost" onClick={() => setConfirmLeave(false)}>
               Cancel
             </Button>
-            <Button variant="danger" loading={busy === "leave"} onClick={leave}>
+            <Button variant="destructive" loading={busy === "leave"} onClick={leave}>
               Leave
             </Button>
           </>

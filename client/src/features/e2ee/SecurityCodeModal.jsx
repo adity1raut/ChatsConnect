@@ -53,20 +53,20 @@ export default function SecurityCodeModal({ open, onClose, peer }) {
           <Spinner label="Computing security code" />
         </div>
       ) : code === "unavailable" ? (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           A security code is available once both of you have turned on encryption.
         </p>
       ) : (
         <div className="space-y-4">
           <p
-            className="grid grid-cols-4 gap-x-4 gap-y-2 rounded-xl bg-surface-2 p-4 text-center font-mono text-lg font-semibold tracking-wider"
+            className="grid grid-cols-4 gap-x-4 gap-y-2 rounded-xl bg-muted p-4 text-center font-mono text-lg font-semibold tracking-wider"
             aria-label={`Security code ${code}`}
           >
             {code.split(" ").map((group, i) => (
               <span key={i}>{group}</span>
             ))}
           </p>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             Ask {peer.name} to open this screen and compare the numbers — in person or on a call.
             If they match, your messages are end-to-end encrypted with nobody in between.
           </p>

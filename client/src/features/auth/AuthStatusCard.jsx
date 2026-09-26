@@ -5,17 +5,17 @@ import { AlertCircle, Loader2 } from "lucide-react";
 export default function AuthStatusCard({ title, error }) {
   return (
     <div
-      className="flex min-h-dvh items-center justify-center bg-bg p-4 text-fg"
+      className="flex min-h-dvh items-center justify-center bg-background p-4 text-foreground"
     >
       <div
-        className="w-full max-w-sm rounded-2xl border border-line bg-surface p-8 text-center shadow-xl"
+        className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center shadow-xl"
       >
         {error ? (
           <>
             <AlertCircle className="mx-auto mb-4 h-10 w-10 text-red-500" />
             <h1 className="mb-2 text-lg font-bold">Sign-in failed</h1>
             <p
-              className="mb-6 text-sm text-muted"
+              className="mb-6 text-sm text-muted-foreground"
             >
               {error}
             </p>

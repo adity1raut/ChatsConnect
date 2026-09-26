@@ -4,7 +4,7 @@ import { Mail, MailCheck } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { Button, Input, PasswordInput } from "../../components/ui";
+import { Button, InputField, PasswordField } from "../../components/ui";
 import AuthLayout from "./AuthLayout";
 import GitHubButton, { OrDivider } from "./GitHubButton";
 
@@ -43,8 +43,8 @@ export default function LoginPage() {
     return (
       <AuthLayout title="Check your email" subtitle="Two-step verification is on for this account.">
         <div className="space-y-4 text-center">
-          <MailCheck className="mx-auto size-12 text-accent" aria-hidden="true" />
-          <p className="text-sm text-muted">{checkEmail}</p>
+          <MailCheck className="mx-auto size-12 text-primary" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">{checkEmail}</p>
           <Button variant="ghost" onClick={() => setCheckEmail("")}>
             Back to sign in
           </Button>
@@ -60,14 +60,14 @@ export default function LoginPage() {
       footer={
         <>
           New here?{" "}
-          <Link to="/registration" className="font-semibold text-accent-fg hover:underline">
+          <Link to="/registration" className="font-semibold text-primary hover:underline">
             Create an account
           </Link>
         </>
       }
     >
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <Input
+        <InputField
           label="Email"
           type="email"
           icon={Mail}
@@ -77,7 +77,7 @@ export default function LoginPage() {
           placeholder="you@example.com"
           required
         />
-        <PasswordInput
+        <PasswordField
           label="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

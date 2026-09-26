@@ -3,7 +3,7 @@ import { AlertTriangle, Trash2 } from "lucide-react";
 import axios from "../../config/axiosInstance.js";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { Button, Card, Input, Modal, PasswordInput } from "../../components/ui";
+import { Button, Card, InputField, Modal, PasswordField } from "../../components/ui";
 
 const CONFIRM_WORD = "DELETE";
 
@@ -43,20 +43,20 @@ export default function DeleteAccountSection() {
   };
 
   return (
-    <Card className="border-red-500/30">
+    <Card className="p-5 border-red-500/30">
       <div className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-500">
           <AlertTriangle className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="font-bold">Delete account</h2>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-muted-foreground">
             Permanently deletes your profile, friends, group memberships and
             notifications. Messages you sent stay in other people's chats. This
             can't be undone.
           </p>
           <Button
-            variant="danger-soft"
+            variant="destructive"
             icon={Trash2}
             className="mt-4"
             onClick={() => setOpen(true)}
@@ -75,7 +75,7 @@ export default function DeleteAccountSection() {
       >
         <form onSubmit={deleteAccount} className="space-y-4">
           {isLocal && (
-            <PasswordInput
+            <PasswordField
               label="Your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -84,7 +84,7 @@ export default function DeleteAccountSection() {
               required
             />
           )}
-          <Input
+          <InputField
             label={`Type ${CONFIRM_WORD} to confirm`}
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
@@ -100,7 +100,7 @@ export default function DeleteAccountSection() {
             <Button variant="ghost" onClick={close}>
               Cancel
             </Button>
-            <Button type="submit" variant="danger" loading={deleting} disabled={!canDelete}>
+            <Button type="submit" variant="destructive" loading={deleting} disabled={!canDelete}>
               Delete forever
             </Button>
           </div>

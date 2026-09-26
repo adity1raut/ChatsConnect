@@ -37,8 +37,9 @@ export default defineConfig([
     languageOptions: { globals: globals.node },
   },
   {
-    // Context modules intentionally export a Provider alongside its use* hook.
-    files: ["src/context/**/*.{js,jsx}"],
+    // Context modules export a Provider alongside its use* hook; shadcn/ui
+    // modules export class helpers (buttonVariants) next to components.
+    files: ["src/context/**/*.{js,jsx}", "src/components/ui/**/*.{js,jsx}"],
     rules: {
       "react-refresh/only-export-components": "off",
     },

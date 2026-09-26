@@ -3,16 +3,8 @@ import { Bell, Check, CheckCheck, Settings, Trash2, UserPlus, X } from "lucide-r
 import { useNotifications } from "../../context/NotificationContext";
 import { useFriends } from "../../context/FriendContext";
 import { useSettingsModal } from "../../context/SettingsModalContext";
-import {
-  Avatar,
-  Button,
-  Card,
-  EmptyState,
-  IconButton,
-  Modal,
-  SegmentedControl,
-} from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Button, Card, EmptyState, IconButton, Modal, SegmentedControl, UserAvatar } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { dayBucket, timeAgo } from "../../lib/time";
 import { toast } from "../../lib/toast";
 import { describeNotification } from "./describe";
@@ -46,19 +38,19 @@ function FriendRequests() {
   };
 
   return (
-    <Card padded={false} className="overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-line px-4 py-3">
-        <UserPlus className="size-4 text-accent-fg" aria-hidden="true" />
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <UserPlus className="size-4 text-primary" aria-hidden="true" />
         <h2 className="text-sm font-bold">Friend requests</h2>
-        <span className="text-xs text-muted">({incomingRequests.length})</span>
+        <span className="text-xs text-muted-foreground">({incomingRequests.length})</span>
       </div>
-      <ul className="divide-y divide-line">
+      <ul className="divide-y divide-border">
         {incomingRequests.map((r) => (
           <li key={r._id} className="flex items-center gap-3 px-4 py-3">
-            <Avatar src={r.sender?.avatar} name={r.sender?.name} online={r.sender?.isOnline} />
+            <UserAvatar src={r.sender?.avatar} name={r.sender?.name} online={r.sender?.isOnline} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{r.sender?.name}</p>
-              <p className="truncate text-xs text-muted">@{r.sender?.username}</p>
+              <p className="truncate text-xs text-muted-foreground">@{r.sender?.username}</p>
             </div>
             <Button
               size="sm"
@@ -69,7 +61,7 @@ function FriendRequests() {
             </Button>
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               disabled={busy === r._id}
               onClick={() => act(rejectRequest, r)}
             >
@@ -92,13 +84,13 @@ function NotificationRow({ n, onOpen, onMarkRead, onDismiss }) {
         type="button"
         onClick={() => onOpen(n)}
         className={cn(
-          "flex w-full items-start gap-3 px-4 py-3 pr-10 text-left transition-colors hover:bg-surface-2 sm:pr-24",
-          unread && "bg-accent-soft/40",
+          "flex w-full items-start gap-3 px-4 py-3 pr-10 text-left transition-colors hover:bg-muted sm:pr-24",
+          unread && "bg-primary/5",
         )}
       >
         <span className="relative shrink-0">
-          <Avatar src={n.actor?.avatar} name={n.actor?.name || title} />
-          <span className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-accent text-white ring-2 ring-surface">
+          <UserAvatar src={n.actor?.avatar} name={n.actor?.name || title} />
+          <span className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full bg-primary text-white ring-2 ring-card">
             <Icon className="size-3" aria-hidden="true" />
           </span>
         </span>
@@ -106,14 +98,14 @@ function NotificationRow({ n, onOpen, onMarkRead, onDismiss }) {
           <span className={cn("block truncate text-sm", unread ? "font-bold" : "font-medium")}>
             {title}
           </span>
-          <span className="line-clamp-2 block text-xs text-muted">{body}</span>
-          <span className="mt-0.5 block text-[11px] text-subtle">{timeAgo(n.updatedAt)}</span>
+          <span className="line-clamp-2 block text-xs text-muted-foreground">{body}</span>
+          <span className="mt-0.5 block text-[11px] text-faint">{timeAgo(n.updatedAt)}</span>
         </span>
       </button>
 
       {unread && (
         <span
-          className="pointer-events-none absolute top-1/2 right-4 size-2.5 -translate-y-1/2 rounded-full bg-accent group-focus-within:opacity-0 group-hover:opacity-0"
+          className="pointer-events-none absolute top-1/2 right-4 size-2.5 -translate-y-1/2 rounded-full bg-primary group-focus-within:opacity-0 group-hover:opacity-0"
           aria-label="Unread"
         />
       )}
@@ -169,7 +161,7 @@ export default function NotificationsPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">Notifications</h1>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             {unreadCount > 0
               ? `${unreadCount} unread`
               : "You're all caught up"}
@@ -177,7 +169,7 @@ export default function NotificationsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             icon={CheckCheck}
             disabled={unreadCount === 0}
@@ -213,7 +205,7 @@ export default function NotificationsPage() {
         />
       </div>
 
-      <Card padded={false} className="overflow-hidden">
+      <Card className="overflow-hidden">
         {sections.length === 0 ? (
           <EmptyState
             icon={Bell}
@@ -227,10 +219,10 @@ export default function NotificationsPage() {
         ) : (
           sections.map(([bucket, items]) => (
             <section key={bucket} aria-label={bucket}>
-              <h2 className="border-b border-line bg-surface-2/60 px-4 py-1.5 text-[11px] font-semibold tracking-wider text-subtle uppercase">
+              <h2 className="border-b border-border bg-muted/60 px-4 py-1.5 text-[11px] font-semibold tracking-wider text-faint uppercase">
                 {bucket}
               </h2>
-              <ul className="divide-y divide-line">
+              <ul className="divide-y divide-border">
                 {items.map((n) => (
                   <NotificationRow
                     key={n._id}
@@ -245,7 +237,7 @@ export default function NotificationsPage() {
           ))
         )}
         {hasMore && (
-          <div className="border-t border-line p-3 text-center">
+          <div className="border-t border-border p-3 text-center">
             <Button variant="ghost" size="sm" loading={loading} onClick={loadMore}>
               Load older notifications
             </Button>
@@ -265,7 +257,7 @@ export default function NotificationsPage() {
               Cancel
             </Button>
             <Button
-              variant="danger"
+              variant="destructive"
               onClick={() => {
                 clearAll();
                 setConfirmClear(false);

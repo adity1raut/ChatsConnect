@@ -4,8 +4,8 @@ import axios from "../../../config/axiosInstance.js";
 import { API_URL } from "../../../config/api.js";
 import { useAuth } from "../../../context/AuthContext";
 import { useSocket } from "../../../context/SocketContext";
-import { Avatar, Input, Spinner } from "../../../components/ui";
-import { cn } from "../../../lib/cn";
+import { InputField, Spinner, UserAvatar } from "../../../components/ui";
+import { cn } from "../../../lib/utils";
 
 const DEBOUNCE_MS = 250;
 
@@ -54,7 +54,7 @@ export default function UserPicker({
 
   return (
     <div className="space-y-2">
-      <Input
+      <InputField
         icon={Search}
         type="search"
         value={query}
@@ -63,19 +63,19 @@ export default function UserPicker({
         aria-label="Search people"
         data-autofocus={autoFocus || undefined}
       />
-      <div className="max-h-72 min-h-24 overflow-y-auto rounded-xl border border-line scrollbar-thin">
+      <div className="max-h-72 min-h-24 overflow-y-auto rounded-xl border border-border scrollbar-thin">
         {loading ? (
           <div className="flex justify-center py-8">
             <Spinner label="Searching" />
           </div>
         ) : !active ? (
-          <p className="px-4 py-8 text-center text-sm text-subtle">Type a name to search</p>
+          <p className="px-4 py-8 text-center text-sm text-faint">Type a name to search</p>
         ) : users.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-subtle">
+          <p className="px-4 py-8 text-center text-sm text-faint">
             {trimmed ? `No one found for "${trimmed}"` : "No one to show"}
           </p>
         ) : (
-          <ul className="divide-y divide-line">
+          <ul className="divide-y divide-border">
             {users.map((u) => {
               const selected = selectedIds?.has(u._id);
               return (
@@ -85,20 +85,20 @@ export default function UserPicker({
                     onClick={() => onPick(u)}
                     aria-pressed={selectedIds ? Boolean(selected) : undefined}
                     className={cn(
-                      "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2",
-                      selected && "bg-accent-soft",
+                      "flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted",
+                      selected && "bg-primary/10",
                     )}
                   >
-                    <Avatar src={u.avatar} name={u.name} size="sm" online={onlineUsers.has(u._id)} />
+                    <UserAvatar src={u.avatar} name={u.name} size="sm" online={onlineUsers.has(u._id)} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">{u.name}</span>
-                      <span className="block truncate text-xs text-muted">@{u.username}</span>
+                      <span className="block truncate text-xs text-muted-foreground">@{u.username}</span>
                     </span>
                     {selectedIds && (
                       <span
                         className={cn(
                           "flex size-5 items-center justify-center rounded-full border",
-                          selected ? "border-accent bg-accent text-white" : "border-line-strong",
+                          selected ? "border-primary bg-primary text-white" : "border-border-strong",
                         )}
                       >
                         {selected && <Check className="size-3" aria-hidden="true" />}

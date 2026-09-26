@@ -23,24 +23,24 @@ export default function AboutPage() {
     <div className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-6">
       <header className="space-y-3 text-center">
         <Brand className="justify-center" />
-        <p className="mx-auto max-w-xl text-muted">
+        <p className="mx-auto max-w-xl text-muted-foreground">
           A full-stack real-time chat platform with end-to-end encrypted direct messages, voice and
           video calls, and a personal AI assistant — built as a mini project.
         </p>
       </header>
 
       <section aria-labelledby="about-features">
-        <h2 id="about-features" className="mb-4 text-xs font-semibold tracking-wider text-subtle uppercase">
+        <h2 id="about-features" className="mb-4 text-xs font-semibold tracking-wider text-faint uppercase">
           Features
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2">
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <li key={title}>
-              <Card className="flex h-full gap-3 p-4">
-                <Icon className="mt-0.5 size-5 shrink-0 text-accent-fg" aria-hidden="true" />
+              <Card className="p-5 flex h-full gap-3 p-4">
+                <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
                 <span>
                   <span className="block text-sm font-bold">{title}</span>
-                  <span className="block text-sm text-muted">{desc}</span>
+                  <span className="block text-sm text-muted-foreground">{desc}</span>
                 </span>
               </Card>
             </li>
@@ -49,14 +49,14 @@ export default function AboutPage() {
       </section>
 
       <section aria-labelledby="about-security">
-        <h2 id="about-security" className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-wider text-subtle uppercase">
+        <h2 id="about-security" className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-wider text-faint uppercase">
           <ShieldCheck className="size-4" aria-hidden="true" /> How encryption works
         </h2>
-        <Card>
+        <Card className="p-5">
           <ul className="space-y-2">
             {SECURITY.map((line) => (
               <li key={line} className="flex gap-2 text-sm">
-                <KeyRound className="mt-0.5 size-4 shrink-0 text-accent-fg" aria-hidden="true" />
+                <KeyRound className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                 {line}
               </li>
             ))}
@@ -65,7 +65,7 @@ export default function AboutPage() {
       </section>
 
       <section aria-labelledby="about-stack">
-        <h2 id="about-stack" className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-wider text-subtle uppercase">
+        <h2 id="about-stack" className="mb-4 flex items-center gap-2 text-xs font-semibold tracking-wider text-faint uppercase">
           <Layers className="size-4" aria-hidden="true" /> Built with
         </h2>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -74,7 +74,7 @@ export default function AboutPage() {
               <h3 className="mb-2 text-sm font-bold">{layer}</h3>
               <ul className="flex flex-wrap gap-1.5">
                 {items.map((item) => (
-                  <li key={item} className="rounded-full border border-line bg-surface-2 px-2.5 py-0.5 text-xs text-muted">
+                  <li key={item} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
                     {item}
                   </li>
                 ))}

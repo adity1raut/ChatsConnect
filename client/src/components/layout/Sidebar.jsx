@@ -5,8 +5,8 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { useSettingsModal } from "../../context/SettingsModalContext";
-import { Avatar, CountBadge, SegmentedControl } from "../ui";
-import { cn } from "../../lib/cn";
+import { CountBadge, SegmentedControl, UserAvatar } from "../ui";
+import { cn } from "../../lib/utils";
 import Brand from "./Brand";
 import { NAV_ITEMS, isNavActive } from "./navItems";
 
@@ -33,27 +33,27 @@ function AccountMenu({ onClose, onLogout }) {
       <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden="true" />
       <div
         role="menu"
-        className="absolute right-3 bottom-full left-3 z-50 mb-2 rounded-2xl border border-line bg-elevated p-1.5 shadow-2xl animate-scale-in"
+        className="absolute right-3 bottom-full left-3 z-50 mb-2 rounded-2xl border border-border bg-popover p-1.5 shadow-2xl animate-scale-in"
       >
         <button
           role="menuitem"
-          className={cn(itemClass, "text-fg hover:bg-surface-2")}
+          className={cn(itemClass, "text-foreground hover:bg-muted")}
           onClick={() => {
             onClose();
             openSettings();
           }}
         >
-          <Settings className="size-4 text-muted" aria-hidden="true" /> Settings
+          <Settings className="size-4 text-muted-foreground" aria-hidden="true" /> Settings
         </button>
         <NavLink
           role="menuitem"
           to="/about"
           onClick={onClose}
-          className={cn(itemClass, "text-fg hover:bg-surface-2")}
+          className={cn(itemClass, "text-foreground hover:bg-muted")}
         >
-          <Info className="size-4 text-muted" aria-hidden="true" /> About
+          <Info className="size-4 text-muted-foreground" aria-hidden="true" /> About
         </NavLink>
-        <div className="my-1 h-px bg-line" />
+        <div className="my-1 h-px bg-border" />
         <button
           role="menuitem"
           className={cn(itemClass, "text-red-600 hover:bg-red-500/10 dark:text-red-400")}
@@ -82,7 +82,7 @@ export default function Sidebar({ className }) {
   return (
     <aside
       className={cn(
-        "relative w-64 shrink-0 flex-col border-r border-line bg-surface/90 backdrop-blur-xl",
+        "relative w-64 shrink-0 flex-col border-r border-border bg-card/90 backdrop-blur-xl",
         className,
       )}
     >
@@ -102,8 +102,8 @@ export default function Sidebar({ className }) {
               className={cn(
                 "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
                 active
-                  ? "bg-accent-soft text-accent-fg"
-                  : "text-muted hover:bg-surface-2 hover:text-fg",
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               <Icon className="size-[18px]" strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
@@ -115,7 +115,7 @@ export default function Sidebar({ className }) {
       </nav>
 
       <div className="flex items-center justify-between px-5 py-3">
-        <span className="text-[11px] font-semibold tracking-wider text-subtle uppercase">
+        <span className="text-[11px] font-semibold tracking-wider text-faint uppercase">
           Theme
         </span>
         <SegmentedControl
@@ -127,20 +127,20 @@ export default function Sidebar({ className }) {
         />
       </div>
 
-      <div className="relative border-t border-line p-3">
+      <div className="relative border-t border-border p-3">
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-surface-2"
+          className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted"
         >
-          <Avatar src={user?.avatar} name={user?.name} size="sm" />
+          <UserAvatar src={user?.avatar} name={user?.name} size="sm" />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-fg">{user?.name}</span>
-            <span className="block truncate text-xs text-muted">@{user?.username}</span>
+            <span className="block truncate text-sm font-semibold text-foreground">{user?.name}</span>
+            <span className="block truncate text-xs text-muted-foreground">@{user?.username}</span>
           </span>
-          <ChevronsUpDown className="size-4 text-subtle" aria-hidden="true" />
+          <ChevronsUpDown className="size-4 text-faint" aria-hidden="true" />
         </button>
         {menuOpen && (
           <AccountMenu onClose={() => setMenuOpen(false)} onLogout={handleLogout} />

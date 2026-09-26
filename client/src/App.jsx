@@ -12,8 +12,7 @@ import PublicRoute from "./components/routes/PublicRoute.jsx";
 import IncomingCallModal from "./components/video/IncomingCallModal";
 import GroupVideoCall from "./components/video/GroupVideoCall";
 import VideoCallModal from "./components/video/VideoCallModal";
-import Toaster from "./components/ui/Toaster";
-import Spinner from "./components/ui/Spinner";
+import { Spinner, Toaster } from "./components/ui";
 
 // Each page is its own chunk, loaded when first visited
 const Login = lazy(() => import("./pages/Login.jsx"));

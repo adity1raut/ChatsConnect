@@ -41,7 +41,7 @@ export default function FriendAction({ userId, name, size = "md" }) {
   if (status === "friends") {
     return (
       <>
-        <Button size={size} variant="secondary" icon={UserCheck} onClick={() => setConfirmRemove(true)}>
+        <Button size={size} variant="outline" icon={UserCheck} onClick={() => setConfirmRemove(true)}>
           Friends
         </Button>
         <Modal
@@ -56,7 +56,7 @@ export default function FriendAction({ userId, name, size = "md" }) {
                 Cancel
               </Button>
               <Button
-                variant="danger"
+                variant="destructive"
                 icon={UserMinus}
                 loading={busy}
                 onClick={() =>
@@ -82,7 +82,7 @@ export default function FriendAction({ userId, name, size = "md" }) {
           Accept
         </Button>
         <Button size={size}
-          variant="secondary"
+          variant="outline"
           icon={UserX}
           disabled={busy}
           onClick={() => run(() => rejectRequest(incoming._id, userId))}
@@ -95,7 +95,7 @@ export default function FriendAction({ userId, name, size = "md" }) {
   if (status === "sent" && sent) {
     return (
       <Button size={size}
-        variant="secondary"
+        variant="outline"
         loading={busy}
         onClick={() => run(() => cancelRequest(sent._id, userId))}
       >

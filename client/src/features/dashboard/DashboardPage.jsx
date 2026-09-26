@@ -21,8 +21,8 @@ import { useAI } from "../../context/AIContext";
 import { useE2EE } from "../../context/E2EEContext";
 import { useFriends } from "../../context/FriendContext";
 import { useSettingsModal } from "../../context/SettingsModalContext";
-import { Avatar, Button, Card, EmptyState, Spinner } from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Button, Card, EmptyState, Spinner, UserAvatar } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { timeAgo } from "../../lib/time";
 
 const greeting = (hour = new Date().getHours()) =>
@@ -30,13 +30,13 @@ const greeting = (hour = new Date().getHours()) =>
 
 function StatCard({ icon: Icon, label, value, tint }) {
   return (
-    <Card className="flex items-center gap-4 p-4">
+    <Card className="p-5 flex items-center gap-4 p-4">
       <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-xl", tint)}>
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
         <p className="text-2xl font-extrabold tabular-nums">{value ?? "–"}</p>
-        <p className="truncate text-xs text-muted">{label}</p>
+        <p className="truncate text-xs text-muted-foreground">{label}</p>
       </div>
     </Card>
   );
@@ -47,7 +47,7 @@ function QuickAction({ icon: Icon, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-surface p-4 text-sm font-semibold transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent-fg"
+      className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-sm font-semibold transition-colors hover:border-primary hover:bg-primary/10 hover:text-primary"
     >
       <Icon className="size-5" aria-hidden="true" />
       {label}
@@ -127,7 +127,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <header>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           {new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
         </p>
         <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
@@ -150,10 +150,10 @@ export default function DashboardPage() {
       </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
-        <Card padded={false} className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
             <h2 className="font-bold">Recent activity</h2>
-            <Link to="/chat" className="inline-flex items-center gap-1 text-xs font-semibold text-accent-fg hover:underline">
+            <Link to="/chat" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
               All chats <ArrowRight className="size-3.5" aria-hidden="true" />
             </Link>
           </div>
@@ -168,22 +168,22 @@ export default function DashboardPage() {
               description={data.error ? "Try again in a moment." : "Messages people send you will show up here."}
             />
           ) : (
-            <ul className="divide-y divide-line">
+            <ul className="divide-y divide-border">
               {data.recentActivity.map((a) => (
                 <li key={a.id}>
                   <button
                     type="button"
                     onClick={() => openActivity(a)}
-                    className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-surface-2"
+                    className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-muted"
                   >
-                    <Avatar src={a.avatar} name={a.user} size="md" />
+                    <UserAvatar src={a.avatar} name={a.user} size="md" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm">
-                        <span className="font-semibold">{a.user}</span> <span className="text-muted">{a.action}</span>
+                        <span className="font-semibold">{a.user}</span> <span className="text-muted-foreground">{a.action}</span>
                       </span>
-                      <span className="text-xs text-subtle">{timeAgo(a.time)}</span>
+                      <span className="text-xs text-faint">{timeAgo(a.time)}</span>
                     </span>
-                    {a.encrypted && <Lock className="size-3.5 text-subtle" aria-label="End-to-end encrypted" />}
+                    {a.encrypted && <Lock className="size-3.5 text-faint" aria-label="End-to-end encrypted" />}
                   </button>
                 </li>
               ))}
@@ -192,17 +192,17 @@ export default function DashboardPage() {
         </Card>
 
         <div className="space-y-5">
-          <Card className="space-y-3">
+          <Card className="p-5 space-y-3">
             <div className="flex items-center gap-3">
               <span className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 text-2xl shadow-md">
                 {assistant?.avatar ?? "🤖"}
               </span>
               <div className="min-w-0">
                 <h2 className="truncate font-bold">{assistant?.name ?? "Your assistant"}</h2>
-                <p className="text-xs text-muted">Your personal AI assistant</p>
+                <p className="text-xs text-muted-foreground">Your personal AI assistant</p>
               </div>
             </div>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               Draft messages, summarize chats, look people up — in your assistant&apos;s own style.
             </p>
             <Button fullWidth iconRight={ArrowRight} onClick={() => navigate("/assistant")}>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
             </Button>
           </Card>
 
-          <Card className="space-y-2">
+          <Card className="p-5 space-y-2">
             <div className="flex items-center gap-2">
               {encryptionOn ? (
                 <Lock className="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
@@ -219,7 +219,7 @@ export default function DashboardPage() {
               )}
               <h2 className="text-sm font-bold">End-to-end encryption</h2>
             </div>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               {encryptionOn
                 ? "On — your direct messages are readable only by you and the people you talk to."
                 : e2ee.status === "locked"
@@ -227,24 +227,26 @@ export default function DashboardPage() {
                   : "Off — turn it on so only you and your contacts can read your direct messages."}
             </p>
             {!encryptionOn && (
-              <Button size="sm" variant="secondary" onClick={openSettings}>
+              <Button size="sm" variant="outline" onClick={openSettings}>
                 {e2ee.status === "locked" ? "Unlock" : "Turn on"}
               </Button>
             )}
           </Card>
 
           {incomingRequests.length > 0 && (
-            <Card as={Link} to="/notifications" interactive className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent-fg">
+            <Card asChild interactive className="flex items-center gap-3 p-5">
+              <Link to="/notifications">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <UserPlus className="size-5" aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-bold">
                   {incomingRequests.length} friend request{incomingRequests.length === 1 ? "" : "s"}
                 </span>
-                <span className="block text-xs text-muted">Review them in Notifications</span>
+                <span className="block text-xs text-muted-foreground">Review them in Notifications</span>
               </span>
-              <ArrowRight className="size-4 text-subtle" aria-hidden="true" />
+              <ArrowRight className="size-4 text-faint" aria-hidden="true" />
+              </Link>
             </Card>
           )}
         </div>

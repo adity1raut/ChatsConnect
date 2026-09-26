@@ -4,8 +4,8 @@ import { ArrowLeft, AtSign, Check, Mail, User } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { Button, Input, PasswordInput } from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Button, InputField, PasswordField } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import AuthLayout from "./AuthLayout";
 import GitHubButton, { OrDivider } from "./GitHubButton";
 
@@ -27,14 +27,14 @@ function StepIndicator({ step }) {
               className={cn(
                 "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                 done && "bg-emerald-500 text-white",
-                current && "bg-accent text-white",
-                !done && !current && "bg-surface-2 text-subtle",
+                current && "bg-primary text-white",
+                !done && !current && "bg-muted text-faint",
               )}
             >
               {done ? <Check className="size-4" aria-hidden="true" /> : n}
             </span>
-            <span className={cn("hidden text-xs font-medium sm:block", current ? "text-fg" : "text-subtle")}>{label}</span>
-            {n < STEPS.length && <span className={cn("h-0.5 flex-1 rounded-full", done ? "bg-emerald-500" : "bg-line")} />}
+            <span className={cn("hidden text-xs font-medium sm:block", current ? "text-foreground" : "text-faint")}>{label}</span>
+            {n < STEPS.length && <span className={cn("h-0.5 flex-1 rounded-full", done ? "bg-emerald-500" : "bg-border")} />}
           </li>
         );
       })}
@@ -139,7 +139,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-accent-fg hover:underline">
+          <Link to="/login" className="font-semibold text-primary hover:underline">
             Sign in
           </Link>
         </>
@@ -150,8 +150,8 @@ export default function RegisterPage() {
       {step === 1 && (
         <>
           <form onSubmit={submitDetails} className="space-y-4" noValidate>
-            <Input label="Name" icon={User} value={form.name} onChange={set("name")} autoComplete="name" placeholder="Your name" required />
-            <Input
+            <InputField label="Name" icon={User} value={form.name} onChange={set("name")} autoComplete="name" placeholder="Your name" required />
+            <InputField
               label="Username"
               icon={AtSign}
               value={form.username}
@@ -161,7 +161,7 @@ export default function RegisterPage() {
               hint="3–20 letters, numbers or underscores"
               required
             />
-            <Input label="Email" type="email" icon={Mail} value={form.email} onChange={set("email")} autoComplete="email" placeholder="you@example.com" required />
+            <InputField label="Email" type="email" icon={Mail} value={form.email} onChange={set("email")} autoComplete="email" placeholder="you@example.com" required />
             {messages}
             <Button type="submit" fullWidth size="lg">
               Continue
@@ -174,8 +174,8 @@ export default function RegisterPage() {
 
       {step === 2 && (
         <form onSubmit={submitPassword} className="space-y-4" noValidate>
-          <PasswordInput label="Password" value={form.password} onChange={set("password")} autoComplete="new-password" hint="At least 6 characters" required />
-          <PasswordInput label="Confirm password" value={form.confirm} onChange={set("confirm")} autoComplete="new-password" required />
+          <PasswordField label="Password" value={form.password} onChange={set("password")} autoComplete="new-password" hint="At least 6 characters" required />
+          <PasswordField label="Confirm password" value={form.confirm} onChange={set("confirm")} autoComplete="new-password" required />
           {messages}
           <div className="flex gap-2">
             <Button variant="ghost" icon={ArrowLeft} onClick={back}>
@@ -190,7 +190,7 @@ export default function RegisterPage() {
 
       {step === 3 && (
         <form onSubmit={submitCode} className="space-y-4" noValidate>
-          <Input
+          <InputField
             label="Verification code"
             value={form.otp}
             onChange={(e) => setForm((f) => ({ ...f, otp: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
@@ -206,14 +206,14 @@ export default function RegisterPage() {
             Create account
           </Button>
           <div className="flex items-center justify-between text-sm">
-            <button type="button" onClick={back} className="font-medium text-muted hover:text-fg">
+            <button type="button" onClick={back} className="font-medium text-muted-foreground hover:text-foreground">
               Change details
             </button>
             <button
               type="button"
               onClick={resend}
               disabled={cooldown > 0 || loading}
-              className="font-semibold text-accent-fg hover:underline disabled:text-subtle disabled:no-underline"
+              className="font-semibold text-primary hover:underline disabled:text-faint disabled:no-underline"
             >
               {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
             </button>

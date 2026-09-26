@@ -1,9 +1,9 @@
 import { AlertTriangle, LockOpen, ShieldAlert } from "lucide-react";
 import { Button } from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { cn } from "../../lib/utils";
 
 const TONES = {
-  info: "border-line bg-surface-2 text-muted",
+  info: "border-border bg-muted text-muted-foreground",
   warn: "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200",
 };
 
@@ -52,7 +52,7 @@ export default function EncryptionBanner({ state, peerName, onSetup, onUnlock, o
       <Icon className="size-4 shrink-0" aria-hidden="true" />
       <p className="min-w-0 flex-1">{content.text}</p>
       {content.action && (
-        <Button size="sm" variant="secondary" onClick={content.action.onClick}>
+        <Button size="sm" variant="outline" onClick={content.action.onClick}>
           {content.action.label}
         </Button>
       )}

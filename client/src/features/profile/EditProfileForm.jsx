@@ -3,7 +3,7 @@ import { Link2, MapPin, Smile } from "lucide-react";
 import axios from "../../config/axiosInstance.js";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { Button, Card, Input, Textarea, Toggle } from "../../components/ui";
+import { Button, Card, InputField, Switch, TextareaField } from "../../components/ui";
 import { toast } from "../../lib/toast";
 
 const LIMITS = { name: 50, bio: 300, statusMessage: 100, location: 60, website: 200 };
@@ -55,8 +55,9 @@ export default function EditProfileForm() {
   const count = (key) => `${form[key].length} / ${LIMITS[key]}`;
 
   return (
-    <Card as="form" onSubmit={submit} className="space-y-4">
-      <Input
+    <Card asChild className="space-y-4 p-5">
+      <form onSubmit={submit}>
+      <InputField
         label="Name"
         value={form.name}
         onChange={set("name")}
@@ -65,7 +66,7 @@ export default function EditProfileForm() {
         error={error?.field === "name" ? error.text : undefined}
         required
       />
-      <Input
+      <InputField
         label="Status"
         icon={Smile}
         placeholder="What's happening? e.g. On holiday until Monday"
@@ -74,7 +75,7 @@ export default function EditProfileForm() {
         maxLength={LIMITS.statusMessage}
         hint={count("statusMessage")}
       />
-      <Textarea
+      <TextareaField
         label="Bio"
         placeholder="Tell people a little about yourself"
         value={form.bio}
@@ -84,7 +85,7 @@ export default function EditProfileForm() {
         hint={count("bio")}
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input
+        <InputField
           label="Location"
           icon={MapPin}
           placeholder="City, country"
@@ -92,7 +93,7 @@ export default function EditProfileForm() {
           onChange={set("location")}
           maxLength={LIMITS.location}
         />
-        <Input
+        <InputField
           label="Website"
           icon={Link2}
           placeholder="example.com"
@@ -104,17 +105,17 @@ export default function EditProfileForm() {
         />
       </div>
 
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface-2 px-4 py-3">
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted px-4 py-3">
         <div>
           <p className="text-sm font-semibold">Show my activity status</p>
-          <p className="text-xs text-muted">
+          <p className="text-xs text-muted-foreground">
             When off, nobody sees when you're online or when you were last seen.
           </p>
         </div>
-        <Toggle
-          label="Show my activity status"
+        <Switch
+          aria-label="Show my activity status"
           checked={form.showActivity}
-          onChange={set("showActivity")}
+          onCheckedChange={set("showActivity")}
         />
       </div>
 
@@ -128,6 +129,7 @@ export default function EditProfileForm() {
           Save changes
         </Button>
       </div>
+      </form>
     </Card>
   );
 }

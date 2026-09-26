@@ -77,7 +77,7 @@ function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
 
   return (
     <div
-      className="fixed top-4 right-4 z-[200] w-80 rounded-2xl border border-line bg-elevated/95 p-4 text-fg shadow-2xl backdrop-blur"
+      className="fixed top-4 right-4 z-[200] w-80 rounded-2xl border border-border bg-popover/95 p-4 text-foreground shadow-2xl backdrop-blur"
       style={{ backdropFilter: "blur(20px)" }}
     >
       <div className="flex items-center gap-3 mb-3">
@@ -103,7 +103,7 @@ function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
         </button>
         <button
           onClick={onDismiss}
-          className="flex-1 rounded-xl bg-surface-2 py-2 text-sm font-bold text-muted transition-colors hover:bg-line"
+          className="flex-1 rounded-xl bg-muted py-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-border"
         >
           Ignore
         </button>

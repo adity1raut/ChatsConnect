@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AlertTriangle, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useE2EE } from "../../context/E2EEContext";
-import { Button, Modal, PasswordInput } from "../../components/ui";
+import { Button, Modal, PasswordField } from "../../components/ui";
 import { toast } from "../../lib/toast";
 import { WrongPassphraseError } from "./crypto";
 
@@ -108,7 +108,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
   return (
     <Modal open={open} onClose={close} title={copy.title} description={copy.description} size="md">
       <form onSubmit={submit} className="space-y-4">
-        <div className="flex gap-3 rounded-xl bg-accent-soft p-3 text-sm text-accent-fg">
+        <div className="flex gap-3 rounded-xl bg-primary/10 p-3 text-sm text-primary">
           <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <div className="space-y-1">
             {mode === "setup" && (
@@ -129,7 +129,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
         </div>
 
         {mode === "unlock" && (
-          <PasswordInput
+          <PasswordField
             label="Encryption passphrase"
             value={fields.passphrase}
             onChange={set("passphrase")}
@@ -139,7 +139,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
           />
         )}
         {mode === "change" && (
-          <PasswordInput
+          <PasswordField
             label="Current passphrase"
             value={fields.current}
             onChange={set("current")}
@@ -150,7 +150,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
         )}
         {choosingNew && (
           <>
-            <PasswordInput
+            <PasswordField
               label={mode === "setup" ? "Passphrase" : "New passphrase"}
               hint={fields.passphrase ? `Strength: ${strengthOf(fields.passphrase)}` : `At least ${MIN_PASSPHRASE} characters — a short sentence works well`}
               value={fields.passphrase}
@@ -159,7 +159,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
               data-autofocus={mode !== "change" || undefined}
               required
             />
-            <PasswordInput
+            <PasswordField
               label="Confirm passphrase"
               value={fields.confirm}
               onChange={set("confirm")}
@@ -169,7 +169,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
           </>
         )}
         {(mode === "reset" || mode === "change") && isLocal && (
-          <PasswordInput
+          <PasswordField
             label="Account password"
             hint="Confirms it's really you"
             value={fields.password}
@@ -193,7 +193,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
                 setError("");
                 setMode("reset");
               }}
-              className="text-xs font-semibold text-muted hover:text-fg hover:underline"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground hover:underline"
             >
               Forgot your passphrase?
             </button>

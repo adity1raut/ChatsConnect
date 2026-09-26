@@ -16,7 +16,7 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
   const { isDark, setThemeMode } = useTheme();
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg text-fg">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <header className="flex items-center justify-between px-4 py-4 sm:px-8">
         <Link to="/" aria-label="ChatsConnect home">
           <Brand />
@@ -41,23 +41,23 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
             <ul className="space-y-4">
               {HIGHLIGHTS.map(({ icon: Icon, title: t, text }) => (
                 <li key={t} className="flex gap-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-fg">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
                   <span>
                     <span className="block font-semibold">{t}</span>
-                    <span className="block text-sm text-muted">{text}</span>
+                    <span className="block text-sm text-muted-foreground">{text}</span>
                   </span>
                 </li>
               ))}
             </ul>
           </section>
 
-          <Card className="mx-auto w-full max-w-md p-6 shadow-xl sm:p-8">
+          <Card className="p-5 mx-auto w-full max-w-md p-6 shadow-xl sm:p-8">
             <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
-            {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+            {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
             <div className="mt-6">{children}</div>
-            {footer && <div className="mt-6 border-t border-line pt-5 text-center text-sm text-muted">{footer}</div>}
+            {footer && <div className="mt-6 border-t border-border pt-5 text-center text-sm text-muted-foreground">{footer}</div>}
           </Card>
         </div>
       </main>

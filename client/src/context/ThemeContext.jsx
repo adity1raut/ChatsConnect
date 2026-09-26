@@ -14,9 +14,9 @@ const DARK_QUERY = "(prefers-color-scheme: dark)";
 
 const readStoredMode = () => {
   try {
-    return localStorage.getItem(THEME_KEY) || "system";
+    return localStorage.getItem(THEME_KEY) || "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 };
 
@@ -50,6 +50,9 @@ export const ThemeProvider = ({ children }) => {
     const root = document.documentElement;
     root.classList.toggle("dark", isDark);
     root.style.colorScheme = isDark ? "dark" : "light";
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", isDark ? "#0a0f17" : "#f8fafc");
   }, [isDark]);
 
   const setThemeMode = useCallback((mode) => {

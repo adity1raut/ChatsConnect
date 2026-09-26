@@ -7,6 +7,7 @@ import { CallProvider } from "../context/CallContext";
 import { GroupCallProvider } from "../context/GroupCallContext";
 import { FriendProvider } from "../context/FriendContext";
 import { NotificationProvider } from "../context/NotificationContext";
+import { TooltipProvider } from "../components/ui/tooltip";
 
 // Outermost first: later providers may depend on earlier ones (e.g. Socket needs Auth)
 const PROVIDERS = [
@@ -19,6 +20,7 @@ const PROVIDERS = [
   GroupCallProvider,
   FriendProvider,
   NotificationProvider,
+  TooltipProvider,
 ];
 
 export default function Providers({ children }) {

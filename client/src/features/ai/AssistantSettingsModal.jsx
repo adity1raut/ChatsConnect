@@ -1,14 +1,7 @@
 import { useState } from "react";
 import { useAI } from "../../context/AIContext";
-import {
-  Button,
-  Input,
-  Modal,
-  SegmentedControl,
-  Select,
-  Textarea,
-} from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Button, InputField, Modal, SegmentedControl, SelectField, TextareaField } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { LANGUAGES } from "../../lib/languages";
 import { toast } from "../../lib/toast";
 import {
@@ -62,13 +55,13 @@ export default function AssistantSettingsModal({ onClose }) {
     >
       <form onSubmit={save} className="space-y-5">
         {/* Live preview */}
-        <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface-2 p-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted p-3">
           <span className="flex size-12 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 text-2xl shadow-md">
             {form.avatar || "🤖"}
           </span>
           <div className="min-w-0">
             <p className="truncate font-bold">{form.name || "Your assistant"}</p>
-            <p className="text-xs text-muted">
+            <p className="text-xs text-muted-foreground">
               {TONE_OPTIONS.find((t) => t.value === form.tone)?.label} ·{" "}
               {LENGTH_OPTIONS.find((l) => l.value === form.length)?.label} answers ·{" "}
               {form.language === "auto" ? "your language" : form.language}
@@ -77,7 +70,7 @@ export default function AssistantSettingsModal({ onClose }) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-          <Input
+          <InputField
             label="Name"
             value={form.name}
             onChange={set("name")}
@@ -86,7 +79,7 @@ export default function AssistantSettingsModal({ onClose }) {
             data-autofocus
             required
           />
-          <Input
+          <InputField
             label="Avatar"
             value={form.avatar}
             onChange={set("avatar")}
@@ -104,7 +97,7 @@ export default function AssistantSettingsModal({ onClose }) {
               aria-pressed={form.avatar === emoji}
               className={cn(
                 "flex size-9 items-center justify-center rounded-xl border text-lg transition-colors",
-                form.avatar === emoji ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
+                form.avatar === emoji ? "border-primary bg-primary/10" : "border-border hover:bg-muted",
               )}
             >
               {emoji}
@@ -113,7 +106,7 @@ export default function AssistantSettingsModal({ onClose }) {
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-xs font-semibold text-muted">Tone</p>
+          <p className="text-xs font-semibold text-muted-foreground">Tone</p>
           <div className="overflow-x-auto scrollbar-none">
             <SegmentedControl label="Tone" options={TONE_OPTIONS} value={form.tone} onChange={set("tone")} size="sm" />
           </div>
@@ -121,14 +114,14 @@ export default function AssistantSettingsModal({ onClose }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <p className="text-xs font-semibold text-muted">Answer length</p>
+            <p className="text-xs font-semibold text-muted-foreground">Answer length</p>
             <SegmentedControl label="Answer length" options={LENGTH_OPTIONS} value={form.length} onChange={set("length")} size="sm" />
           </div>
-          <Select label="Reply language" options={LANGUAGE_OPTIONS} value={form.language} onChange={set("language")} />
+          <SelectField label="Reply language" options={LANGUAGE_OPTIONS} value={form.language} onValueChange={set("language")} />
         </div>
 
         <div className="space-y-2">
-          <Textarea
+          <TextareaField
             label="Custom instructions"
             placeholder="How should your assistant behave? What should it know about you?"
             value={form.instructions}
@@ -147,7 +140,7 @@ export default function AssistantSettingsModal({ onClose }) {
                     form.instructions ? `${form.instructions.trimEnd()}\n${example}` : example,
                   )
                 }
-                className="rounded-full border border-line px-2.5 py-1 text-[11px] text-muted hover:border-accent hover:text-accent-fg"
+                className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-primary hover:text-primary"
               >
                 + {example}
               </button>

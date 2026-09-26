@@ -24,15 +24,8 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useE2EE } from "../../context/E2EEContext";
 import EncryptionModal from "../e2ee/EncryptionModal";
 import AssistantSettingsModal from "../ai/AssistantSettingsModal";
-import {
-  Button,
-  Input,
-  PasswordInput,
-  SegmentedControl,
-  Select,
-  Toggle,
-} from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Button, InputField, PasswordField, SegmentedControl, SelectField, Switch } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { LANGUAGES } from "../../lib/languages";
 
 
@@ -91,14 +84,14 @@ function InlineMessage({ message }) {
 
 function Section({ icon: Icon, title, description, children }) {
   return (
-    <section className="space-y-3 border-b border-line pb-6 last:border-b-0 last:pb-0">
+    <section className="space-y-3 border-b border-border pb-6 last:border-b-0 last:pb-0">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-accent-soft text-accent-fg">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <Icon className="size-[18px]" aria-hidden="true" />
         </span>
         <div>
-          <h3 className="text-sm font-bold text-fg">{title}</h3>
-          {description && <p className="text-xs text-muted">{description}</p>}
+          <h3 className="text-sm font-bold text-foreground">{title}</h3>
+          {description && <p className="text-xs text-muted-foreground">{description}</p>}
         </div>
       </div>
       <div className="space-y-2">{children}</div>
@@ -110,8 +103,8 @@ function Row({ title, description, control }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-xl px-1 py-2">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-fg">{title}</p>
-        {description && <p className="text-xs text-muted">{description}</p>}
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
       {control}
     </div>
@@ -120,26 +113,26 @@ function Row({ title, description, control }) {
 
 function Collapsible({ icon: Icon, title, description, open, onToggle, children }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-line bg-surface">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted"
       >
-        <Icon className="size-4 shrink-0 text-muted" aria-hidden="true" />
+        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-fg">{title}</span>
+          <span className="block text-sm font-semibold text-foreground">{title}</span>
           {description && (
-            <span className="block truncate text-xs text-muted">{description}</span>
+            <span className="block truncate text-xs text-muted-foreground">{description}</span>
           )}
         </span>
         <ChevronDown
-          className={cn("size-4 text-subtle transition-transform", open && "rotate-180")}
+          className={cn("size-4 text-faint transition-transform", open && "rotate-180")}
           aria-hidden="true"
         />
       </button>
-      {open && <div className="space-y-3 border-t border-line p-4">{children}</div>}
+      {open && <div className="space-y-3 border-t border-border p-4">{children}</div>}
     </div>
   );
 }
@@ -182,7 +175,7 @@ function AISection() {
         title={`${assistant?.avatar ?? "🤖"} ${assistant?.name ?? "Your assistant"}`}
         description="Name, personality, tone, answer length and instructions"
         control={
-          <Button size="sm" variant="secondary" onClick={() => setCustomizing(true)}>
+          <Button size="sm" variant="outline" onClick={() => setCustomizing(true)}>
             Customize
           </Button>
         }
@@ -191,21 +184,21 @@ function AISection() {
       <Row
         title="AI suggestions"
         description="Show smart reply suggestions for incoming messages"
-        control={<Toggle label="AI suggestions" checked={aiEnabled} onChange={setAiEnabled} />}
+        control={<Switch aria-label="AI suggestions" checked={aiEnabled} onCheckedChange={setAiEnabled} />}
       />
       <Row
         title="Auto-translate"
         description="Translate received messages into your language"
         control={
-          <Toggle label="Auto-translate" checked={autoTranslate} onChange={setAutoTranslate} />
+          <Switch aria-label="Auto-translate" checked={autoTranslate} onCheckedChange={setAutoTranslate} />
         }
       />
       {autoTranslate && (
-        <Select
+        <SelectField
           label="Translate to"
           options={LANGUAGES}
           value={preferredLanguage}
-          onChange={(e) => setPreferredLanguage(e.target.value)}
+          onValueChange={setPreferredLanguage}
         />
       )}
     </Section>
@@ -243,24 +236,24 @@ function NotificationsSection() {
           key={key}
           title={title}
           control={
-            <Toggle
-              label={title}
+            <Switch
+              aria-label={title}
               checked={preferences?.[key] ?? true}
               disabled={!preferences}
-              onChange={(value) => updatePreference(key, value)}
+              onCheckedChange={(value) => updatePreference(key, value)}
             />
           }
         />
       ))}
-      <div className="my-1 h-px bg-line" />
+      <div className="my-1 h-px bg-border" />
       <Row
         title="Sound"
         description="Play a chime on this device"
         control={
-          <Toggle
-            label="Sound"
+          <Switch
+            aria-label="Sound"
             checked={devicePrefs.sound}
-            onChange={(value) => setDevicePref("sound", value)}
+            onCheckedChange={(value) => setDevicePref("sound", value)}
           />
         }
       />
@@ -268,11 +261,11 @@ function NotificationsSection() {
         title="Desktop notifications"
         description={desktopHint}
         control={
-          <Toggle
-            label="Desktop notifications"
+          <Switch
+            aria-label="Desktop notifications"
             checked={devicePrefs.desktop && desktopPermission === "granted"}
             disabled={desktopPermission === "unsupported" || desktopPermission === "denied"}
-            onChange={(value) => setDevicePref("desktop", value)}
+            onCheckedChange={(value) => setDevicePref("desktop", value)}
           />
         }
       />
@@ -295,9 +288,9 @@ function EncryptionSection() {
 
   return (
     <Section icon={KeyRound} title="End-to-end encryption" description="Direct messages only; group chats aren't encrypted">
-      <p className="text-sm text-muted">{summary}</p>
+      <p className="text-sm text-muted-foreground">{summary}</p>
       {status === "ready" && fingerprint && (
-        <p className="rounded-xl bg-surface-2 px-3 py-2 font-mono text-xs text-muted">
+        <p className="rounded-xl bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
           Your key: {groupFingerprint(fingerprint)}
         </p>
       )}
@@ -319,10 +312,10 @@ function EncryptionSection() {
         )}
         {status === "ready" && (
           <>
-            <Button size="sm" variant="secondary" onClick={() => setModal("change")}>
+            <Button size="sm" variant="outline" onClick={() => setModal("change")}>
               Change passphrase
             </Button>
-            <Button size="sm" variant="danger-soft" onClick={() => setModal("reset")}>
+            <Button size="sm" variant="destructive" onClick={() => setModal("reset")}>
               Reset keys
             </Button>
           </>
@@ -354,26 +347,26 @@ function TwoFactorSetting({ enabled, onChanged }) {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-line bg-surface p-4">
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <ShieldCheck
-            className={cn("size-4 shrink-0", enabled ? "text-emerald-500" : "text-muted")}
+            className={cn("size-4 shrink-0", enabled ? "text-emerald-500" : "text-muted-foreground")}
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-fg">Two-step verification</p>
-            <p className="text-xs text-muted">
+            <p className="text-sm font-semibold text-foreground">Two-step verification</p>
+            <p className="text-xs text-muted-foreground">
               {enabled
                 ? "On — we email you a sign-in link each time you log in"
                 : "Confirm each sign-in with a link sent to your email"}
             </p>
           </div>
         </div>
-        <Toggle
-          label="Two-step verification"
+        <Switch
+          aria-label="Two-step verification"
           checked={enabled}
-          onChange={() => {
+          onCheckedChange={() => {
             setConfirming((v) => !v);
             action.clear();
           }}
@@ -381,7 +374,7 @@ function TwoFactorSetting({ enabled, onChanged }) {
       </div>
       {confirming && (
         <form onSubmit={submit} className="space-y-3">
-          <PasswordInput
+          <PasswordField
             label={`Enter your password to turn ${enabled ? "off" : "on"}`}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -438,14 +431,14 @@ function ChangePasswordForm() {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <PasswordInput
+      <PasswordField
         label="Current password"
         value={current}
         onChange={(e) => setCurrent(e.target.value)}
         autoComplete="current-password"
         required
       />
-      <PasswordInput
+      <PasswordField
         label="New password"
         hint="At least 6 characters"
         value={next}
@@ -453,7 +446,7 @@ function ChangePasswordForm() {
         autoComplete="new-password"
         required
       />
-      <PasswordInput
+      <PasswordField
         label="Confirm new password"
         value={confirm}
         onChange={(e) => setConfirm(e.target.value)}
@@ -484,7 +477,7 @@ function ChangeEmailForm({ currentEmail, onUpdated }) {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <Input
+      <InputField
         label="New email"
         type="email"
         icon={Mail}
@@ -520,7 +513,7 @@ function ChangeUsernameForm({ currentUsername, onUpdated }) {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <Input
+      <InputField
         label="New username"
         icon={AtSign}
         placeholder={currentUsername}
@@ -551,7 +544,7 @@ function SecuritySection() {
           onChanged={(twoFactorEnabled) => updateUser({ twoFactorEnabled })}
         />
       ) : (
-        <p className="rounded-xl bg-surface-2 px-4 py-3 text-xs text-muted">
+        <p className="rounded-xl bg-muted px-4 py-3 text-xs text-muted-foreground">
           You sign in with GitHub, so your password and two-step verification are
           managed in your GitHub account.
         </p>
@@ -604,7 +597,7 @@ export default function SettingsPanel({ onNavigate }) {
         <Link
           to="/about"
           onClick={onNavigate}
-          className="inline-flex text-sm font-semibold text-accent-fg hover:underline"
+          className="inline-flex text-sm font-semibold text-primary hover:underline"
         >
           About ChatsConnect →
         </Link>

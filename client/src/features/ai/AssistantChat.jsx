@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, MoreVertical, SendHorizontal, Settings2, Trash2, X } from "lucide-react";
 import { useAI } from "../../context/AIContext";
-import { IconButton, Markdown, Modal, Button } from "../../components/ui";
-import Menu from "../../components/ui/Menu";
-import { cn } from "../../lib/cn";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Button,
+  IconButton,
+  Markdown,
+  Modal,
+} from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { downloadTextFile, slugify } from "../../lib/download";
 import { toast } from "../../lib/toast";
 import AssistantSettingsModal from "./AssistantSettingsModal";
@@ -12,13 +21,13 @@ import { STARTER_PROMPTS, buildAssistantMarkdown } from "./assistantOptions";
 function Thinking({ avatar }) {
   return (
     <li className="flex items-end gap-2" aria-live="polite">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-base">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-base">
         {avatar}
       </span>
-      <span className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-line bg-surface px-4 py-3">
+      <span className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3">
         <span className="sr-only">Thinking</span>
         {[0, 150, 300].map((d) => (
-          <span key={d} className="size-1.5 animate-bounce rounded-full bg-subtle" style={{ animationDelay: `${d}ms` }} />
+          <span key={d} className="size-1.5 animate-bounce rounded-full bg-faint" style={{ animationDelay: `${d}ms` }} />
         ))}
       </span>
     </li>
@@ -67,25 +76,32 @@ export default function AssistantChat({ compact = false, onClose }) {
 
   return (
     <section
-      className={cn("flex h-full min-h-0 w-full flex-col bg-surface", compact && "border-l border-line")}
+      className={cn("flex h-full min-h-0 w-full flex-col bg-card", compact && "border-l border-border")}
       aria-label={`Chat with ${name}`}
     >
-      <header className="relative z-10 flex shrink-0 items-center gap-3 border-b border-line px-4 py-3">
+      <header className="relative z-10 flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 text-xl shadow-md">
           {avatar}
         </span>
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-sm font-bold">{name}</h2>
-          <p className="truncate text-xs text-muted">Your AI assistant · private to you</p>
+          <p className="truncate text-xs text-muted-foreground">Your AI assistant · private to you</p>
         </div>
         <IconButton icon={Settings2} label="Customize assistant" size="sm" onClick={() => setShowSettings(true)} />
-        <Menu
-          trigger={(props) => <IconButton icon={MoreVertical} label="More actions" size="sm" {...props} />}
-          items={[
-            { label: "Export conversation (.md)", icon: Download, onSelect: exportChat },
-            { label: "Clear conversation", icon: Trash2, danger: true, onSelect: () => setConfirmClear(true) },
-          ]}
-        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <IconButton icon={MoreVertical} label="More actions" size="sm" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={exportChat}>
+              <Download /> Export conversation (.md)
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onSelect={() => setConfirmClear(true)}>
+              <Trash2 /> Clear conversation
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         {onClose && <IconButton icon={X} label="Close assistant" size="sm" onClick={onClose} />}
       </header>
 
@@ -94,7 +110,7 @@ export default function AssistantChat({ compact = false, onClose }) {
           <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
             <span className="mb-3 text-5xl" aria-hidden="true">{avatar}</span>
             <h3 className="text-lg font-bold">Hi, I&apos;m {name}!</h3>
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 text-sm text-muted-foreground">
               Ask me anything — I can draft messages, summarize your chats and look people up.
             </p>
             <div className={cn("mt-5 grid w-full gap-2", !compact && "sm:grid-cols-2")}>
@@ -103,7 +119,7 @@ export default function AssistantChat({ compact = false, onClose }) {
                   key={prompt}
                   type="button"
                   onClick={() => send(prompt)}
-                  className="rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-left text-xs text-fg transition-colors hover:border-accent hover:bg-accent-soft"
+                  className="rounded-xl border border-border bg-muted px-3 py-2.5 text-left text-xs text-foreground transition-colors hover:border-primary hover:bg-primary/10"
                 >
                   {prompt}
                 </button>
@@ -121,10 +137,10 @@ export default function AssistantChat({ compact = false, onClose }) {
                 </li>
               ) : (
                 <li key={i} className="flex items-end gap-2">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-base">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-base">
                     {avatar}
                   </span>
-                  <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-md border border-line bg-surface-2 px-3.5 py-2">
+                  <div className="min-w-0 max-w-[85%] rounded-2xl rounded-bl-md border border-border bg-muted px-3.5 py-2">
                     <Markdown>{m.content}</Markdown>
                   </div>
                 </li>
@@ -146,9 +162,9 @@ export default function AssistantChat({ compact = false, onClose }) {
           e.preventDefault();
           send();
         }}
-        className="shrink-0 border-t border-line p-3"
+        className="shrink-0 border-t border-border p-3"
       >
-        <div className="flex items-end gap-2 rounded-2xl border border-line bg-surface-2 p-1.5 pl-3 focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15">
+        <div className="flex items-end gap-2 rounded-2xl border border-border bg-muted p-1.5 pl-3 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
           <textarea
             ref={inputRef}
             rows={1}
@@ -163,13 +179,13 @@ export default function AssistantChat({ compact = false, onClose }) {
             maxLength={4000}
             placeholder={`Message ${name}…`}
             aria-label={`Message ${name}`}
-            className="max-h-36 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-fg outline-none placeholder:text-subtle"
+            className="max-h-36 min-h-9 flex-1 resize-none bg-transparent py-2 text-sm text-foreground outline-none placeholder:text-faint"
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
             aria-label="Send to assistant"
-            className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white hover:bg-accent-hover disabled:opacity-40"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-40"
           >
             <SendHorizontal className="size-4" aria-hidden="true" />
           </button>
@@ -189,7 +205,7 @@ export default function AssistantChat({ compact = false, onClose }) {
               Cancel
             </Button>
             <Button
-              variant="danger"
+              variant="destructive"
               onClick={() => {
                 clearChat();
                 setConfirmClear(false);
