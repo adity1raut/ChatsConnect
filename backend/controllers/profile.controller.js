@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import { cloudinary } from "../config/cloudinary.js";
 
@@ -214,6 +215,57 @@ export const updateEmail = async (req, res) => {
       .json({ success: true, message: "Email updated successfully", user });
   } catch (error) {
     console.error("Error updating email:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Turn two-step verification (emailed sign-in link) on or off
+// @route   PUT /api/profile/two-factor
+// @access  Private
+export const updateTwoFactor = async (req, res) => {
+  try {
+    const { enabled, password } = req.body;
+    if (typeof enabled !== "boolean") {
+      return res.status(400).json({ message: "`enabled` must be true or false" });
+    }
+
+    const user = await User.findById(req.user._id).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 2FA guards the email/password login; GitHub sign-in never reaches it
+    if (user.authProvider !== "LOCAL" || !user.password) {
+      return res.status(400).json({
+        message: "Two-step verification applies to email and password sign-in only",
+      });
+    }
+    if (enabled && !user.email) {
+      return res
+        .status(400)
+        .json({ message: "Add an email address before enabling two-step verification" });
+    }
+
+    // Changing a security setting requires re-entering the password
+    const passwordOk =
+      typeof password === "string" &&
+      (await bcrypt.compare(password, user.password));
+    if (!passwordOk) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    user.twoFactorEnabled = enabled;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      twoFactorEnabled: user.twoFactorEnabled,
+      message: enabled
+        ? "Two-step verification enabled"
+        : "Two-step verification disabled",
+    });
+  } catch (error) {
+    console.error("Error updating two-factor setting:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

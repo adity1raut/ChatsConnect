@@ -4,7 +4,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import ProfileSidebar from "./ProfileSidebar";
 import ProfileTab from "./ProfileTab";
-import SettingsTab from "./SettingsTab";
+import SettingsPanel from "../../features/settings/SettingsPanel";
 import DangerZoneTab from "./DangerZoneTab";
 import DeleteModal from "./DeleteModal";
 import Toast from "./Toast";
@@ -195,7 +195,7 @@ export default function ProfilePage() {
                 />
               )}
               {activeTab === "settings" && (
-                <SettingsTab key="settings" isDark={isDark} />
+                <SettingsPanel key="settings" />
               )}
               {activeTab === "danger" && (
                 <DangerZoneTab

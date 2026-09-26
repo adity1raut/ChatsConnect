@@ -49,8 +49,13 @@ function ChatPage() {
   } = useAI();
   const { startCall } = useCall();
   const { startGroupCall } = useGroupCall();
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [showNewDM, setShowNewDM] = useState(false);
+  // Dashboard quick actions deep-link here with { newChat } / { newGroup }
+  const [showCreateGroup, setShowCreateGroup] = useState(
+    () => Boolean(location.state?.newGroup),
+  );
+  const [showNewDM, setShowNewDM] = useState(() =>
+    Boolean(location.state?.newChat),
+  );
   const [showManageGroup, setShowManageGroup] = useState(false);
   const [managingGroup, setManagingGroup] = useState(null);
   const [loadingMessages, setLoadingMessages] = useState(false);

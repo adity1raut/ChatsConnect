@@ -42,53 +42,6 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     }, "Profile updated!");
   };
 
-  const updateUsername = (username) => {
-    if (!username) return setError("Username is required");
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username))
-      return setError(
-        "Username must be 3–20 chars (letters, numbers, underscore)",
-      );
-
-    withFeedback(async () => {
-      const { data } = await axios.put(`${API_URL}/profile/update`, {
-        username,
-      });
-      updateUser(data.user);
-    }, "Username updated!");
-  };
-
-  const updateEmail = (email) => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      return setError("Enter a valid email address");
-
-    withFeedback(async () => {
-      const { data } = await axios.put(`${API_URL}/profile/update-email`, {
-        email,
-      });
-      updateUser(data.user);
-    }, "Email updated!");
-  };
-
-  const updatePassword = ({
-    currentPassword,
-    newPassword,
-    confirmPassword,
-  }) => {
-    if (!currentPassword || !newPassword || !confirmPassword)
-      return setError("All fields are required");
-    if (newPassword !== confirmPassword)
-      return setError("Passwords don't match");
-    if (newPassword.length < 6)
-      return setError("Password must be at least 6 characters");
-
-    withFeedback(async () => {
-      await axios.put(`${API_URL}/auth/change-password`, {
-        currentPassword,
-        newPassword,
-      });
-    }, "Password changed!");
-  };
-
   const deleteAccount = async (confirmText) => {
     if (confirmText !== "DELETE") return setError("Type DELETE to confirm");
     setLoading(true);
@@ -110,9 +63,6 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     setError,
     setSuccess,
     updateProfile,
-    updateUsername,
-    updateEmail,
-    updatePassword,
     deleteAccount,
   };
 }

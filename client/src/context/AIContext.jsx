@@ -43,9 +43,11 @@ export function AIProvider({ children }) {
     try {
       const { data } = await axios.put(`${AI_API_URL}/toggle`, {});
       setAiEnabledState(data.aiEnabled);
+      return data.aiEnabled;
     } catch {
-      // Optimistic fallback
-      setAiEnabledState((prev) => !prev);
+      // Leave the switch as-is: the server did not change, so the UI must not either
+      setError("Couldn't update the AI setting. Please try again.");
+      return null;
     }
   }, []);
 

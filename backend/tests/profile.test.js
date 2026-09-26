@@ -31,8 +31,10 @@ const {
   updateEmail,
   deleteProfile,
   searchUsers,
+  updateTwoFactor,
   PUBLIC_PROFILE_FIELDS,
 } = await import("../controllers/profile.controller.js");
+const bcrypt = (await import("bcryptjs")).default;
 
 const User = (await import("../models/user.model.js")).default;
 const { cloudinary } = await import("../config/cloudinary.js");
@@ -363,5 +365,76 @@ describe("searchUsers", () => {
     const filter = User.find.mock.calls[0][0];
     expect(filter.$or[0].username.$regex).toBe("a\\.\\*\\(b");
     expect(res.status).toHaveBeenCalledWith(200);
+  });
+});
+
+// ─── updateTwoFactor ───────────────────────────────────────────────────────
+describe("updateTwoFactor", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const localUser = async (overrides = {}) => ({
+    _id: USER_ID,
+    authProvider: "LOCAL",
+    email: "me@example.com",
+    password: await bcrypt.hash("correct-horse", 4),
+    twoFactorEnabled: false,
+    save: vi.fn().mockResolvedValue(true),
+    ...overrides,
+  });
+
+  it("enables 2FA when the password is correct", async () => {
+    const user = await localUser();
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(user),
+    });
+    const { req, res } = mockReqRes(
+      { enabled: true, password: "correct-horse" },
+      {},
+      {},
+      { _id: USER_ID },
+    );
+    await updateTwoFactor(req, res);
+    expect(user.twoFactorEnabled).toBe(true);
+    expect(user.save).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it("refuses with a wrong password and leaves the setting unchanged", async () => {
+    const user = await localUser();
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(user),
+    });
+    const { req, res } = mockReqRes(
+      { enabled: true, password: "wrong" },
+      {},
+      {},
+      { _id: USER_ID },
+    );
+    await updateTwoFactor(req, res);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(user.twoFactorEnabled).toBe(false);
+    expect(user.save).not.toHaveBeenCalled();
+  });
+
+  it("rejects GitHub accounts, which never use the password login", async () => {
+    const user = await localUser({ authProvider: "GITHUB", password: undefined });
+    User.findById.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce(user),
+    });
+    const { req, res } = mockReqRes(
+      { enabled: true, password: "x" },
+      {},
+      {},
+      { _id: USER_ID },
+    );
+    await updateTwoFactor(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it("requires a boolean `enabled`", async () => {
+    const { req, res } = mockReqRes({ enabled: "yes" }, {}, {}, { _id: USER_ID });
+    await updateTwoFactor(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(User.findById).not.toHaveBeenCalled();
   });
 });

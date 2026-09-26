@@ -1,7 +1,8 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   MessageSquare,
-  Video,
+  Search,
   Users,
   Settings,
   Bot,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
+import { useSettingsModal } from "../../context/SettingsModalContext";
 
 const STAT_CONFIG = {
   blue: {
@@ -73,14 +75,11 @@ export default function MainDashboard({
   recentActivity,
   aiEnabled,
   setAiEnabled,
-  setCurrentView,
-  setShowSettingsModal,
 }) {
   const { isDark } = useTheme();
   const { user } = useAuth();
-
-  // On small screens, hide the theme toggle in header (App.jsx renders nothing at top-right on mobile)
-  // The theme toggle absolute position handles itself on desktop only
+  const navigate = useNavigate();
+  const { openSettings } = useSettingsModal();
 
   const quickActions = [
     {
@@ -88,28 +87,28 @@ export default function MainDashboard({
       icon: MessageSquare,
       color: "from-blue-500 to-cyan-500",
       glow: "rgba(59,130,246,0.25)",
-      action: () => setCurrentView("chat"),
+      action: () => navigate("/chat", { state: { newChat: true } }),
     },
     {
-      label: "Start Call",
-      icon: Video,
+      label: "Find People",
+      icon: Search,
       color: "from-emerald-500 to-teal-500",
       glow: "rgba(16,185,129,0.25)",
-      action: () => {},
+      action: () => navigate("/search"),
     },
     {
       label: "New Group",
       icon: Users,
       color: "from-violet-500 to-purple-600",
       glow: "rgba(139,92,246,0.25)",
-      action: () => {},
+      action: () => navigate("/chat", { state: { newGroup: true } }),
     },
     {
       label: "Settings",
       icon: Settings,
       color: "from-orange-500 to-amber-500",
       glow: "rgba(249,115,22,0.25)",
-      action: () => setShowSettingsModal(true),
+      action: openSettings,
     },
   ];
 

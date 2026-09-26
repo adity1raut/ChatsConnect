@@ -1,8 +1,128 @@
 @import "tailwindcss";
 
+/* `dark:` utilities follow the .dark class on <html> (set by ThemeContext and
+   the pre-paint script in index.html), not only the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Custom xs breakpoint (480px) for very small screens between base and sm (640px) */
   --breakpoint-xs: 480px;
+
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-fade-in-left: fade-in-left 0.4s ease-out both;
+  --animate-fade-in-right: fade-in-right 0.4s ease-out both;
+  --animate-slide-up: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shake: shake 0.4s ease-in-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in-left {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fade-in-right {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+}
+
+/* ── Semantic color tokens ──────────────────────────────────────────────
+   Components use bg-bg, bg-surface, border-line, text-fg, text-muted,
+   bg-accent … instead of `isDark ? … : …` ternaries. */
+:root {
+  --app-bg: #f4f5ff;
+  --app-surface: #ffffff;
+  --app-surface-2: #f5f5fb;
+  --app-elevated: #ffffff;
+  --app-line: #e5e6f0;
+  --app-line-strong: #d2d3e0;
+  --app-fg: #13131f;
+  --app-muted: #585b6b;
+  --app-subtle: #767989;
+  --app-accent: #7c3aed;
+  --app-accent-hover: #6d28d9;
+  --app-accent-soft: #ede9fe;
+  --app-accent-fg: #6d28d9;
+  --app-overlay: rgb(15 15 30 / 0.45);
+}
+
+.dark {
+  --app-bg: #0a0a14;
+  --app-surface: #11111c;
+  --app-surface-2: #181826;
+  --app-elevated: #1d1d2d;
+  --app-line: rgb(255 255 255 / 0.08);
+  --app-line-strong: rgb(255 255 255 / 0.15);
+  --app-fg: #ececf3;
+  --app-muted: #a3a6b8;
+  --app-subtle: #7d8094;
+  --app-accent: #8b5cf6;
+  --app-accent-hover: #7c3aed;
+  --app-accent-soft: rgb(139 92 246 / 0.16);
+  --app-accent-fg: #c4b5fd;
+  --app-overlay: rgb(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --color-bg: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-elevated: var(--app-elevated);
+  --color-line: var(--app-line);
+  --color-line-strong: var(--app-line-strong);
+  --color-fg: var(--app-fg);
+  --color-muted: var(--app-muted);
+  --color-subtle: var(--app-subtle);
+  --color-accent: var(--app-accent);
+  --color-accent-hover: var(--app-accent-hover);
+  --color-accent-soft: var(--app-accent-soft);
+  --color-accent-fg: var(--app-accent-fg);
+  --color-overlay: var(--app-overlay);
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--app-bg);
+    color: var(--app-fg);
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--app-accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @utility scrollbar-none {
@@ -10,4 +130,18 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-line-strong) transparent;
+}
+
+/* Room for the fixed mobile bottom nav (3.5rem + iPhone home-indicator inset) */
+@utility pb-mobile-nav {
+  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
+}
+
+@utility h-above-mobile-nav {
+  height: calc(100dvh - 3.5rem - env(safe-area-inset-bottom));
 }

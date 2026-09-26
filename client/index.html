@@ -2,9 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/chatsconnect.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/chatsconnect.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="ChatsConnect — real-time messaging with end-to-end encrypted DMs, video calls and an AI assistant." />
+    <meta name="theme-color" content="#f4f5ff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a14" media="(prefers-color-scheme: dark)" />
     <title>ChatsConnect</title>
+    <script>
+      // Apply the saved theme before first paint so dark mode never flashes light
+      (function () {
+        try {
+          var mode = localStorage.getItem("themeMode") || "system";
+          var dark =
+            mode === "dark" ||
+            (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+          document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

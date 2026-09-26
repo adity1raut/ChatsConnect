@@ -16,8 +16,6 @@ function timeAgo(dateStr) {
 
 function Dashboard() {
   const { aiEnabled, setAiEnabled } = useAI();
-  const [_currentView, setCurrentView] = useState("dashboard");
-  const [_showSettingsModal, setShowSettingsModal] = useState(false);
 
   const [statsData, setStatsData] = useState({
     totalMessages: 0,
@@ -151,8 +149,6 @@ function Dashboard() {
         recentActivity={recentActivity}
         aiEnabled={aiEnabled}
         setAiEnabled={setAiEnabled}
-        setCurrentView={setCurrentView}
-        setShowSettingsModal={setShowSettingsModal}
       />
     </>
   );

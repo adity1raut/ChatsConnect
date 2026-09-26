@@ -5,6 +5,7 @@ import {
   updateProfile,
   updateEmail,
   updateOnlineStatus,
+  updateTwoFactor,
   deleteProfile,
   searchUsers,
   getAllUsers,
@@ -21,6 +22,7 @@ router.get("/me", protect, getCurrentUserProfile);
 router.put("/update", protect, updateProfile);
 router.put("/update-email", protect, updateEmail);
 router.put("/online-status", protect, updateOnlineStatus);
+router.put("/two-factor", protect, updateTwoFactor);
 router.delete("/delete", protect, deleteProfile);
 
 // Wildcard route last

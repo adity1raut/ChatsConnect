@@ -405,6 +405,7 @@ export const login = async (req, res) => {
       isOnline: user.isOnline,
       lastSeen: user.lastSeen,
       authProvider: user.authProvider,
+      twoFactorEnabled: user.twoFactorEnabled,
       createdAt: user.createdAt,
     };
 
