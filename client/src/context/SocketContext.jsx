@@ -18,16 +18,8 @@ export function SocketProvider({ children }) {
     const token =
       localStorage.getItem("authToken") || localStorage.getItem("accessToken");
 
-    if (!user || !token) {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-        setSocket(null);
-        setIsConnected(false);
-        setOnlineUsers(new Set());
-      }
-      return;
-    }
+    // Logged out: the previous run's cleanup has already torn the socket down
+    if (!user || !token) return;
 
     // Already connected with same token — skip
     if (socketRef.current?.connected) return;
@@ -77,6 +69,7 @@ export function SocketProvider({ children }) {
       socketRef.current = null;
       setSocket(null);
       setIsConnected(false);
+      setOnlineUsers(new Set());
     };
   }, [user]);
 

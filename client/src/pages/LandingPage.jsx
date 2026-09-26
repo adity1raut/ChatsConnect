@@ -9,7 +9,6 @@ import {
   Video,
   Sparkles,
   ArrowRight,
-  Github,
   Moon,
   Sun,
 } from "lucide-react";
@@ -55,7 +54,7 @@ const FEATURES = [
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { isDark, themeMode, setThemeMode } = useTheme();
+  const { isDark, setThemeMode } = useTheme();
   const { isAuthenticated } = useAuth();
 
   const handleGetStarted = () => {
@@ -111,18 +110,6 @@ export default function LandingPage() {
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-
-          <a
-            href="https://github.com/adity1raut/MiniProject-"
-            target="_blank"
-            rel="noreferrer"
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${isDark
-              ? "text-gray-400 hover:text-white hover:bg-white/8"
-              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-          >
-            <Github size={16} />
-          </a>
 
           {isAuthenticated() ? (
             <button
@@ -307,16 +294,7 @@ export default function LandingPage() {
           : "border-gray-200/60 text-gray-400"
           }`}
       >
-        Built by{" "}
-        <a
-          href="https://github.com/adity1raut"
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-violet-500 hover:text-violet-400 transition-colors"
-        >
-          Aditya Raut
-        </a>{" "}
-        · ChatsConnect Mini Project
+        ChatsConnect · Mini Project
       </footer>
     </div>
   );

@@ -152,7 +152,7 @@ export const requestOTP = async (req, res) => {
     // Send OTP via email
     await sendOTP(email, otp, name);
 
-    console.log(`OTP sent to ${email}: ${otp}`); // For development - remove in production
+    console.log(`OTP sent to ${email}`);
 
     res.status(200).json({
       success: true,
@@ -705,7 +705,7 @@ export const resendOTP = async (req, res) => {
     // Send new OTP via email
     await sendOTP(email, otp, storedData.name);
 
-    console.log(`New OTP sent to ${email}: ${otp}`); // For development - remove in production
+    console.log(`New OTP sent to ${email}`);
 
     res.status(200).json({
       success: true,

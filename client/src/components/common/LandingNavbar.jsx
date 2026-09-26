@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
-import { Sparkles, Github, Moon, Sun } from "lucide-react";
+import { Sparkles, Moon, Sun } from "lucide-react";
 
 export default function LandingNavbar() {
   const navigate = useNavigate();
@@ -50,19 +50,6 @@ export default function LandingNavbar() {
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-
-        {/* GitHub */}
-        <a
-          href="https://github.com/adity1raut/MiniProject-"
-          target="_blank"
-          rel="noreferrer"
-          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isDark
-              ? "text-white/70 hover:text-white hover:bg-white/10"
-              : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-            }`}
-        >
-          <Github size={16} />
-        </a>
 
         {/* Context-aware CTA */}
         {isLogin && (
