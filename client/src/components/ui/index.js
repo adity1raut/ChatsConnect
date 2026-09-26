@@ -6,6 +6,7 @@ export { default as Card } from "./Card";
 export { default as EmptyState } from "./EmptyState";
 export { Input, PasswordInput, Select, Textarea } from "./Field";
 export { default as IconButton } from "./IconButton";
+export { default as Markdown } from "./Markdown";
 export { default as Modal } from "./Modal";
 export { default as SegmentedControl } from "./SegmentedControl";
 export { default as Spinner } from "./Spinner";

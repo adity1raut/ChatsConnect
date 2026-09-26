@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import axios from "../../config/axiosInstance.js";
+import axios from "../../../config/axiosInstance.js";
 import {
   X,
   Search,
@@ -10,8 +10,8 @@ import {
   Loader2,
   Users,
 } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
-import { API_URL } from "../../config/api.js";
+import { useTheme } from "../../../context/ThemeContext";
+import { API_URL } from "../../../config/api.js";
 
 export default function ManageGroupModal({
   group,

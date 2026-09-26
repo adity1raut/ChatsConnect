@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Search, Users, Check, Loader2 } from "lucide-react";
-import axios from "../../config/axiosInstance.js";
-import { useTheme } from "../../context/ThemeContext";
+import axios from "../../../config/axiosInstance.js";
+import { useTheme } from "../../../context/ThemeContext";
 
-import { API_URL as API } from "../../config/api.js";
+import { API_URL as API } from "../../../config/api.js";
 
 export default function CreateGroupModal({ onClose, onGroupCreated }) {
   const { isDark } = useTheme();

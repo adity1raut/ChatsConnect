@@ -122,7 +122,10 @@ export function initSocket(httpServer) {
       }
 
       try {
-        if (!(await User.exists({ _id: receiverId }))) {
+        const receiver = await User.findById(receiverId)
+          .select("name username avatar aiEnabled")
+          .lean();
+        if (!receiver) {
           return socket.emit("error", { message: "User not found" });
         }
 
@@ -157,6 +160,13 @@ export function initSocket(httpServer) {
         const payload = {
           message: populatedMessage,
           conversationId: conversation._id,
+          // Lets the sender's tabs file a brand-new conversation under the right person
+          receiver: {
+            _id: receiver._id,
+            name: receiver.name,
+            username: receiver.username,
+            avatar: receiver.avatar,
+          },
         };
         // User rooms reach every open tab of both people
         io.to(receiverId).emit("newMessage", payload);
@@ -171,10 +181,7 @@ export function initSocket(httpServer) {
         });
 
         // ── Real-time AI smart replies for the receiver ──────────────
-        const receiverUser = await User.findById(receiverId)
-          .select("aiEnabled")
-          .lean();
-        if (receiverUser?.aiEnabled) {
+        if (receiver.aiEnabled) {
           buildDMContext(conversation._id, receiverId, 8)
             .then((ctx) => generateSmartReplies(ctx))
             .then((replies) =>
