@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import { SOCKET_URL } from "../config/api.js";
+import { refreshAccessToken } from "../config/axiosInstance.js";
 
 const SocketContext = createContext(null);
 
@@ -25,7 +26,13 @@ export function SocketProvider({ children }) {
     if (socketRef.current?.connected) return;
 
     const s = io(SOCKET_URL, {
-      auth: { token },
+      // Read the token on every (re)connect — access tokens expire every 15 min
+      auth: (cb) =>
+        cb({
+          token:
+            localStorage.getItem("authToken") ||
+            localStorage.getItem("accessToken"),
+        }),
       // Force WebSocket immediately — skip HTTP long-polling round-trip
       transports: ["websocket"],
       upgrade: false,
@@ -48,6 +55,20 @@ export function SocketProvider({ children }) {
     s.on("reconnect", () => {
       setIsConnected(true);
       setSocket(s);
+    });
+
+    // The server rejects expired tokens and won't retry on its own:
+    // refresh the token, then reconnect
+    s.on("connect_error", (err) => {
+      if (err.message !== "Invalid token") return; // network errors retry automatically
+      refreshAccessToken()
+        .then(() => s.connect())
+        .catch(() => {});
+    });
+
+    // Who was already online when we connected
+    s.on("onlineUsers", ({ userIds }) => {
+      setOnlineUsers(new Set(userIds));
     });
 
     s.on("userOnline", ({ userId }) => {
@@ -111,8 +132,9 @@ export function SocketProvider({ children }) {
     socketRef.current?.emit("callAccepted", { toUserId });
   };
 
-  const rejectCall = (toUserId) => {
-    socketRef.current?.emit("callRejected", { toUserId });
+  // reason "timeout" = the ring went unanswered (server records a missed call)
+  const rejectCall = (toUserId, reason) => {
+    socketRef.current?.emit("callRejected", { toUserId, reason });
   };
 
   const hangUp = (toUserId) => {

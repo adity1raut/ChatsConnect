@@ -65,6 +65,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Which events create notifications (missing = on, for existing users)
+    notificationPrefs: {
+      messages: { type: Boolean, default: true },
+      groupMessages: { type: Boolean, default: true },
+      friendRequests: { type: Boolean, default: true },
+      groups: { type: Boolean, default: true },
+      calls: { type: Boolean, default: true },
+    },
   },
   { timestamps: true },
 );

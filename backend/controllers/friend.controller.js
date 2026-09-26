@@ -1,5 +1,11 @@
+import mongoose from "mongoose";
 import FriendRequest from "../models/friendRequest.model.js";
-import { getIO } from "../socket/socket.js";
+import User from "../models/user.model.js";
+import { getIO } from "../socket/io.js";
+import {
+  notify,
+  removeRequestNotifications,
+} from "../service/notification.service.js";
 import logger from "../utils/logger.js";
 
 // POST /api/friends/request/:userId — send a friend request
@@ -7,11 +13,18 @@ export const sendRequest = async (req, res) => {
   const myId = req.user._id;
   const { userId: targetId } = req.params;
 
+  if (!mongoose.isValidObjectId(targetId)) {
+    return res.status(400).json({ message: "Invalid user id" });
+  }
   if (myId.toString() === targetId) {
     return res.status(400).json({ message: "Cannot send request to yourself" });
   }
 
   try {
+    if (!(await User.exists({ _id: targetId }))) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     // Check for existing request in either direction
     const existing = await FriendRequest.findOne({
       $or: [
@@ -40,6 +53,12 @@ export const sendRequest = async (req, res) => {
         );
         // Notify receiver via socket
         getIO()?.to(targetId).emit("friendRequest", { request: populated });
+        notify({
+          recipient: targetId,
+          type: "friend_request",
+          actor: myId,
+          requestId: existing._id,
+        });
         return res.status(200).json({ request: populated });
       }
       return res.status(400).json({ message: "Cannot send request" });
@@ -56,6 +75,12 @@ export const sendRequest = async (req, res) => {
 
     // Real-time notification to receiver
     getIO()?.to(targetId).emit("friendRequest", { request: populated });
+    notify({
+      recipient: targetId,
+      type: "friend_request",
+      actor: myId,
+      requestId: request._id,
+    });
 
     res.status(201).json({ request: populated });
   } catch (err) {
@@ -95,6 +120,12 @@ export const acceptRequest = async (req, res) => {
           avatar: req.user.avatar,
         },
       });
+    removeRequestNotifications(request._id);
+    notify({
+      recipient: request.sender._id,
+      type: "friend_accepted",
+      actor: myId,
+    });
 
     res.status(200).json({ request });
   } catch (err) {
@@ -121,6 +152,7 @@ export const rejectRequest = async (req, res) => {
 
     request.status = "rejected";
     await request.save();
+    removeRequestNotifications(request._id);
 
     res.status(200).json({ message: "Request rejected" });
   } catch (err) {
@@ -144,6 +176,12 @@ export const cancelRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
+
+    // Take it off the receiver's screen too
+    removeRequestNotifications(request._id);
+    getIO()
+      ?.to(request.receiver.toString())
+      .emit("friendRequestCancelled", { requestId: request._id, senderId: myId });
 
     res.status(200).json({ message: "Request cancelled" });
   } catch (err) {

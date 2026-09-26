@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AtSign,
+  Bell,
   Bot,
   ChevronDown,
   Info,
@@ -18,6 +19,7 @@ import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
 import { useAI } from "../../context/AIContext";
 import { useTheme } from "../../context/ThemeContext";
+import { useNotifications } from "../../context/NotificationContext";
 import {
   Button,
   Input,
@@ -204,6 +206,74 @@ function AISection() {
           onChange={(e) => setPreferredLanguage(e.target.value)}
         />
       )}
+    </Section>
+  );
+}
+
+const NOTIFICATION_TYPES = [
+  { key: "messages", title: "Direct messages" },
+  { key: "groupMessages", title: "Group messages" },
+  { key: "friendRequests", title: "Friend requests" },
+  { key: "groups", title: "Added to a group" },
+  { key: "calls", title: "Missed calls" },
+];
+
+function NotificationsSection() {
+  const {
+    preferences,
+    updatePreference,
+    devicePrefs,
+    setDevicePref,
+    desktopPermission,
+  } = useNotifications();
+
+  const desktopHint =
+    desktopPermission === "unsupported"
+      ? "Not supported in this browser"
+      : desktopPermission === "denied"
+        ? "Blocked — allow notifications for this site in your browser settings"
+        : "Show alerts when ChatsConnect is in the background";
+
+  return (
+    <Section icon={Bell} title="Notifications" description="What notifies you, and how">
+      {NOTIFICATION_TYPES.map(({ key, title }) => (
+        <Row
+          key={key}
+          title={title}
+          control={
+            <Toggle
+              label={title}
+              checked={preferences?.[key] ?? true}
+              disabled={!preferences}
+              onChange={(value) => updatePreference(key, value)}
+            />
+          }
+        />
+      ))}
+      <div className="my-1 h-px bg-line" />
+      <Row
+        title="Sound"
+        description="Play a chime on this device"
+        control={
+          <Toggle
+            label="Sound"
+            checked={devicePrefs.sound}
+            onChange={(value) => setDevicePref("sound", value)}
+          />
+        }
+      />
+      <Row
+        title="Desktop notifications"
+        description={desktopHint}
+        control={
+          <Toggle
+            label="Desktop notifications"
+            checked={devicePrefs.desktop && desktopPermission === "granted"}
+            disabled={desktopPermission === "unsupported" || desktopPermission === "denied"}
+            onChange={(value) => setDevicePref("desktop", value)}
+          />
+        }
+      />
     </Section>
   );
 }
@@ -472,6 +542,7 @@ export default function SettingsPanel({ onNavigate }) {
     <div className="space-y-6">
       <AppearanceSection />
       <AISection />
+      <NotificationsSection />
       <SecuritySection />
       <Section icon={Info} title="About" description="Version, stack and credits">
         <Link

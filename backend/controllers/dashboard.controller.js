@@ -1,7 +1,7 @@
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
-import { onlineUsers } from "../socket/socket.js";
+import { onlineUsers } from "../socket/io.js";
 import logger from "../utils/logger.js";
 
 // GET /api/dashboard/stats

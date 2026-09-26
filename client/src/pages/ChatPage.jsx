@@ -166,6 +166,23 @@ function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contacts.length, location.state]);
 
+  // ── Tell notifications which chat is open (none on unmount) ─────
+  const activeConversationId = selectedChat?.conversationId?.toString();
+  const activeGroupId = selectedChat?.type === "group" ? selectedChat.groupId : undefined;
+  const activePeerId = selectedChat?.type === "user" ? selectedChat.id : undefined;
+  useEffect(() => {
+    setNotifActiveChat(
+      activeConversationId || activeGroupId || activePeerId
+        ? {
+            conversationId: activeConversationId,
+            groupId: activeGroupId,
+            peerId: activePeerId,
+          }
+        : null,
+    );
+  }, [activeConversationId, activeGroupId, activePeerId, setNotifActiveChat]);
+  useEffect(() => () => setNotifActiveChat(null), [setNotifActiveChat]);
+
   // ── Load message history when chat is selected ──────────────────
   useEffect(() => {
     if (!selectedChat) {
@@ -515,15 +532,6 @@ function ChatPage() {
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setTypingUsers(new Set());
-    if (chat) {
-      const chatId =
-        chat.type === "group"
-          ? `group-${chat.groupId}`
-          : chat.conversationId?.toString() || null;
-      setNotifActiveChat(chatId);
-    } else {
-      setNotifActiveChat(null);
-    }
   };
 
   // Start a DM from the discovery list (allUsers)

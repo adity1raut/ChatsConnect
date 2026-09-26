@@ -11,6 +11,7 @@ import PublicRoute from "./components/routes/PublicRoute.jsx";
 import IncomingCallModal from "./components/video/IncomingCallModal";
 import GroupVideoCall from "./components/video/GroupVideoCall";
 import VideoCallModal from "./components/video/VideoCallModal";
+import Toaster from "./components/ui/Toaster";
 
 import Login from "./pages/Login.jsx";
 import Registration from "./pages/Register.jsx";
@@ -40,6 +41,7 @@ function App() {
         <IncomingCallModal />
         <VideoCallModal />
         <GroupVideoCall />
+        <Toaster />
 
         <Routes>
           <Route path="/" element={<LandingPage />} />

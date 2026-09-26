@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Server } from "socket.io";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
@@ -8,16 +9,43 @@ import {
   buildDMContext,
   buildGroupContext,
 } from "../service/aiService.js";
+import { notify } from "../service/notification.service.js";
 import { bustMessageCache } from "../controllers/message.controller.js";
 import { redisAddOnline, redisRemoveOnline } from "../cache/redis.js";
 import { verifyAccessToken } from "../service/token.service.js";
+import { getIO, isOnline, onlineUsers, setIO } from "./io.js";
 import logger from "../utils/logger.js";
 
-// In-process Map: userId -> socketId (fast O(1) lookups for targeting)
-const onlineUsers = new Map();
+export { getIO, onlineUsers };
 
-let _io = null;
-export const getIO = () => _io;
+const MAX_MESSAGE_LENGTH = 5000;
+const isId = (value) => mongoose.isValidObjectId(value);
+
+// "callerId:calleeId" → ring that hasn't been answered yet (for missed calls)
+const pendingCalls = new Map();
+const callKey = (callerId, calleeId) => `${callerId}:${calleeId}`;
+
+function recordMissedCall(callerId, calleeId) {
+  const pending = pendingCalls.get(callKey(callerId, calleeId));
+  if (!pending) return;
+  pendingCalls.delete(callKey(callerId, calleeId));
+  notify({
+    recipient: calleeId,
+    type: "missed_call",
+    actor: callerId,
+    meta: { callType: pending.callType },
+  });
+}
+
+async function setPresence(userId, online) {
+  const update = online
+    ? { isOnline: true }
+    : { isOnline: false, lastSeen: new Date() };
+  await User.updateOne({ _id: userId }, update).catch((err) =>
+    logger.warn(`Presence update failed for ${userId}: ${err.message}`),
+  );
+  return update;
+}
 
 export function initSocket(httpServer) {
   const allowedOrigins = [
@@ -35,34 +63,69 @@ export function initSocket(httpServer) {
     pingTimeout: 5000,
   });
 
-  _io = io;
+  setIO(io);
 
   // ── JWT auth middleware ───────────────────────────────────────────
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error("No token provided"));
     try {
-      const decoded = verifyAccessToken(token);
-      socket.userId = decoded.userId;
+      socket.userId = String(verifyAccessToken(token).userId);
       next();
     } catch {
+      // The client refreshes its access token when it sees this message
       next(new Error("Invalid token"));
     }
   });
 
   io.on("connection", (socket) => {
     const userId = socket.userId;
-    onlineUsers.set(userId, socket.id);
-    redisAddOnline(userId);
-
-    socket.broadcast.emit("userOnline", { userId });
     socket.join(userId);
 
+    // ── Presence: online while any tab is connected ────────────────
+    const sockets = onlineUsers.get(userId) ?? new Set();
+    const firstTab = sockets.size === 0;
+    sockets.add(socket.id);
+    onlineUsers.set(userId, sockets);
+    if (firstTab) {
+      redisAddOnline(userId);
+      setPresence(userId, true);
+      socket.broadcast.emit("userOnline", { userId });
+    }
+    // Snapshot so this client knows who was already online
+    socket.emit("onlineUsers", { userIds: [...onlineUsers.keys()] });
+
+    // Join every group room, so group messages and typing arrive on any page
+    Group.find({ "members.user": userId })
+      .select("_id")
+      .lean()
+      .then((groups) => groups.forEach((g) => socket.join(`group:${g._id}`)))
+      .catch((err) => logger.warn(`Joining group rooms failed: ${err.message}`));
+
+    // Which chat this tab is looking at (suppresses notifications for it)
+    socket.on("activeChat", ({ conversationId, groupId, peerId } = {}) => {
+      socket.data.activeChat = isId(conversationId)
+        ? `dm:${conversationId}`
+        : isId(groupId)
+          ? `group:${groupId}`
+          : isId(peerId)
+            ? `peer:${peerId}`
+            : null;
+    });
+
     // ── Direct Message ──────────────────────────────────────────────
-    socket.on("sendMessage", async ({ receiverId, content }) => {
-      if (!receiverId || !content?.trim()) return;
+    socket.on("sendMessage", async ({ receiverId, content } = {}) => {
+      const text = typeof content === "string" ? content.trim() : "";
+      if (!isId(receiverId) || !text || receiverId === userId) return;
+      if (text.length > MAX_MESSAGE_LENGTH) {
+        return socket.emit("error", { message: "Message is too long" });
+      }
 
       try {
+        if (!(await User.exists({ _id: receiverId }))) {
+          return socket.emit("error", { message: "User not found" });
+        }
+
         let conversation = await Conversation.findOne({
           participants: { $all: [userId, receiverId] },
         });
@@ -75,7 +138,7 @@ export function initSocket(httpServer) {
         const message = await Message.create({
           senderId: userId,
           conversationId: conversation._id,
-          content: content.trim(),
+          content: text,
           messageType: "text",
           readBy: [userId],
         });
@@ -91,37 +154,31 @@ export function initSocket(httpServer) {
         // Bust cache so next REST fetch gets fresh data
         await bustMessageCache(conversation._id, null, [userId, receiverId]);
 
-        io.to(receiverId).emit("newMessage", {
+        const payload = {
           message: populatedMessage,
           conversationId: conversation._id,
-        });
-        socket.emit("newMessage", {
-          message: populatedMessage,
+        };
+        // User rooms reach every open tab of both people
+        io.to(receiverId).emit("newMessage", payload);
+        io.to(userId).emit("newMessage", payload);
+
+        notify({
+          recipient: receiverId,
+          type: "message",
+          actor: userId,
           conversationId: conversation._id,
+          body: text,
         });
 
-        // ── Real-time AI smart replies ────────────────────────────────
-        const [receiverUser, senderUser] = await Promise.all([
-          User.findById(receiverId).select("aiEnabled").lean(),
-          User.findById(userId).select("aiEnabled").lean(),
-        ]);
-
+        // ── Real-time AI smart replies for the receiver ──────────────
+        const receiverUser = await User.findById(receiverId)
+          .select("aiEnabled")
+          .lean();
         if (receiverUser?.aiEnabled) {
           buildDMContext(conversation._id, receiverId, 8)
             .then((ctx) => generateSmartReplies(ctx))
             .then((replies) =>
               io.to(receiverId).emit("aiSmartReplies", {
-                conversationId: conversation._id,
-                replies,
-              }),
-            )
-            .catch(() => {});
-        }
-        if (senderUser?.aiEnabled) {
-          buildDMContext(conversation._id, userId, 8)
-            .then((ctx) => generateSmartReplies(ctx))
-            .then((replies) =>
-              socket.emit("aiSmartReplies", {
                 conversationId: conversation._id,
                 replies,
               }),
@@ -135,8 +192,12 @@ export function initSocket(httpServer) {
     });
 
     // ── Group Message ───────────────────────────────────────────────
-    socket.on("sendGroupMessage", async ({ groupId, content }) => {
-      if (!groupId || !content?.trim()) return;
+    socket.on("sendGroupMessage", async ({ groupId, content } = {}) => {
+      const text = typeof content === "string" ? content.trim() : "";
+      if (!isId(groupId) || !text) return;
+      if (text.length > MAX_MESSAGE_LENGTH) {
+        return socket.emit("error", { message: "Message is too long" });
+      }
 
       try {
         const group = await Group.findOne({
@@ -149,7 +210,7 @@ export function initSocket(httpServer) {
         const message = await Message.create({
           senderId: userId,
           groupId,
-          content: content.trim(),
+          content: text,
           messageType: "text",
           readBy: [userId],
         });
@@ -169,11 +230,21 @@ export function initSocket(httpServer) {
           groupId,
         });
 
-        // ── Real-time AI smart replies for group ──────────────────────
         const otherMemberIds = group.members
-          .filter((m) => m.user.toString() !== userId)
-          .map((m) => m.user.toString());
+          .map((m) => m.user.toString())
+          .filter((id) => id !== userId);
 
+        for (const memberId of otherMemberIds) {
+          notify({
+            recipient: memberId,
+            type: "group_message",
+            actor: userId,
+            groupId,
+            body: text,
+          });
+        }
+
+        // ── Real-time AI smart replies for group ──────────────────────
         if (otherMemberIds.length) {
           const aiUsers = await User.find({
             _id: { $in: otherMemberIds },
@@ -203,76 +274,109 @@ export function initSocket(httpServer) {
     });
 
     // ── Join / Leave Group Room ───────────────────────────────────────
-    socket.on("joinGroup", async ({ groupId }) => {
-      if (!groupId) return;
-      const isMember = await Group.findOne({
+    socket.on("joinGroup", async ({ groupId } = {}) => {
+      if (!isId(groupId)) return;
+      const isMember = await Group.exists({
         _id: groupId,
         "members.user": userId,
       });
       if (isMember) socket.join(`group:${groupId}`);
     });
 
-    socket.on("leaveGroup", ({ groupId }) => {
+    socket.on("leaveGroup", ({ groupId } = {}) => {
       if (groupId) socket.leave(`group:${groupId}`);
     });
 
-    // ── WebRTC Signaling ─────────────────────────────────────────────
-    socket.on(
-      "callUser",
-      ({ toUserId, callerName, callerAvatar, callType }) => {
-        io.to(toUserId).emit("incomingCall", {
-          callerId: userId,
-          callerName,
-          callerAvatar,
-          callType,
-        });
-      },
-    );
-    socket.on("callAccepted", ({ toUserId }) => {
+    // ── 1:1 call signaling ───────────────────────────────────────────
+    socket.on("callUser", async ({ toUserId, callType } = {}) => {
+      if (!isId(toUserId) || toUserId === userId) return;
+      const type = callType === "audio" ? "audio" : "video";
+      pendingCalls.set(callKey(userId, toUserId), { callType: type });
+
+      if (!isOnline(toUserId)) {
+        // Nobody to ring — tell the caller and leave a missed call
+        recordMissedCall(userId, toUserId);
+        socket.emit("callUnavailable", { toUserId, reason: "offline" });
+        return;
+      }
+
+      // Name and avatar come from the database so callers can't impersonate anyone
+      const caller = await User.findById(userId).select("name avatar").lean();
+      io.to(toUserId).emit("incomingCall", {
+        callerId: userId,
+        callerName: caller?.name,
+        callerAvatar: caller?.avatar,
+        callType: type,
+      });
+    });
+    socket.on("callAccepted", ({ toUserId } = {}) => {
+      if (!isId(toUserId)) return;
+      pendingCalls.delete(callKey(toUserId, userId));
       io.to(toUserId).emit("callAccepted", { calleeId: userId });
     });
-    socket.on("callRejected", ({ toUserId }) => {
-      io.to(toUserId).emit("callRejected", { calleeId: userId });
+    socket.on("callRejected", ({ toUserId, reason } = {}) => {
+      if (!isId(toUserId)) return;
+      // The ring timed out unanswered → missed call; an explicit decline is not
+      if (reason === "timeout") recordMissedCall(toUserId, userId);
+      else pendingCalls.delete(callKey(toUserId, userId));
+      io.to(toUserId).emit("callRejected", { calleeId: userId, reason });
     });
-    socket.on("endCall", ({ toUserId }) => {
+    socket.on("endCall", ({ toUserId } = {}) => {
+      if (!isId(toUserId)) return;
+      // Caller hung up before the callee answered
+      recordMissedCall(userId, toUserId);
       io.to(toUserId).emit("callEnded", { byUserId: userId });
     });
-    socket.on("webrtcOffer", ({ toUserId, offer }) => {
-      io.to(toUserId).emit("webrtcOffer", { fromUserId: userId, offer });
+    socket.on("webrtcOffer", ({ toUserId, offer } = {}) => {
+      if (isId(toUserId))
+        io.to(toUserId).emit("webrtcOffer", { fromUserId: userId, offer });
     });
-    socket.on("webrtcAnswer", ({ toUserId, answer }) => {
-      io.to(toUserId).emit("webrtcAnswer", { fromUserId: userId, answer });
+    socket.on("webrtcAnswer", ({ toUserId, answer } = {}) => {
+      if (isId(toUserId))
+        io.to(toUserId).emit("webrtcAnswer", { fromUserId: userId, answer });
     });
-    socket.on("iceCandidate", ({ toUserId, candidate }) => {
-      io.to(toUserId).emit("iceCandidate", { fromUserId: userId, candidate });
+    socket.on("iceCandidate", ({ toUserId, candidate } = {}) => {
+      if (isId(toUserId))
+        io.to(toUserId).emit("iceCandidate", { fromUserId: userId, candidate });
     });
 
     // ── Typing indicators ────────────────────────────────────────────
-    socket.on("typing", ({ receiverId, groupId }) => {
-      if (receiverId) io.to(receiverId).emit("typing", { senderId: userId });
-      else if (groupId)
+    socket.on("typing", ({ receiverId, groupId } = {}) => {
+      if (isId(receiverId)) io.to(receiverId).emit("typing", { senderId: userId });
+      else if (isId(groupId))
         socket
           .to(`group:${groupId}`)
           .emit("typing", { senderId: userId, groupId });
     });
-    socket.on("stopTyping", ({ receiverId, groupId }) => {
-      if (receiverId)
+    socket.on("stopTyping", ({ receiverId, groupId } = {}) => {
+      if (isId(receiverId))
         io.to(receiverId).emit("stopTyping", { senderId: userId });
-      else if (groupId)
+      else if (isId(groupId))
         socket
           .to(`group:${groupId}`)
           .emit("stopTyping", { senderId: userId, groupId });
     });
 
     // ── Disconnect ───────────────────────────────────────────────────
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
+      const tabs = onlineUsers.get(userId);
+      tabs?.delete(socket.id);
+      if (tabs?.size) return; // still open in another tab
+
       onlineUsers.delete(userId);
       redisRemoveOnline(userId);
-      socket.broadcast.emit("userOffline", { userId });
+      // A caller who drops mid-ring leaves the callee a missed call
+      for (const key of pendingCalls.keys()) {
+        const [callerId, calleeId] = key.split(":");
+        if (callerId === userId) {
+          recordMissedCall(callerId, calleeId);
+          io.to(calleeId).emit("callEnded", { byUserId: userId });
+        }
+      }
+      const { lastSeen } = await setPresence(userId, false);
+      socket.broadcast.emit("userOffline", { userId, lastSeen });
     });
   });
 
   return io;
 }
-
-export { onlineUsers };

@@ -9,6 +9,7 @@ import groupRoutes from "./routes/group.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 import passport from "./config/passport.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 
@@ -50,6 +51,7 @@ export function createApp() {
   app.use("/api/friends", friendRoutes);
   app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/ai", aiRoutes);
+  app.use("/api/notifications", notificationRoutes);
 
   app.get("/", (req, res) => {
     res.status(200).json({ message: "Server is running" });
