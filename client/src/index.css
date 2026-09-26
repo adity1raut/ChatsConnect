@@ -84,6 +84,8 @@
   --grid: rgb(23 32 51 / 0.05);
   --sidebar: #f1f5f9;
   --glow: rgb(22 122 92 / 0.18);
+  --panel-shadow: 0 24px 60px rgb(15 23 42 / 0.1);
+  --float-shadow: 0 10px 28px rgb(15 23 42 / 0.08);
 }
 
 .dark {
@@ -115,6 +117,8 @@
   --grid: rgb(148 163 184 / 0.045);
   --sidebar: #070b12;
   --glow: rgb(94 234 212 / 0.18);
+  --panel-shadow: 0 30px 80px rgb(0 0 0 / 0.45);
+  --float-shadow: 0 10px 28px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {
@@ -143,6 +147,10 @@
   --color-warning: var(--warning);
   --color-overlay: var(--overlay);
   --color-sidebar: var(--sidebar);
+
+  /* Elevation: big soft drop for dialogs and hero panels, smaller for floating bars/menus */
+  --shadow-panel: var(--panel-shadow);
+  --shadow-float: var(--float-shadow);
 
   /* Square corners everywhere; rounded-full stays for dots and pills */
   --radius-xs: var(--radius);

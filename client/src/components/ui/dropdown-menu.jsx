@@ -25,7 +25,7 @@ export function DropdownMenuContent({ className, sideOffset = 6, ...props }) {
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-120 max-h-(--radix-dropdown-menu-content-available-height) min-w-48 overflow-x-hidden overflow-y-auto border border-border-strong bg-popover p-1 text-popover-foreground shadow-[0_16px_40px_rgb(0_0_0/0.4)]",
+          "z-120 max-h-(--radix-dropdown-menu-content-available-height) min-w-48 overflow-x-hidden overflow-y-auto border border-border-strong bg-popover p-1 text-popover-foreground shadow-float",
           "origin-(--radix-dropdown-menu-content-transform-origin) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           className,

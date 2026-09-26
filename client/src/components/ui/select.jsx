@@ -41,7 +41,7 @@ export function SelectContent({ className, children, position = "popper", ...pro
         data-slot="select-content"
         position={position}
         className={cn(
-          "relative z-130 max-h-(--radix-select-content-available-height) min-w-32 overflow-x-hidden overflow-y-auto border border-border-strong bg-popover text-popover-foreground shadow-[0_16px_40px_rgb(0_0_0/0.4)]",
+          "relative z-130 max-h-(--radix-select-content-available-height) min-w-32 overflow-x-hidden overflow-y-auto border border-border-strong bg-popover text-popover-foreground shadow-float",
           "origin-(--radix-select-content-transform-origin) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           position === "popper" && "w-full min-w-(--radix-select-trigger-width) data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className,

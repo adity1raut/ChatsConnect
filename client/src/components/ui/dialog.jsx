@@ -43,7 +43,7 @@ export function DialogContent({ className, children, showCloseButton = true, ...
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed inset-x-0 bottom-0 z-100 flex max-h-[92dvh] w-full flex-col border border-border-strong bg-popover text-popover-foreground shadow-[0_24px_60px_rgb(0_0_0/0.45)] outline-none",
+          "fixed inset-x-0 bottom-0 z-100 flex max-h-[92dvh] w-full flex-col border border-border-strong bg-popover text-popover-foreground shadow-panel outline-none",
           "sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:w-[calc(100%-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2",
           "duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-95",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 sm:data-[state=closed]:zoom-out-95",

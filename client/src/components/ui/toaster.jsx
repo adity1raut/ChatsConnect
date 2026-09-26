@@ -22,7 +22,7 @@ function ToastItem({ toast }) {
     <div
       role={isError ? "alert" : "status"}
       className={cn(
-        "pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden border bg-popover p-3 pr-2 shadow-[0_16px_40px_rgb(0_0_0/0.4)] animate-fade-in-right",
+        "pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden border bg-popover p-3 pr-2 shadow-float animate-fade-in-right",
         isError ? "border-destructive/50" : "border-border-strong",
       )}
     >

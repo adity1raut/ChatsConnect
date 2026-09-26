@@ -12,9 +12,9 @@ export default function MobileNav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
-      <div className="flex h-14 items-center justify-around">
+      <div className="grid h-14 grid-cols-6">
         {NAV_ITEMS.map((item) => {
           const active = isNavActive(item, pathname);
           const Icon = item.icon;
@@ -25,20 +25,17 @@ export default function MobileNav() {
               aria-current={active ? "page" : undefined}
               aria-label={item.label}
               className={cn(
-                "relative flex min-w-14 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition-colors",
-                active ? "text-primary" : "text-faint hover:text-foreground",
+                "relative flex flex-col items-center justify-center gap-1 border-t-2 transition-colors",
+                active ? "border-primary bg-primary/[0.06] text-primary" : "border-transparent text-faint hover:text-foreground",
               )}
             >
-              {active && (
-                <span className="absolute top-0 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-primary" />
-              )}
               <span className="relative">
-                <Icon className="size-[22px]" strokeWidth={active ? 2.5 : 2} aria-hidden="true" />
+                <Icon className="size-5" strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
                 {item.showUnread && (
-                  <CountBadge count={unreadCount} className="absolute -top-1.5 -right-2.5 h-4 min-w-4 px-1 text-[9px]" />
+                  <CountBadge count={unreadCount} className="absolute -top-1.5 -right-3 h-4 min-w-4 px-0.5 text-[9px]" />
                 )}
               </span>
-              <span className="text-[10px] font-semibold">{item.shortLabel}</span>
+              <span className="text-[9px] font-bold tracking-[0.12em] uppercase">{item.shortLabel}</span>
             </NavLink>
           );
         })}
