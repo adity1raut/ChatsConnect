@@ -23,10 +23,10 @@ export default function GitHubButton({ label = "Continue with GitHub" }) {
 
 export function OrDivider() {
   return (
-    <div className="my-5 flex items-center gap-3 text-xs text-faint" role="separator">
-      <span className="h-px flex-1 bg-border" />
+    <div className="eyebrow my-6 flex items-center gap-3 text-faint" role="separator">
+      <span className="h-px flex-1 border-t border-dashed border-border-strong" />
       or
-      <span className="h-px flex-1 bg-border" />
+      <span className="h-px flex-1 border-t border-dashed border-border-strong" />
     </div>
   );
 }

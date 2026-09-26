@@ -1,5 +1,6 @@
 // shadcn/ui components on Radix primitives, themed in src/index.css.
 // Import from "components/ui" (or "@/components/ui/<name>") instead of restyling per page.
+export { Alert, AlertDescription, AlertTitle, alertVariants } from "./alert";
 export { Avatar, AvatarFallback, AvatarImage, UserAvatar } from "./avatar";
 export { Badge, CountBadge, badgeVariants } from "./badge";
 export { Button, buttonVariants } from "./button";
