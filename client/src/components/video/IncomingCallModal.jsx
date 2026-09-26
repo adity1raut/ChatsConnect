@@ -6,33 +6,36 @@ const AUTO_REJECT_SECONDS = 30;
 
 export default function IncomingCallModal() {
   const { incomingCall, acceptCall, rejectCall } = useCall();
-  const [countdown, setCountdown] = useState(AUTO_REJECT_SECONDS);
-
-  // Auto-reject countdown
-  useEffect(() => {
-    if (!incomingCall) {
-      setCountdown(AUTO_REJECT_SECONDS);
-      return;
-    }
-
-    setCountdown(AUTO_REJECT_SECONDS);
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          rejectCall();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [incomingCall, rejectCall]);
 
   if (!incomingCall) return null;
 
-  const { callerName, callerAvatar, callType } = incomingCall;
+  // Keyed so each new call remounts the card with a fresh countdown
+  return (
+    <IncomingCallCard
+      key={incomingCall.callerId}
+      call={incomingCall}
+      acceptCall={acceptCall}
+      rejectCall={rejectCall}
+    />
+  );
+}
+
+function IncomingCallCard({ call, acceptCall, rejectCall }) {
+  const [countdown, setCountdown] = useState(AUTO_REJECT_SECONDS);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Auto-reject once the countdown runs out
+  useEffect(() => {
+    if (countdown === 0) rejectCall();
+  }, [countdown, rejectCall]);
+
+  const { callerName, callerAvatar, callType } = call;
   const isVideo = callType === "video";
 
   return (

@@ -76,8 +76,8 @@ git rebase HEAD~<number-of-commits> --signoff
 
 ## Reporting Bugs
 
-Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.yaml) to report bugs.
+Use the [bug report template](ISSUE_TEMPLATE/bug_report.md) to report bugs.
 
 ## Suggesting Features
 
-Use the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md) to suggest new features.
+Use the [feature request template](ISSUE_TEMPLATE/feature_request.md) to suggest new features.

@@ -24,38 +24,59 @@ export function FriendProvider({ children }) {
   const [relationships, setRelationships] = useState({});
 
   // ── Load on login ─────────────────────────────────────────────────
+  const fetchAll = useCallback(async () => {
+    const [friendsRes, incomingRes, sentRes] = await Promise.all([
+      axios.get(`${API}/friends`, {}),
+      axios.get(`${API}/friends/requests`, {}),
+      axios.get(`${API}/friends/sent`, {}),
+    ]);
+    return {
+      friends: friendsRes.data.friends || [],
+      incoming: incomingRes.data.requests || [],
+      sent: sentRes.data.requests || [],
+    };
+  }, []);
+
+  const applyAll = useCallback(({ friends, incoming, sent }) => {
+    setFriends(friends);
+    setIncomingRequests(incoming);
+    setSentRequests(sent);
+
+    // Populate relationship cache from loaded data
+    const rel = {};
+    friends.forEach((f) => {
+      rel[f._id] = { status: "friends" };
+    });
+    incoming.forEach((r) => {
+      rel[r.sender._id] = { status: "received", requestId: r._id };
+    });
+    sent.forEach((r) => {
+      rel[r.receiver._id] = { status: "sent", requestId: r._id };
+    });
+    setRelationships(rel);
+  }, []);
+
   const loadAll = useCallback(async () => {
     if (!user) return;
     try {
-      const [friendsRes, incomingRes, sentRes] = await Promise.all([
-        axios.get(`${API}/friends`, {}),
-        axios.get(`${API}/friends/requests`, {}),
-        axios.get(`${API}/friends/sent`, {}),
-      ]);
-      setFriends(friendsRes.data.friends || []);
-      setIncomingRequests(incomingRes.data.requests || []);
-      setSentRequests(sentRes.data.requests || []);
-
-      // Populate relationship cache from loaded data
-      const rel = {};
-      (friendsRes.data.friends || []).forEach((f) => {
-        rel[f._id] = { status: "friends" };
-      });
-      (incomingRes.data.requests || []).forEach((r) => {
-        rel[r.sender._id] = { status: "received", requestId: r._id };
-      });
-      (sentRes.data.requests || []).forEach((r) => {
-        rel[r.receiver._id] = { status: "sent", requestId: r._id };
-      });
-      setRelationships(rel);
+      applyAll(await fetchAll());
     } catch (err) {
       console.error("FriendContext loadAll error:", err);
     }
-  }, [user]);
+  }, [user, fetchAll, applyAll]);
 
   useEffect(() => {
-    if (user) loadAll();
-  }, [user, loadAll]);
+    if (!user) return;
+    let cancelled = false;
+    fetchAll()
+      .then((data) => {
+        if (!cancelled) applyAll(data);
+      })
+      .catch((err) => console.error("FriendContext loadAll error:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [user, fetchAll, applyAll]);
 
   // ── Socket: incoming friend request ──────────────────────────────
   useEffect(() => {

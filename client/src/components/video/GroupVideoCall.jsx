@@ -116,12 +116,11 @@ function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
 
 export default function GroupVideoCall() {
   const { user } = useAuth();
-  const { isDark } = useTheme();
   const {
     activeGroupCall,
     incomingGroupCall,
     participants,
-    localStreamRef,
+    localStream,
     isMuted,
     isCameraOff,
     leaveGroupCall,
@@ -131,14 +130,7 @@ export default function GroupVideoCall() {
     dismissIncoming,
   } = useGroupCall();
 
-  const localVideoRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    if (localVideoRef.current && localStreamRef.current) {
-      localVideoRef.current.srcObject = localStreamRef.current;
-    }
-  }, [activeGroupCall, localStreamRef]);
 
   if (!activeGroupCall && !incomingGroupCall) return null;
 
@@ -213,7 +205,7 @@ export default function GroupVideoCall() {
             {/* Local tile */}
             <div className={tileHeight}>
               <VideoTile
-                stream={localStreamRef.current}
+                stream={localStream}
                 name={user?.name}
                 avatar={user?.avatar}
                 isMuted={isMuted}

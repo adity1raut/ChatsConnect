@@ -3,8 +3,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const EMAIL_USER = process.env.EMAIL_USER || "araut7798@gmail.com";
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD || "dlopcaeamcjnzgyo";
+// Credentials must come from the environment — never commit them to source.
+const { EMAIL_USER, EMAIL_PASSWORD } = process.env;
+
+if (!EMAIL_USER || !EMAIL_PASSWORD) {
+  console.warn(
+    "EMAIL_USER / EMAIL_PASSWORD are not set — outgoing emails (OTP, security alerts) will fail.",
+  );
+}
 
 const transporter = nodemailer.createTransport({
   service: "gmail",

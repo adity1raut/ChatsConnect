@@ -1,20 +1,22 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext } from "react";
 
 const AuthContext = createContext(null);
 
+// Restore the session synchronously so routes never render a logged-out flash
+const readStoredUser = () => {
+  const token = localStorage.getItem("authToken");
+  const userData = localStorage.getItem("userData");
+  if (!token || !userData) return null;
+  try {
+    return JSON.parse(userData);
+  } catch {
+    localStorage.removeItem("userData");
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const userData = localStorage.getItem("userData");
-
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-    }
-    setLoading(false);
-  }, []);
+  const [user, setUser] = useState(readStoredUser);
 
   const login = (userData, token) => {
     localStorage.setItem("authToken", token);
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, updateUser, isAuthenticated, loading }}
+      value={{ user, login, logout, updateUser, isAuthenticated }}
     >
       {children}
     </AuthContext.Provider>

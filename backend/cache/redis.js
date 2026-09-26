@@ -67,7 +67,9 @@ export async function cacheSet(key, value, ttlSeconds) {
   if (!r) return;
   try {
     await r.set(key, JSON.stringify(value), "EX", ttlSeconds);
-  } catch {}
+  } catch {
+    // Redis is optional — ignore cache errors
+  }
 }
 
 export async function cacheDel(key) {
@@ -75,7 +77,9 @@ export async function cacheDel(key) {
   if (!r) return;
   try {
     await r.del(key);
-  } catch {}
+  } catch {
+    // Redis is optional — ignore cache errors
+  }
 }
 
 export async function cacheDelPattern(pattern) {
@@ -84,7 +88,9 @@ export async function cacheDelPattern(pattern) {
   try {
     const keys = await r.keys(pattern);
     if (keys.length) await r.del(...keys);
-  } catch {}
+  } catch {
+    // Redis is optional — ignore cache errors
+  }
 }
 
 // ── Online-user set backed by Redis ───────────────────────────────────────
@@ -97,7 +103,9 @@ export async function redisAddOnline(userId) {
   try {
     await r.sadd(ONLINE_KEY, userId);
     await r.expire(ONLINE_KEY, TTL.ONLINE_USERS);
-  } catch {}
+  } catch {
+    // Redis is optional — ignore cache errors
+  }
 }
 
 export async function redisRemoveOnline(userId) {
@@ -105,7 +113,9 @@ export async function redisRemoveOnline(userId) {
   if (!r) return;
   try {
     await r.srem(ONLINE_KEY, userId);
-  } catch {}
+  } catch {
+    // Redis is optional — ignore cache errors
+  }
 }
 
 export async function redisGetOnlineUsers() {

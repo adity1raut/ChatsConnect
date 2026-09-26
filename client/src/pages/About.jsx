@@ -8,7 +8,6 @@ import {
   Bell,
   Search,
   Sparkles,
-  Github,
   Globe,
   Database,
   Server,
@@ -171,22 +170,11 @@ export default function About() {
           </h1>
           <p className={`text-base sm:text-lg max-w-xl mx-auto leading-relaxed ${muted}`}>
             A full-stack real-time chat platform with AI-powered smart replies,
-            video calls, and group messaging — built as a mini-project by Aditya Raut.
+            video calls, and group messaging — built as a mini-project.
           </p>
 
           {/* Links */}
           <div className="flex items-center justify-center gap-3 mt-5 flex-wrap">
-            <a
-              href="https://github.com/adity1raut/MiniProject-"
-              target="_blank"
-              rel="noreferrer"
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${isDark
-                ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
-                : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
-                }`}
-            >
-              <Github size={15} /> GitHub Repo
-            </a>
             <a
               href="https://mini-project-omega-ochre.vercel.app"
               target="_blank"
@@ -287,33 +275,6 @@ export default function About() {
               AI features are handled inline by the Node server via the{" "}
               <strong className="font-semibold">Anthropic SDK</strong> — no separate microservice.
             </p>
-          </div>
-        </section>
-
-        {/* ── Author ── */}
-        <section style={{ animation: "slideUp 0.6s 0.18s cubic-bezier(0.16,1,0.3,1) both" }}>
-          <h2 className={`text-xs font-bold uppercase tracking-widest mb-5 ${subtle}`}>
-            Author
-          </h2>
-          <div className={`${card} rounded-2xl p-6 flex items-center gap-5`}>
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl font-black text-white shadow-lg"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
-            >
-              A
-            </div>
-            <div>
-              <p className="font-bold text-base">Aditya Raut</p>
-              <p className={`text-sm ${muted} mb-2`}>Full-Stack Developer · Mini Project</p>
-              <a
-                href="https://github.com/adity1raut"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-violet-300 transition-colors"
-              >
-                <Github size={13} /> @adity1raut
-              </a>
-            </div>
           </div>
         </section>
 

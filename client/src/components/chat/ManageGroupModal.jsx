@@ -63,7 +63,9 @@ export default function ManageGroupModal({
         setSearchResults(
           (data.users || []).filter((u) => !memberIds.has(u._id)),
         );
-      } catch {}
+      } catch {
+        setSearchResults([]);
+      }
     }, 300);
     return () => clearTimeout(searchTimerRef.current);
   }, [searchQuery, members]);
@@ -121,12 +123,6 @@ export default function ManageGroupModal({
       setActionLoading("");
     }
   };
-
-  const inputClass = `w-full px-4 py-2.5 text-sm rounded-xl border outline-none transition-all ${
-    isDark
-      ? "bg-white/4 border-white/8 text-white placeholder-gray-600 focus:border-violet-500/60"
-      : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:bg-white"
-  }`;
 
   return (
     <div

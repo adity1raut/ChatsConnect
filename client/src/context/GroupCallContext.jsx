@@ -30,6 +30,8 @@ export function GroupCallProvider({ children }) {
   const [participants, setParticipants] = useState(new Map());
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
+  // Mirrors localStreamRef as state so the local video tile re-renders when it changes
+  const [localStream, setLocalStream] = useState(null);
 
   const localStreamRef = useRef(null);
   // pcs: Map<userId, RTCPeerConnection>
@@ -44,6 +46,7 @@ export function GroupCallProvider({ children }) {
       audio: true,
     });
     localStreamRef.current = stream;
+    setLocalStream(stream);
     return stream;
   }, []);
 
@@ -146,7 +149,9 @@ export function GroupCallProvider({ children }) {
     for (const c of candidates) {
       try {
         await pc.addIceCandidate(new RTCIceCandidate(c));
-      } catch {}
+      } catch {
+        // A single bad candidate is not fatal — ICE continues with the rest.
+      }
     }
     pendingCandidatesRef.current.set(peerId, []);
   }, []);
@@ -155,6 +160,7 @@ export function GroupCallProvider({ children }) {
   const cleanupCall = useCallback(() => {
     localStreamRef.current?.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
+    setLocalStream(null);
     pcsRef.current.forEach((pc) => pc.close());
     pcsRef.current = new Map();
     pendingCandidatesRef.current = new Map();
@@ -305,7 +311,9 @@ export function GroupCallProvider({ children }) {
       if (pc.remoteDescription) {
         try {
           await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch {}
+        } catch {
+          // A single bad candidate is not fatal — ICE continues with the rest.
+        }
       } else {
         const pending = pendingCandidatesRef.current.get(fromUserId) || [];
         pending.push(candidate);
@@ -347,7 +355,7 @@ export function GroupCallProvider({ children }) {
         activeGroupCall,
         incomingGroupCall,
         participants,
-        localStreamRef,
+        localStream,
         isMuted,
         isCameraOff,
         startGroupCall,

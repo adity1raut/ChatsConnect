@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { MessageSquare, Video, Users, Layers } from "lucide-react";
 import axios from "../config/axiosInstance.js";
 import MainDashboard from "../components/chat/MainDashboard";
@@ -29,26 +29,27 @@ function Dashboard() {
 
   const { socket } = useSocket();
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const { data } = await axios.get(`${API_URL}/dashboard/stats`);
-      setStatsData(data.stats);
-      setRecentActivity(
-        data.recentActivity.map((a) => ({
-          ...a,
-          time: timeAgo(a.time),
-          avatar: a.avatar || "👤",
-        })),
-      );
-    } catch (err) {
-      console.error("Failed to fetch dashboard stats:", err);
-    }
-  }, []);
-
   // Initial fetch
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    let cancelled = false;
+    axios
+      .get(`${API_URL}/dashboard/stats`)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setStatsData(data.stats);
+        setRecentActivity(
+          data.recentActivity.map((a) => ({
+            ...a,
+            time: timeAgo(a.time),
+            avatar: a.avatar || "👤",
+          })),
+        );
+      })
+      .catch((err) => console.error("Failed to fetch dashboard stats:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Real-time updates via socket
   useEffect(() => {

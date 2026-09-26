@@ -26,7 +26,6 @@ export default function UserProfile() {
   const { isDark } = useTheme();
   const { user: me } = useAuth();
   const {
-    friends,
     incomingRequests,
     sentRequests,
     sendRequest,

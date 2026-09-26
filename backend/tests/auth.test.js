@@ -34,8 +34,9 @@ process.env.JWT_REFRESH_SECRET = "test_refresh_secret";
 process.env.EMAIL_USER = "test@example.com";
 process.env.EMAIL_PASSWORD = "test_password";
 
-const { requestOTP, verifyOTPAndRegister, login, logout, changePassword } =
-  await import("../controllers/auth.controller.js");
+const { requestOTP, login, logout, changePassword } = await import(
+  "../controllers/auth.controller.js"
+);
 
 const User = (await import("../models/user.model.js")).default;
 const bcrypt = (await import("bcryptjs")).default;

@@ -168,6 +168,9 @@ function ChatPage() {
       return;
     }
 
+    // Ignore responses for a chat the user has already navigated away from
+    let cancelled = false;
+
     const fetchHistory = async () => {
       setLoadingMessages(true);
       try {
@@ -177,6 +180,7 @@ function ChatPage() {
             : `${API}/messages/dm/${selectedChat.id}`;
 
         const res = await axios.get(url);
+        if (cancelled) return;
         const raw = res.data.messages || [];
 
         // If this is first message (new conversation), store conversationId
@@ -207,8 +211,10 @@ function ChatPage() {
               return t ? { ...m, text: t, originalText: m.text } : m;
             }),
           );
+          if (cancelled) return;
+          // A failed translation falls back to the original message
           setMessages(
-            results.map((r) => (r.status === "fulfilled" ? r.value : r.reason)),
+            results.map((r, i) => (r.status === "fulfilled" ? r.value : mapped[i])),
           );
         } else {
           setMessages(mapped);
@@ -216,12 +222,18 @@ function ChatPage() {
       } catch (err) {
         console.error("fetchHistory error:", err);
       } finally {
-        setLoadingMessages(false);
+        if (!cancelled) setLoadingMessages(false);
       }
     };
 
     fetchHistory();
-  }, [selectedChat?.id, selectedChat?.groupId, user]); // only re-run when the actual chat changes
+    return () => {
+      cancelled = true;
+    };
+    // Only re-run when the actual chat changes — not when selectedChat gains a
+    // conversationId or the translation settings change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChat?.id, selectedChat?.groupId, user]);
 
   // ── Socket: incoming DM ──────────────────────────────────────────
   useEffect(() => {
