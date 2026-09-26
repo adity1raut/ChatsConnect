@@ -1,5 +1,6 @@
 import { Calendar, Camera, Link2, MapPin } from "lucide-react";
-import { Card, UserAvatar } from "../../components/ui";
+import { Card, Corners, StatusDot, UserAvatar } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import { timeAgo } from "../../lib/time";
 
 const joinedLabel = (date) =>
@@ -45,23 +46,34 @@ export default function ProfileHeader({
 
   return (
     <Card className="overflow-hidden">
+      <Corners />
+      <div className="flex items-center justify-between border-b border-border px-5 py-2.5 sm:px-6">
+        <span className="eyebrow text-muted-foreground">
+          Profile <span className="text-faint">//</span> @{user.username}
+        </span>
+        {presence && (
+          <span className={cn("eyebrow flex items-center gap-2", online ? "text-success" : "text-faint")}>
+            <StatusDot tone={online ? "success" : "idle"} />
+            {presence}
+          </span>
+        )}
+      </div>
       <div
         aria-hidden="true"
-        className="h-28 bg-linear-to-r from-violet-600 via-fuchsia-500 to-pink-500 sm:h-36"
+        className="h-24 border-b border-border bg-grid bg-[radial-gradient(ellipse_at_top_left,var(--glow),transparent_65%)] sm:h-28"
       />
-      <div className="px-5 pb-5 sm:px-6">
+      <div className="px-5 pb-6 sm:px-6">
         <div className="-mt-12 flex flex-wrap items-end justify-between gap-3">
           <div className="relative">
             <UserAvatar
               src={avatarSrc ?? user.avatar}
               name={user.name}
               size="2xl"
-              online={online}
-              className="rounded-full ring-4 ring-card"
+              className="bg-card p-1 ring-1 ring-border-strong"
             />
             {onAvatarChange && (
               <label
-                className="absolute right-1 bottom-1 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg ring-2 ring-card transition-colors hover:bg-primary/90 focus-within:outline-2 focus-within:outline-primary"
+                className="absolute -right-2 -bottom-2 flex size-9 cursor-pointer items-center justify-center border border-primary/60 bg-popover text-primary transition-colors hover:bg-primary/15 focus-within:outline-1 focus-within:outline-ring"
                 title="Change photo"
               >
                 <Camera className="size-4" aria-hidden="true" />
@@ -83,42 +95,35 @@ export default function ProfileHeader({
           {actions && <div className="flex flex-wrap gap-2 pb-1">{actions}</div>}
         </div>
 
-        <div className="mt-3 space-y-2">
+        <div className="mt-5 space-y-3">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">{user.name}</h1>
-            <p className="text-sm text-muted-foreground">
-              @{user.username}
-              {presence && (
-                <>
-                  <span className="mx-1.5 text-faint">·</span>
-                  <span className={online ? "text-emerald-600 dark:text-emerald-400" : ""}>
-                    {presence}
-                  </span>
-                </>
-              )}
-            </p>
+            <h1 className="text-xl font-extrabold tracking-[0.08em] uppercase sm:text-2xl">{user.name}</h1>
+            <p className="mt-1 text-xs text-muted-foreground">@{user.username}</p>
           </div>
 
           {user.statusMessage && (
-            <p className="inline-flex max-w-full rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <p className="inline-flex max-w-full items-center gap-2 border border-primary/35 bg-primary/[0.07] px-2.5 py-1 text-xs text-primary">
+              <span aria-hidden="true">&gt;</span>
               <span className="truncate">{user.statusMessage}</span>
             </p>
           )}
           {user.bio && (
-            <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">{user.bio}</p>
+            <p className="max-w-2xl border-l border-border-strong pl-3 text-xs leading-relaxed whitespace-pre-line text-foreground">
+              {user.bio}
+            </p>
           )}
 
           {meta.length > 0 && (
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] text-muted-foreground">
               {meta.map(({ icon: Icon, text, href }) => (
                 <li key={text} className="inline-flex items-center gap-1.5">
-                  <Icon className="size-3.5" aria-hidden="true" />
+                  <Icon className="size-3.5 text-faint" aria-hidden="true" />
                   {href ? (
                     <a
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
-                      className="font-medium text-primary hover:underline"
+                      className="font-medium text-primary underline-offset-4 hover:underline"
                     >
                       {text}
                     </a>
@@ -129,19 +134,19 @@ export default function ProfileHeader({
               ))}
             </ul>
           )}
-
-          {stats?.length > 0 && (
-            <dl className="flex gap-6 pt-1">
-              {stats.map(({ label, value }) => (
-                <div key={label}>
-                  <dd className="text-lg font-bold">{value}</dd>
-                  <dt className="text-xs text-muted-foreground">{label}</dt>
-                </div>
-              ))}
-            </dl>
-          )}
         </div>
       </div>
+
+      {stats?.length > 0 && (
+        <dl className="grid border-t border-border" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
+          {stats.map(({ label, value }) => (
+            <div key={label} className="border-r border-border px-5 py-3.5 last:border-r-0 sm:px-6">
+              <dd className="text-xl font-extrabold tabular-nums">{value}</dd>
+              <dt className="eyebrow mt-1 text-faint">{label}</dt>
+            </div>
+          ))}
+        </dl>
+      )}
     </Card>
   );
 }

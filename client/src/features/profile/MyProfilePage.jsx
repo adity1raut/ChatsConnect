@@ -73,7 +73,7 @@ export default function MyProfilePage() {
     user.privacy?.showActivity !== false && (isConnected || onlineUsers.has(user._id));
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8 sm:px-8 sm:py-10">
       <ProfileHeader
         user={user}
         avatarSrc={avatarPreview}

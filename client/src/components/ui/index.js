@@ -5,6 +5,7 @@ export { Avatar, AvatarFallback, AvatarImage, UserAvatar } from "./avatar";
 export { Badge, CountBadge, badgeVariants } from "./badge";
 export { Button, buttonVariants } from "./button";
 export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card";
+export { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./collapsible";
 export {
   Dialog,
   DialogClose,

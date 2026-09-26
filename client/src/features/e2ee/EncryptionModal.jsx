@@ -204,7 +204,7 @@ export default function EncryptionModal({ open, mode: initialMode, onClose }) {
             <Button variant="ghost" onClick={close}>
               {mode === "setup" ? "Not now" : "Cancel"}
             </Button>
-            <Button type="submit" variant={mode === "reset" ? "danger" : "primary"} loading={busy}>
+            <Button type="submit" variant={mode === "reset" ? "destructive" : "default"} loading={busy}>
               {busy && choosingNew ? "Securing your key…" : copy.submit}
             </Button>
           </div>

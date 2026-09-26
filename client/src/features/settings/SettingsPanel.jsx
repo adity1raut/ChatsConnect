@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  AlertCircle,
   AtSign,
   Bell,
   Bot,
+  CheckCircle2,
   ChevronDown,
   Info,
   KeyRound,
@@ -24,14 +26,25 @@ import { useNotifications } from "../../context/NotificationContext";
 import { useE2EE } from "../../context/E2EEContext";
 import EncryptionModal from "../e2ee/EncryptionModal";
 import AssistantSettingsModal from "../ai/AssistantSettingsModal";
-import { Button, InputField, PasswordField, SegmentedControl, SelectField, Switch } from "../../components/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  InputField,
+  PasswordField,
+  SegmentedControl,
+  SelectField,
+  Switch,
+} from "../../components/ui";
 import { cn } from "../../lib/utils";
 import { LANGUAGES } from "../../lib/languages";
 
-
 const THEME_OPTIONS = [
-  { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
+  { value: "light", label: "Light", icon: Sun },
   { value: "system", label: "System", icon: Monitor },
 ];
 
@@ -67,31 +80,25 @@ function useFormAction() {
 
 function InlineMessage({ message }) {
   if (!message) return null;
+  const isError = message.type === "error";
   return (
-    <p
-      role={message.type === "error" ? "alert" : "status"}
-      className={cn(
-        "rounded-lg px-3 py-2 text-xs font-medium",
-        message.type === "error"
-          ? "bg-red-500/10 text-red-600 dark:text-red-400"
-          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-      )}
-    >
-      {message.text}
-    </p>
+    <Alert variant={isError ? "destructive" : "success"} role={isError ? "alert" : "status"}>
+      {isError ? <AlertCircle aria-hidden="true" /> : <CheckCircle2 aria-hidden="true" />}
+      <AlertDescription className="text-current">{message.text}</AlertDescription>
+    </Alert>
   );
 }
 
 function Section({ icon: Icon, title, description, children }) {
   return (
-    <section className="space-y-3 border-b border-border pb-6 last:border-b-0 last:pb-0">
+    <section className="space-y-4 border-b border-dashed border-border-strong pb-7 last:border-b-0 last:pb-0">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Icon className="size-[18px]" aria-hidden="true" />
+        <span className="flex size-8 items-center justify-center border border-primary/40 bg-primary/10 text-primary">
+          <Icon className="size-4" aria-hidden="true" />
         </span>
         <div>
-          <h3 className="text-sm font-bold text-foreground">{title}</h3>
-          {description && <p className="text-xs text-muted-foreground">{description}</p>}
+          <h3 className="eyebrow text-foreground">{title}</h3>
+          {description && <p className="mt-1 text-[11px] text-muted-foreground">{description}</p>}
         </div>
       </div>
       <div className="space-y-2">{children}</div>
@@ -101,39 +108,34 @@ function Section({ icon: Icon, title, description, children }) {
 
 function Row({ title, description, control }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl px-1 py-2">
+    <div className="flex items-center justify-between gap-4 py-2">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-foreground">{title}</p>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+        <p className="text-xs font-bold text-foreground">{title}</p>
+        {description && <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{description}</p>}
       </div>
       {control}
     </div>
   );
 }
 
-function Collapsible({ icon: Icon, title, description, open, onToggle, children }) {
+function SettingsCollapsible({ icon: Icon, title, description, open, onToggle, children }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted"
-      >
-        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+    <Collapsible open={open} onOpenChange={onToggle} className="border border-border bg-card">
+      <CollapsibleTrigger className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent data-[state=open]:border-b data-[state=open]:border-border">
+        <Icon className="size-4 shrink-0 text-faint" aria-hidden="true" />
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-foreground">{title}</span>
-          {description && (
-            <span className="block truncate text-xs text-muted-foreground">{description}</span>
-          )}
+          <span className="block text-xs font-bold text-foreground">{title}</span>
+          {description && <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{description}</span>}
         </span>
         <ChevronDown
-          className={cn("size-4 text-faint transition-transform", open && "rotate-180")}
+          className={cn("size-4 text-faint transition-transform", open && "rotate-180 text-primary")}
           aria-hidden="true"
         />
-      </button>
-      {open && <div className="space-y-3 border-t border-border p-4">{children}</div>}
-    </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="space-y-3 p-4">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -245,7 +247,7 @@ function NotificationsSection() {
           }
         />
       ))}
-      <div className="my-1 h-px bg-border" />
+      <div className="my-1 h-px border-t border-dashed border-border" />
       <Row
         title="Sound"
         description="Play a chime on this device"
@@ -288,10 +290,11 @@ function EncryptionSection() {
 
   return (
     <Section icon={KeyRound} title="End-to-end encryption" description="Direct messages only; group chats aren't encrypted">
-      <p className="text-sm text-muted-foreground">{summary}</p>
+      <p className="text-xs leading-relaxed text-muted-foreground">{summary}</p>
       {status === "ready" && fingerprint && (
-        <p className="rounded-xl bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
-          Your key: {groupFingerprint(fingerprint)}
+        <p className="border border-border bg-muted/60 px-3 py-2 text-[11px] text-muted-foreground">
+          <span className="eyebrow mr-2 text-primary">Key</span>
+          {groupFingerprint(fingerprint)}
         </p>
       )}
       <div className="flex flex-wrap gap-2 pt-1">
@@ -347,15 +350,15 @@ function TwoFactorSetting({ enabled, onChanged }) {
   };
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <div className="space-y-3 border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <ShieldCheck
-            className={cn("size-4 shrink-0", enabled ? "text-emerald-500" : "text-muted-foreground")}
+            className={cn("size-4 shrink-0", enabled ? "text-success" : "text-faint")}
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Two-step verification</p>
+            <p className="text-xs font-bold text-foreground">Two-step verification</p>
             <p className="text-xs text-muted-foreground">
               {enabled
                 ? "On — we email you a sign-in link each time you log in"
@@ -544,22 +547,22 @@ function SecuritySection() {
           onChanged={(twoFactorEnabled) => updateUser({ twoFactorEnabled })}
         />
       ) : (
-        <p className="rounded-xl bg-muted px-4 py-3 text-xs text-muted-foreground">
+        <p className="border border-border bg-muted/60 px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">
           You sign in with GitHub, so your password and two-step verification are
           managed in your GitHub account.
         </p>
       )}
       {isLocal && (
-        <Collapsible
+        <SettingsCollapsible
           icon={Lock}
           title="Change password"
           open={open === "password"}
           onToggle={() => toggle("password")}
         >
           <ChangePasswordForm />
-        </Collapsible>
+        </SettingsCollapsible>
       )}
-      <Collapsible
+      <SettingsCollapsible
         icon={Mail}
         title="Change email"
         description={user?.email}
@@ -567,8 +570,8 @@ function SecuritySection() {
         onToggle={() => toggle("email")}
       >
         <ChangeEmailForm currentEmail={user?.email} onUpdated={updateUser} />
-      </Collapsible>
-      <Collapsible
+      </SettingsCollapsible>
+      <SettingsCollapsible
         icon={AtSign}
         title="Change username"
         description={user?.username && `@${user.username}`}
@@ -576,7 +579,7 @@ function SecuritySection() {
         onToggle={() => toggle("username")}
       >
         <ChangeUsernameForm currentUsername={user?.username} onUpdated={updateUser} />
-      </Collapsible>
+      </SettingsCollapsible>
     </Section>
   );
 }
@@ -597,7 +600,7 @@ export default function SettingsPanel({ onNavigate }) {
         <Link
           to="/about"
           onClick={onNavigate}
-          className="inline-flex text-sm font-semibold text-primary hover:underline"
+          className="inline-flex text-[11px] font-bold tracking-[0.12em] text-primary uppercase underline-offset-4 hover:underline"
         >
           About ChatsConnect →
         </Link>

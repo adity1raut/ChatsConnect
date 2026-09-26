@@ -57,9 +57,11 @@ export function Modal({
             <DialogTitle>Dialog</DialogTitle>
           </VisuallyHidden.Root>
         )}
-        <div className={cn("flex-1 overflow-y-auto px-5 py-5 scrollbar-thin sm:px-6", bodyClassName)}>
-          {children}
-        </div>
+        {children != null && children !== false && (
+          <div className={cn("flex-1 overflow-y-auto px-5 py-5 scrollbar-thin sm:px-6", bodyClassName)}>
+            {children}
+          </div>
+        )}
         {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>

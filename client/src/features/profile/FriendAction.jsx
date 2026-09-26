@@ -5,7 +5,7 @@ import { Button, Modal } from "../../components/ui";
 import { toast } from "../../lib/toast";
 
 // Add / cancel / accept / decline / remove — whatever fits the current relationship
-export default function FriendAction({ userId, name, size = "md" }) {
+export default function FriendAction({ userId, name, size = "default" }) {
   const {
     getRelationship,
     incomingRequests,
@@ -74,14 +74,16 @@ export default function FriendAction({ userId, name, size = "md" }) {
   if (status === "received" && incoming) {
     return (
       <>
-        <Button size={size}
+        <Button
+          size={size}
           icon={UserCheck}
           loading={busy}
           onClick={() => run(() => acceptRequest(incoming._id, userId))}
         >
           Accept
         </Button>
-        <Button size={size}
+        <Button
+          size={size}
           variant="outline"
           icon={UserX}
           disabled={busy}
@@ -94,7 +96,8 @@ export default function FriendAction({ userId, name, size = "md" }) {
   }
   if (status === "sent" && sent) {
     return (
-      <Button size={size}
+      <Button
+          size={size}
         variant="outline"
         loading={busy}
         onClick={() => run(() => cancelRequest(sent._id, userId))}
