@@ -14,6 +14,9 @@ const SIZES = {
   xl: "sm:max-w-2xl",
 };
 
+// Open dialogs, innermost last — only the top one reacts to Escape / Tab
+const openStack = [];
+
 // Keep Tab / Shift+Tab inside the dialog
 function trapFocus(event, container) {
   const nodes = container?.querySelectorAll(FOCUSABLE);
@@ -59,8 +62,11 @@ export default function Modal({
     const previouslyFocused = document.activeElement;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const token = {};
+    openStack.push(token);
 
     const onKeyDown = (event) => {
+      if (openStack.at(-1) !== token) return;
       if (event.key === "Escape") onCloseRef.current?.();
       else if (event.key === "Tab") trapFocus(event, panelRef.current);
     };
@@ -77,6 +83,7 @@ export default function Modal({
 
     return () => {
       cancelAnimationFrame(frame);
+      openStack.splice(openStack.indexOf(token), 1);
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus?.();

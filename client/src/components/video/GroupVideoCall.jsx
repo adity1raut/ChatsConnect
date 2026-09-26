@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { useGroupCall } from "../../context/GroupCallContext";
 import { useAuth } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
 
 // Single video tile for one participant
 function VideoTile({
@@ -75,11 +74,10 @@ function VideoTile({
 
 // Incoming group call notification banner
 function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
-  const { isDark } = useTheme();
 
   return (
     <div
-      className={`fixed top-4 right-4 z-[200] w-80 rounded-2xl shadow-2xl border p-4 ${isDark ? "bg-gray-900/95 border-white/10 text-white" : "bg-white/95 border-gray-200 text-gray-900"}`}
+      className="fixed top-4 right-4 z-[200] w-80 rounded-2xl border border-line bg-elevated/95 p-4 text-fg shadow-2xl backdrop-blur"
       style={{ backdropFilter: "blur(20px)" }}
     >
       <div className="flex items-center gap-3 mb-3">
@@ -105,7 +103,7 @@ function IncomingGroupCallBanner({ call, onJoin, onDismiss }) {
         </button>
         <button
           onClick={onDismiss}
-          className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${isDark ? "bg-white/8 text-gray-300 hover:bg-white/15" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+          className="flex-1 rounded-xl bg-surface-2 py-2 text-sm font-bold text-muted transition-colors hover:bg-line"
         >
           Ignore
         </button>

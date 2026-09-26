@@ -4,17 +4,12 @@ import {
   ArrowLeft,
   MessageCircle,
   Phone,
-  UserCheck,
-  UserMinus,
-  UserPlus,
   Users,
-  UserX,
   Video,
 } from "lucide-react";
 import axios from "../../config/axiosInstance.js";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { useFriends } from "../../context/FriendContext";
 import { useSocket } from "../../context/SocketContext";
 import { useCall } from "../../context/CallContext";
 import {
@@ -23,116 +18,10 @@ import {
   Card,
   EmptyState,
   IconButton,
-  Modal,
   Spinner,
 } from "../../components/ui";
-import { toast } from "../../lib/toast";
 import ProfileHeader from "./ProfileHeader";
-
-function FriendAction({ userId, name }) {
-  const {
-    getRelationship,
-    incomingRequests,
-    sentRequests,
-    sendRequest,
-    acceptRequest,
-    rejectRequest,
-    cancelRequest,
-    removeFriend,
-  } = useFriends();
-  const [busy, setBusy] = useState(false);
-  const [confirmRemove, setConfirmRemove] = useState(false);
-  const status = getRelationship(userId).status;
-
-  const run = async (fn) => {
-    setBusy(true);
-    try {
-      await fn();
-    } catch (err) {
-      toast({
-        title: "Something went wrong",
-        description: err.response?.data?.message,
-        variant: "error",
-      });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const incoming = incomingRequests.find((r) => r.sender?._id === userId);
-  const sent = sentRequests.find((r) => r.receiver?._id === userId);
-
-  if (status === "friends") {
-    return (
-      <>
-        <Button variant="secondary" icon={UserCheck} onClick={() => setConfirmRemove(true)}>
-          Friends
-        </Button>
-        <Modal
-          open={confirmRemove}
-          onClose={() => setConfirmRemove(false)}
-          title={`Remove ${name} from friends?`}
-          description="You can send a new request later."
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setConfirmRemove(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                icon={UserMinus}
-                loading={busy}
-                onClick={() =>
-                  run(() => removeFriend(userId)).then(() => setConfirmRemove(false))
-                }
-              >
-                Remove friend
-              </Button>
-            </>
-          }
-        />
-      </>
-    );
-  }
-  if (status === "received" && incoming) {
-    return (
-      <>
-        <Button
-          icon={UserCheck}
-          loading={busy}
-          onClick={() => run(() => acceptRequest(incoming._id, userId))}
-        >
-          Accept
-        </Button>
-        <Button
-          variant="secondary"
-          icon={UserX}
-          disabled={busy}
-          onClick={() => run(() => rejectRequest(incoming._id, userId))}
-        >
-          Decline
-        </Button>
-      </>
-    );
-  }
-  if (status === "sent" && sent) {
-    return (
-      <Button
-        variant="secondary"
-        loading={busy}
-        onClick={() => run(() => cancelRequest(sent._id, userId))}
-      >
-        Cancel request
-      </Button>
-    );
-  }
-  return (
-    <Button icon={UserPlus} loading={busy} onClick={() => run(() => sendRequest(userId))}>
-      Add friend
-    </Button>
-  );
-}
+import FriendAction from "./FriendAction";
 
 function MutualList({ title, count, children }) {
   if (!count) return null;

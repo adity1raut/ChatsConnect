@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Navigate,
@@ -12,25 +13,36 @@ import IncomingCallModal from "./components/video/IncomingCallModal";
 import GroupVideoCall from "./components/video/GroupVideoCall";
 import VideoCallModal from "./components/video/VideoCallModal";
 import Toaster from "./components/ui/Toaster";
+import Spinner from "./components/ui/Spinner";
 
-import Login from "./pages/Login.jsx";
-import Registration from "./pages/Register.jsx";
-import LandingPage from "./pages/LandingPage.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import Notification from "./pages/Notification.jsx";
-import ChatPage from "./pages/ChatPage.jsx";
-import Profile from "./pages/Profile.jsx";
-import UserProfile from "./pages/UserProfile.jsx";
-import SearchPage from "./pages/Search.jsx";
-import About from "./pages/About.jsx";
-import AuthCallback from "./features/auth/AuthCallback.jsx";
-import Verify2FA from "./features/auth/Verify2FA.jsx";
-import AssistantPage from "./features/ai/AssistantPage.jsx";
+// Each page is its own chunk, loaded when first visited
+const Login = lazy(() => import("./pages/Login.jsx"));
+const Registration = lazy(() => import("./pages/Register.jsx"));
+const LandingPage = lazy(() => import("./pages/LandingPage.jsx"));
+const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
+const Notification = lazy(() => import("./pages/Notification.jsx"));
+const ChatPage = lazy(() => import("./pages/ChatPage.jsx"));
+const Profile = lazy(() => import("./pages/Profile.jsx"));
+const UserProfile = lazy(() => import("./pages/UserProfile.jsx"));
+const SearchPage = lazy(() => import("./pages/Search.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
+const AuthCallback = lazy(() => import("./features/auth/AuthCallback.jsx"));
+const Verify2FA = lazy(() => import("./features/auth/Verify2FA.jsx"));
+const AssistantPage = lazy(() => import("./features/ai/AssistantPage.jsx"));
 
 // Signed-in pages share the app shell (sidebar / mobile nav / settings modal)
+const PageLoading = () => (
+  <div className="flex h-full min-h-[50dvh] items-center justify-center">
+    <Spinner label="Loading page" className="size-7" />
+  </div>
+);
+
+// Signed-in pages keep the shell visible while their code loads
 const signedIn = (page, { fullHeight = false } = {}) => (
   <ProtectedRoute>
-    <AppLayout fullHeight={fullHeight}>{page}</AppLayout>
+    <AppLayout fullHeight={fullHeight}>
+      <Suspense fallback={<PageLoading />}>{page}</Suspense>
+    </AppLayout>
   </ProtectedRoute>
 );
 
@@ -44,40 +56,51 @@ function App() {
         <GroupVideoCall />
         <Toaster />
 
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/registration"
-            element={
-              <PublicRoute>
-                <Registration />
-              </PublicRoute>
-            }
-          />
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/registration"
+              element={
+                <PublicRoute>
+                  <Registration />
+                </PublicRoute>
+              }
+            />
 
-          {/* Auth hand-offs: GitHub OAuth and emailed 2FA link */}
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/auth/verify-2fa" element={<Verify2FA />} />
+            {/* Auth hand-offs: GitHub OAuth and emailed 2FA link */}
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/verify-2fa" element={<Verify2FA />} />
 
-          <Route path="/dashboard" element={signedIn(<Dashboard />)} />
-          <Route path="/notifications" element={signedIn(<Notification />)} />
-          <Route path="/chat" element={signedIn(<ChatPage />, { fullHeight: true })} />
-          <Route path="/assistant" element={signedIn(<AssistantPage />, { fullHeight: true })} />
-          <Route path="/profile" element={signedIn(<Profile />)} />
-          <Route path="/profile/:userId" element={signedIn(<UserProfile />)} />
-          <Route path="/search" element={signedIn(<SearchPage />)} />
-          <Route path="/about" element={signedIn(<About />)} />
+            <Route path="/dashboard" element={signedIn(<Dashboard />)} />
+            <Route path="/notifications" element={signedIn(<Notification />)} />
+            <Route
+              path="/chat"
+              element={signedIn(<ChatPage />, { fullHeight: true })}
+            />
+            <Route
+              path="/assistant"
+              element={signedIn(<AssistantPage />, { fullHeight: true })}
+            />
+            <Route path="/profile" element={signedIn(<Profile />)} />
+            <Route
+              path="/profile/:userId"
+              element={signedIn(<UserProfile />)}
+            />
+            <Route path="/search" element={signedIn(<SearchPage />)} />
+            <Route path="/about" element={signedIn(<About />)} />
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
       </Providers>
     </Router>
   );

@@ -208,6 +208,7 @@ export default function ChatPage() {
           currentUser={chat.me}
           onClose={() => setModal(null)}
           onGroupUpdated={chat.reloadContacts}
+          onLeft={() => chat.selectChat(null)}
         />
       )}
     </div>

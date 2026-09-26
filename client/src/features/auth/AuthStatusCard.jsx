@@ -1,24 +1,21 @@
 import { Link } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
 
 // Full-screen card for auth hand-off pages: a spinner while working, or an error with a way back
 export default function AuthStatusCard({ title, error }) {
-  const { isDark } = useTheme();
-
   return (
     <div
-      className={`min-h-dvh flex items-center justify-center p-4 ${isDark ? "bg-[#0a0a14] text-gray-100" : "bg-[#f4f5ff] text-gray-900"}`}
+      className="flex min-h-dvh items-center justify-center bg-bg p-4 text-fg"
     >
       <div
-        className={`w-full max-w-sm rounded-2xl border p-8 text-center shadow-xl ${isDark ? "bg-white/5 border-white/10" : "bg-white border-gray-200"}`}
+        className="w-full max-w-sm rounded-2xl border border-line bg-surface p-8 text-center shadow-xl"
       >
         {error ? (
           <>
             <AlertCircle className="mx-auto mb-4 h-10 w-10 text-red-500" />
             <h1 className="mb-2 text-lg font-bold">Sign-in failed</h1>
             <p
-              className={`mb-6 text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}
+              className="mb-6 text-sm text-muted"
             >
               {error}
             </p>
