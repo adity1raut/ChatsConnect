@@ -199,7 +199,12 @@ export const chat = async (req, res) => {
       { upsert: true, new: true },
     ).lean();
 
-    res.json({ reply, messages: saved.messages });
+    res.json({
+      reply,
+      messages: saved.messages,
+      // Clients from before server-side history read `history`; keep it until they're gone
+      history: saved.messages.map(({ role, content }) => ({ role, content })),
+    });
   } catch (err) {
     logger.error("AI chat failed", err);
     res.status(502).json({ message: "The assistant couldn't reply right now. Please try again." });
