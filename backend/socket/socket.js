@@ -1,5 +1,4 @@
 import { Server } from "socket.io";
-import jwt from "jsonwebtoken";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
@@ -11,6 +10,8 @@ import {
 } from "../service/aiService.js";
 import { bustMessageCache } from "../controllers/message.controller.js";
 import { redisAddOnline, redisRemoveOnline } from "../cache/redis.js";
+import { verifyAccessToken } from "../service/token.service.js";
+import logger from "../utils/logger.js";
 
 // In-process Map: userId -> socketId (fast O(1) lookups for targeting)
 const onlineUsers = new Map();
@@ -41,7 +42,7 @@ export function initSocket(httpServer) {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error("No token provided"));
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = verifyAccessToken(token);
       socket.userId = decoded.userId;
       next();
     } catch {
@@ -128,7 +129,7 @@ export function initSocket(httpServer) {
             .catch(() => {});
         }
       } catch (err) {
-        console.error("sendMessage error:", err);
+        logger.error("sendMessage error:", err);
         socket.emit("error", { message: "Failed to send message" });
       }
     });
@@ -196,7 +197,7 @@ export function initSocket(httpServer) {
           }
         }
       } catch (err) {
-        console.error("sendGroupMessage error:", err);
+        logger.error("sendGroupMessage error:", err);
         socket.emit("error", { message: "Failed to send group message" });
       }
     });

@@ -4,6 +4,7 @@ import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
+import logger from "../utils/logger.js";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -326,7 +327,7 @@ export async function runAgentWithDBTools(
             content: String(result),
           };
         } catch (err) {
-          console.error(`AI tool "${block.name}" failed:`, err);
+          logger.error(`AI tool "${block.name}" failed:`, err);
           return {
             type: "tool_result",
             tool_use_id: block.id,

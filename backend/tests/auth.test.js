@@ -121,8 +121,7 @@ describe("requestOTP", () => {
     );
   });
 
-  it("returns 400 if password too short", async () => {
-    User.findOne.mockResolvedValueOnce(null);
+  it("returns 400 if password too short, without querying the DB", async () => {
     const { req, res } = mockReqRes({
       email: "test@example.com",
       username: "newuser",
@@ -131,6 +130,7 @@ describe("requestOTP", () => {
     });
     await requestOTP(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
+    expect(User.findOne).not.toHaveBeenCalled();
   });
 
   it("sends OTP and returns 200 on valid input", async () => {

@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import logger from "../utils/logger.js";
 
 // Redis is optional — if REDIS_URL is not set or connection fails,
 // the app falls back to direct DB queries silently.
@@ -22,13 +23,13 @@ export function initRedis() {
 
   _client.on("connect", () => {
     _ready = true;
-    console.log("Redis connected");
+    logger.info("Redis connected");
   });
 
   _client.on("error", (err) => {
     if (_ready) {
       _ready = false;
-      console.warn("Redis disconnected:", err.message);
+      logger.warn("Redis disconnected:", err.message);
     }
   });
 
@@ -37,7 +38,7 @@ export function initRedis() {
   });
 
   _client.connect().catch(() => {
-    console.warn("Redis not available — falling back to DB-only mode");
+    logger.warn("Redis not available — falling back to DB-only mode");
   });
 }
 

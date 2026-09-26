@@ -1,5 +1,6 @@
 import FriendRequest from "../models/friendRequest.model.js";
 import { getIO } from "../socket/socket.js";
+import logger from "../utils/logger.js";
 
 // POST /api/friends/request/:userId — send a friend request
 export const sendRequest = async (req, res) => {
@@ -58,7 +59,7 @@ export const sendRequest = async (req, res) => {
 
     res.status(201).json({ request: populated });
   } catch (err) {
-    console.error("sendRequest error:", err);
+    logger.error("sendRequest error:", err);
     res.status(500).json({ message: "Failed to send friend request" });
   }
 };
@@ -97,7 +98,7 @@ export const acceptRequest = async (req, res) => {
 
     res.status(200).json({ request });
   } catch (err) {
-    console.error("acceptRequest error:", err);
+    logger.error("acceptRequest error:", err);
     res.status(500).json({ message: "Failed to accept request" });
   }
 };
@@ -123,7 +124,7 @@ export const rejectRequest = async (req, res) => {
 
     res.status(200).json({ message: "Request rejected" });
   } catch (err) {
-    console.error("rejectRequest error:", err);
+    logger.error("rejectRequest error:", err);
     res.status(500).json({ message: "Failed to reject request" });
   }
 };
@@ -146,7 +147,7 @@ export const cancelRequest = async (req, res) => {
 
     res.status(200).json({ message: "Request cancelled" });
   } catch (err) {
-    console.error("cancelRequest error:", err);
+    logger.error("cancelRequest error:", err);
     res.status(500).json({ message: "Failed to cancel request" });
   }
 };
@@ -170,7 +171,7 @@ export const getFriends = async (req, res) => {
 
     res.status(200).json({ friends });
   } catch (err) {
-    console.error("getFriends error:", err);
+    logger.error("getFriends error:", err);
     res.status(500).json({ message: "Failed to fetch friends" });
   }
 };
@@ -190,7 +191,7 @@ export const getFriendRequests = async (req, res) => {
 
     res.status(200).json({ requests });
   } catch (err) {
-    console.error("getFriendRequests error:", err);
+    logger.error("getFriendRequests error:", err);
     res.status(500).json({ message: "Failed to fetch requests" });
   }
 };
@@ -210,7 +211,7 @@ export const getSentRequests = async (req, res) => {
 
     res.status(200).json({ requests });
   } catch (err) {
-    console.error("getSentRequests error:", err);
+    logger.error("getSentRequests error:", err);
     res.status(500).json({ message: "Failed to fetch sent requests" });
   }
 };
@@ -234,7 +235,7 @@ export const removeFriend = async (req, res) => {
 
     res.status(200).json({ message: "Friend removed" });
   } catch (err) {
-    console.error("removeFriend error:", err);
+    logger.error("removeFriend error:", err);
     res.status(500).json({ message: "Failed to remove friend" });
   }
 };
@@ -273,7 +274,7 @@ export const getRelationship = async (req, res) => {
     // rejected — treat as none (allow re-request)
     return res.status(200).json({ status: "none" });
   } catch (err) {
-    console.error("getRelationship error:", err);
+    logger.error("getRelationship error:", err);
     res.status(500).json({ message: "Failed to get relationship" });
   }
 };

@@ -2,6 +2,7 @@ import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
 import { onlineUsers } from "../socket/socket.js";
+import logger from "../utils/logger.js";
 
 // GET /api/dashboard/stats
 export const getDashboardStats = async (req, res) => {
@@ -60,7 +61,7 @@ export const getDashboardStats = async (req, res) => {
       recentActivity,
     });
   } catch (err) {
-    console.error("getDashboardStats error:", err);
+    logger.error("getDashboardStats error:", err);
     res.status(500).json({ message: "Failed to fetch dashboard stats" });
   }
 };

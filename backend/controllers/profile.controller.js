@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import { cloudinary } from "../config/cloudinary.js";
+import logger from "../utils/logger.js";
 
 // Fields any logged-in user may see about someone else. Never email,
 // auth provider, GitHub id or security settings.
@@ -46,7 +47,7 @@ export const getUserProfile = async (req, res) => {
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    console.error("Error fetching profile:", error);
+    logger.error("Error fetching profile:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -66,7 +67,7 @@ export const getCurrentUserProfile = async (req, res) => {
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    console.error("Error fetching current profile:", error);
+    logger.error("Error fetching current profile:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -148,7 +149,7 @@ export const updateProfile = async (req, res) => {
         cloudinaryPublicId(oldAvatar);
       if (oldPublicId) {
         cloudinary.uploader.destroy(oldPublicId).catch((err) => {
-          console.warn("Failed to delete old avatar:", err.message);
+          logger.warn("Failed to delete old avatar:", err.message);
         });
       }
     }
@@ -171,7 +172,7 @@ export const updateProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error updating profile:", error);
+    logger.error("Error updating profile:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -214,7 +215,7 @@ export const updateEmail = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Email updated successfully", user });
   } catch (error) {
-    console.error("Error updating email:", error);
+    logger.error("Error updating email:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -265,7 +266,7 @@ export const updateTwoFactor = async (req, res) => {
         : "Two-step verification disabled",
     });
   } catch (error) {
-    console.error("Error updating two-factor setting:", error);
+    logger.error("Error updating two-factor setting:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -287,7 +288,7 @@ export const updateOnlineStatus = async (req, res) => {
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    console.error("Error updating online status:", error);
+    logger.error("Error updating online status:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -303,7 +304,7 @@ export const deleteProfile = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Profile deleted successfully" });
   } catch (error) {
-    console.error("Error deleting profile:", error);
+    logger.error("Error deleting profile:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -331,7 +332,7 @@ export const searchUsers = async (req, res) => {
 
     res.status(200).json({ success: true, users });
   } catch (error) {
-    console.error("Error searching users:", error);
+    logger.error("Error searching users:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -362,7 +363,7 @@ export const getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error listing users:", error);
+    logger.error("Error listing users:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

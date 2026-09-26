@@ -1,69 +1,30 @@
-import express from "express";
+// Must be the first import: ES modules evaluate imports before this file's
+// body, so later modules would otherwise read process.env before .env loads.
+import "dotenv/config";
 import { createServer } from "http";
-import dotenv from "dotenv";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import authRoutes from "./routes/auth.routes.js";
-import profileRoutes from "./routes/profile.routes.js";
-import messageRoutes from "./routes/message.routes.js";
-import groupRoutes from "./routes/group.routes.js";
-import friendRoutes from "./routes/friend.routes.js";
-import dashboardRoutes from "./routes/dashboard.routes.js";
-import aiRoutes from "./routes/ai.routes.js";
+import { createApp } from "./app.js";
 import ConnectDB from "./db/ConnectDB.js";
-import passport from "./config/passport.js";
 import { initSocket } from "./socket/socket.js";
 import { initRedis } from "./cache/redis.js";
+import logger from "./utils/logger.js";
 
-dotenv.config();
+// Refuse to start without the secrets that protect every session
+const REQUIRED_ENV = ["MONGO_URI", "JWT_SECRET", "JWT_REFRESH_SECRET"];
+const missingEnv = REQUIRED_ENV.filter((name) => !process.env[name]);
+if (missingEnv.length) {
+  logger.error(`Missing required environment variables: ${missingEnv.join(", ")}`);
+  process.exit(1);
+}
 
-const app = express();
+const app = createApp();
 const httpServer = createServer(app);
-
-// Middleware
-app.use(passport.initialize());
-// Avatar uploads arrive as base64 data URLs (client caps files at 5 MB ≈ 6.7 MB encoded)
-app.use(express.json({ limit: "8mb" }));
-app.use(express.urlencoded({ extended: true, limit: "8mb" }));
-app.use(cookieParser());
-
-// CORS configuration — allow production frontend + localhost in dev
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "https://www.chatsconnect.tech",
-  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : []),
-].filter(Boolean);
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
 
 ConnectDB();
 initRedis();
-
-// Socket.io
 initSocket(httpServer);
-
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/messages", messageRoutes);
-app.use("/api/groups", groupRoutes);
-app.use("/api/friends", friendRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/ai", aiRoutes);
-
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Server is running" });
-});
 
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });

@@ -1,373 +1,205 @@
 import crypto from "crypto";
-import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import transporter from "../service/Nodemailer.js";
+import User from "../models/user.model.js";
+import logger from "../utils/logger.js";
+import { sendOtpEmail, sendTwoFactorEmail } from "../service/mail.service.js";
+import {
+  deletePendingRegistration,
+  generateOTP,
+  getPendingRegistration,
+  recordFailedAttempt,
+  savePendingRegistration,
+} from "../service/otp.service.js";
+import {
+  issueSession,
+  refreshTokenMatches,
+  signAccessToken,
+  verifyRefreshToken,
+} from "../service/token.service.js";
 
-// Temporary store for OTPs (use Redis in production)
-const otpStore = new Map();
-
-// Wrong guesses allowed per OTP before it is invalidated (stops brute force)
-const MAX_OTP_ATTEMPTS = 5;
-
-// Generate 6-digit OTP with a cryptographically secure RNG
-const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const MIN_PASSWORD_LENGTH = 6;
+const BCRYPT_ROUNDS = 10;
+const TWO_FACTOR_TTL_MS = 10 * 60 * 1000;
 
 // Emails and usernames are stored lowercase, so compare them that way too
 const normalizeEmail = (email) => String(email ?? "").toLowerCase().trim();
 const normalizeUsername = (username) =>
   String(username ?? "").toLowerCase().trim();
 
-const sendOTP = async (email, otp, name) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Your OTP for Registration - ChatConnect",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #8b5cf6;">Welcome to ChatConnect!</h2>
-        <p>Hi ${name},</p>
-        <p>Thank you for signing up. Please use the following OTP to verify your email address:</p>
-        <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-          <h1 style="color: #8b5cf6; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
-        </div>
-        <p><strong>This OTP will expire in 10 minutes.</strong></p>
-        <p>If you didn't request this, please ignore this email.</p>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="color: #6b7280; font-size: 12px;">This is an automated message, please do not reply.</p>
-      </div>
-    `,
-  };
+const fail = (res, status, message) =>
+  res.status(status).json({ success: false, message });
 
-  await transporter.sendMail(mailOptions);
-};
+// The signed-in user's own account details returned after any sign-in
+const sessionUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  username: user.username,
+  email: user.email,
+  avatar: user.avatar,
+  bio: user.bio,
+  isOnline: user.isOnline,
+  lastSeen: user.lastSeen,
+  authProvider: user.authProvider,
+  twoFactorEnabled: user.twoFactorEnabled,
+  createdAt: user.createdAt,
+});
 
-const send2FAEmail = async (email, name, verificationUrl) => {
-  const mailOptions = {
-    from: `"ChatConnect Security" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Login Verification Link - ChatConnect",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #8b5cf6;">Two-Factor Authentication</h2>
-        <p>Hi ${name},</p>
-        <p>A login attempt was made on your ChatConnect account. Click the button below to verify it was you and complete sign-in.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationUrl}"
-            style="background-color: #8b5cf6; color: #ffffff; padding: 14px 28px;
-                   text-decoration: none; border-radius: 6px; font-size: 16px;
-                   display: inline-block;">
-            Verify and Sign In
-          </a>
-        </div>
-        <p><strong>This link expires in 10 minutes and can only be used once.</strong></p>
-        <p>If you did not attempt to log in, your password may be compromised. Change it immediately.</p>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="color: #6b7280; font-size: 12px;">
-          If the button above does not work, copy and paste this URL into your browser:<br>
-          <span style="color: #8b5cf6;">${verificationUrl}</span>
-        </p>
-        <p style="color: #6b7280; font-size: 12px;">This is an automated message, please do not reply.</p>
-      </div>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
-};
-
-// Step 1: Request OTP
+// Step 1: validate sign-up details and email a verification code
 export const requestOTP = async (req, res) => {
   try {
-    const { password, name } = req.body;
+    const { password } = req.body;
+    const name = String(req.body.name ?? "").trim();
     const email = normalizeEmail(req.body.email);
     const username = normalizeUsername(req.body.username);
 
-    // Validation
     if (!email || !username || !password || !name) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required (name, username, email, password)",
-      });
+      return fail(res, 400, "All fields are required (name, username, email, password)");
+    }
+    if (!EMAIL_RE.test(email)) {
+      return fail(res, 400, "Please provide a valid email address");
+    }
+    if (!USERNAME_RE.test(username)) {
+      return fail(
+        res,
+        400,
+        "Username must be 3-20 characters (letters, numbers, underscore only)",
+      );
+    }
+    if (String(password).length < MIN_PASSWORD_LENGTH) {
+      return fail(res, 400, "Password must be at least 6 characters long");
+    }
+    if (name.length < 2) {
+      return fail(res, 400, "Name must be at least 2 characters long");
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide a valid email address",
-      });
-    }
-
-    // Validate username format
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    if (!usernameRegex.test(username)) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Username must be 3-20 characters (letters, numbers, underscore only)",
-      });
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      if (existingUser.email === email) {
-        return res.status(400).json({
-          success: false,
-          message: "Email already exists",
-        });
-      }
-      if (existingUser.username === username) {
-        return res.status(400).json({
-          success: false,
-          message: "Username already taken",
-        });
-      }
+      return fail(
+        res,
+        400,
+        existingUser.email === email ? "Email already exists" : "Username already taken",
+      );
     }
 
-    // Validate password strength
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password must be at least 6 characters long",
-      });
-    }
-
-    // Validate name
-    if (name.trim().length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: "Name must be at least 2 characters long",
-      });
-    }
-
-    // Generate OTP
     const otp = generateOTP();
+    // Hash now so the plain password never sits in the pending-registration store
+    const passwordHash = await bcrypt.hash(String(password), BCRYPT_ROUNDS);
+    await savePendingRegistration(email, { otp, name, username, passwordHash });
 
-    // Store OTP with user data (expires in 10 minutes)
-    otpStore.set(email, {
-      otp,
-      name: name.trim(),
-      username: username.toLowerCase().trim(),
-      password,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-    });
-
-    // Send OTP via email
-    await sendOTP(email, otp, name);
-
-    console.log(`OTP sent to ${email}`);
+    await sendOtpEmail(email, otp, name);
+    logger.info(`Verification code sent to ${email}`);
 
     res.status(200).json({
       success: true,
       message: "OTP sent to your email. Please check your inbox.",
     });
   } catch (error) {
-    console.error("Error in requestOTP:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Failed to send OTP. Please try again.",
-    });
+    logger.error("requestOTP failed", error);
+    fail(res, 500, "Failed to send the verification code. Please try again.");
   }
 };
 
-// Step 2: Verify OTP and Create Account
+// Step 2: confirm the code and create the account
 export const verifyOTPAndRegister = async (req, res) => {
   try {
-    const { otp } = req.body;
     const email = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp ?? "").trim();
 
-    // Validation
     if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and OTP are required",
-      });
+      return fail(res, 400, "Email and OTP are required");
     }
 
-    // Get stored OTP data
-    const storedData = otpStore.get(email);
-
-    if (!storedData) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired or not found. Please request a new OTP",
-      });
+    const pending = await getPendingRegistration(email);
+    if (!pending) {
+      return fail(res, 400, "OTP expired or not found. Please request a new OTP");
+    }
+    if (Date.now() > pending.expiresAt) {
+      await deletePendingRegistration(email);
+      return fail(res, 400, "OTP has expired. Please request a new OTP");
     }
 
-    // Check if OTP is expired
-    if (Date.now() > storedData.expiresAt) {
-      otpStore.delete(email);
-      return res.status(400).json({
-        success: false,
-        message: "OTP has expired. Please request a new OTP",
-      });
+    if (pending.otp !== otp) {
+      const lockedOut = await recordFailedAttempt(email, pending);
+      return lockedOut
+        ? fail(res, 429, "Too many incorrect attempts. Please request a new OTP.")
+        : fail(res, 400, "Invalid OTP. Please try again.");
     }
 
-    // Verify OTP
-    if (storedData.otp !== otp.toString()) {
-      storedData.attempts = (storedData.attempts || 0) + 1;
-      if (storedData.attempts >= MAX_OTP_ATTEMPTS) {
-        otpStore.delete(email);
-        return res.status(429).json({
-          success: false,
-          message: "Too many incorrect attempts. Please request a new OTP.",
-        });
-      }
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP. Please try again.",
-      });
-    }
-
-    // Check if user was created in the meantime
+    // Someone may have taken the email/username while the code was pending
     const existingUser = await User.findOne({
-      $or: [{ email }, { username: storedData.username }],
+      $or: [{ email }, { username: pending.username }],
     });
-
     if (existingUser) {
-      otpStore.delete(email);
-      return res.status(400).json({
-        success: false,
-        message: "User already exists with this email or username",
-      });
+      await deletePendingRegistration(email);
+      return fail(res, 400, "User already exists with this email or username");
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(storedData.password, 10);
-
-    // Generate default avatar (using UI Avatars)
-    const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(storedData.name)}&background=8b5cf6&color=fff&size=200`;
-
-    // Create user
     const newUser = await User.create({
-      name: storedData.name,
-      username: storedData.username,
-      email: email.toLowerCase().trim(),
-      password: hashedPassword,
+      name: pending.name,
+      username: pending.username,
+      email,
+      password: pending.passwordHash,
       authProvider: "LOCAL",
-      avatar: defaultAvatar,
-      isOnline: true,
-      lastSeen: new Date(),
     });
+    await deletePendingRegistration(email);
 
-    // Remove OTP from store
-    otpStore.delete(email);
-
-    // Generate tokens
-    const accessToken = jwt.sign(
-      { userId: newUser._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" },
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: newUser._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    // Save refresh token
-    newUser.refreshToken = refreshToken;
+    const { accessToken, refreshToken } = issueSession(newUser);
     await newUser.save();
-
-    // Remove sensitive data
-    const userResponse = {
-      _id: newUser._id,
-      name: newUser.name,
-      username: newUser.username,
-      email: newUser.email,
-      avatar: newUser.avatar,
-      bio: newUser.bio,
-      isOnline: newUser.isOnline,
-      lastSeen: newUser.lastSeen,
-      authProvider: newUser.authProvider,
-      createdAt: newUser.createdAt,
-    };
 
     res.status(201).json({
       success: true,
-      message: "Account created successfully! Welcome to ChatConnect.",
-      user: userResponse,
+      message: "Account created successfully! Welcome to ChatsConnect.",
+      user: sessionUser(newUser),
       accessToken,
       refreshToken,
     });
   } catch (error) {
-    console.error("Error in verifyOTPAndRegister:", error);
-
     if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0];
-      return res.status(400).json({
-        success: false,
-        message: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`,
-      });
+      const field = Object.keys(error.keyPattern ?? { account: 1 })[0];
+      return fail(res, 400, `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`);
     }
-
-    res.status(500).json({
-      success: false,
-      message: error.message || "Failed to create account. Please try again.",
-    });
+    logger.error("verifyOTPAndRegister failed", error);
+    fail(res, 500, "Failed to create account. Please try again.");
   }
 };
 
-// Login controller
+// Password sign-in (emails a one-time link instead when 2FA is on)
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
+      return fail(res, 400, "Email and password are required");
     }
 
-    const user = await User.findOne({
-      email: email.toLowerCase().trim(),
-    }).select("+password +refreshToken");
-
+    const user = await User.findOne({ email }).select("+password +refreshToken");
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return fail(res, 401, "Invalid email or password");
     }
-
     if (user.authProvider !== "LOCAL") {
-      return res.status(401).json({
-        success: false,
-        message: `This account was created using ${user.authProvider}. Please use ${user.authProvider} to login.`,
-      });
+      return fail(
+        res,
+        401,
+        `This account was created using ${user.authProvider}. Please use ${user.authProvider} to login.`,
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
+    const isPasswordValid = await bcrypt.compare(String(password), user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return fail(res, 401, "Invalid email or password");
     }
 
-    // 2FA: generate a verification link instead of issuing JWT
     if (user.twoFactorEnabled) {
       const rawToken = crypto.randomBytes(32).toString("hex");
-      const hashedToken = crypto
-        .createHash("sha256")
-        .update(rawToken)
-        .digest("hex");
-
-      user.twoFactorToken = hashedToken;
-      user.twoFactorTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      user.twoFactorToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+      user.twoFactorTokenExpiry = new Date(Date.now() + TWO_FACTOR_TTL_MS);
       await user.save();
 
       const verificationUrl = `${process.env.CLIENT_URL}/auth/verify-2fa?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
-
-      await send2FAEmail(user.email, user.name, verificationUrl);
+      await sendTwoFactorEmail(user.email, user.name, verificationUrl);
 
       return res.status(200).json({
         success: true,
@@ -377,365 +209,184 @@ export const login = async (req, res) => {
       });
     }
 
-    // No 2FA — issue tokens directly
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    const refreshToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
-
-    user.refreshToken = refreshToken;
-    user.isOnline = true;
-    user.lastSeen = new Date();
+    const { accessToken, refreshToken } = issueSession(user);
     await user.save();
-
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      avatar: user.avatar,
-      bio: user.bio,
-      isOnline: user.isOnline,
-      lastSeen: user.lastSeen,
-      authProvider: user.authProvider,
-      twoFactorEnabled: user.twoFactorEnabled,
-      createdAt: user.createdAt,
-    };
 
     res.status(200).json({
       success: true,
       message: "Login successful!",
-      user: userResponse,
+      user: sessionUser(user),
       accessToken,
       refreshToken,
     });
   } catch (error) {
-    console.error("Error in login:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message || "Login failed. Please try again.",
-    });
+    logger.error("login failed", error);
+    fail(res, 500, "Login failed. Please try again.");
   }
 };
 
-// Verify 2FA link and issue JWT
+// Finish a 2FA sign-in from the emailed single-use link
 export const verify2FA = async (req, res) => {
   try {
-    const { token, email } = req.body;
+    const token = String(req.body.token ?? "");
+    const email = normalizeEmail(req.body.email);
 
     if (!token || !email) {
-      return res.status(400).json({
-        success: false,
-        message: "Token and email are required",
-      });
+      return fail(res, 400, "Token and email are required");
     }
 
-    const user = await User.findOne({
-      email: email.toLowerCase().trim(),
-    }).select("+twoFactorToken +twoFactorTokenExpiry +refreshToken");
-
+    const user = await User.findOne({ email }).select(
+      "+twoFactorToken +twoFactorTokenExpiry +refreshToken",
+    );
     if (!user || !user.twoFactorToken || !user.twoFactorTokenExpiry) {
-      return res.status(400).json({
-        success: false,
-        message: "Verification link is invalid or has already been used",
-      });
+      return fail(res, 400, "Verification link is invalid or has already been used");
     }
 
-    // Check expiry before doing any crypto work
     if (user.twoFactorTokenExpiry < new Date()) {
       user.twoFactorToken = undefined;
       user.twoFactorTokenExpiry = undefined;
       await user.save();
-      return res.status(400).json({
-        success: false,
-        message: "Verification link has expired. Please log in again.",
-      });
+      return fail(res, 400, "Verification link has expired. Please log in again.");
     }
 
-    // Hash the incoming raw token and compare with the stored hash
-    const incomingHash = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
-    const storedHash = user.twoFactorToken;
-
-    // Constant-time comparison to prevent timing attacks
-    const incomingBuf = Buffer.from(incomingHash, "hex");
-    const storedBuf = Buffer.from(storedHash, "hex");
+    // Constant-time comparison of the hashed tokens
+    const incoming = crypto.createHash("sha256").update(token).digest();
+    const stored = Buffer.from(user.twoFactorToken, "hex");
     const isValid =
-      incomingBuf.length === storedBuf.length &&
-      crypto.timingSafeEqual(incomingBuf, storedBuf);
-
+      incoming.length === stored.length && crypto.timingSafeEqual(incoming, stored);
     if (!isValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Verification link is invalid",
-      });
+      return fail(res, 400, "Verification link is invalid");
     }
 
-    // Token is valid — clear it (single-use)
+    // Single use
     user.twoFactorToken = undefined;
     user.twoFactorTokenExpiry = undefined;
-
-    // Issue JWT
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    const refreshToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
-
-    user.refreshToken = refreshToken;
-    user.isOnline = true;
-    user.lastSeen = new Date();
+    const { accessToken, refreshToken } = issueSession(user);
     await user.save();
-
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      avatar: user.avatar,
-      bio: user.bio,
-      isOnline: user.isOnline,
-      lastSeen: user.lastSeen,
-      authProvider: user.authProvider,
-      twoFactorEnabled: user.twoFactorEnabled,
-      createdAt: user.createdAt,
-    };
 
     res.status(200).json({
       success: true,
       message: "Two-factor authentication successful!",
-      user: userResponse,
+      user: sessionUser(user),
       accessToken,
       refreshToken,
     });
   } catch (error) {
-    console.error("Error in verify2FA:", error);
-    res.status(500).json({
-      success: false,
-      message: "Verification failed. Please try again.",
-    });
+    logger.error("verify2FA failed", error);
+    fail(res, 500, "Verification failed. Please try again.");
   }
 };
 
-// GitHub OAuth Callback Handler
+// GitHub OAuth callback: start a session and hand the tokens to the client
 export const githubCallback = async (req, res) => {
+  const failureUrl = `${process.env.CLIENT_URL}/login?error=${encodeURIComponent("Authentication failed")}`;
   try {
     const user = req.user;
+    if (!user) return res.redirect(failureUrl);
 
-    if (!user) {
-      return res.redirect(
-        `${process.env.CLIENT_URL}/login?error=Authentication failed`,
-      );
-    }
-
-    // Generate tokens
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    const refreshToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" },
-    );
-
-    // Update user status
-    user.refreshToken = refreshToken;
-    user.isOnline = true;
-    user.lastSeen = new Date();
+    const { accessToken, refreshToken } = issueSession(user);
     await user.save();
 
-    // Redirect to frontend with tokens in the fragment — fragments are never
-    // sent to servers, so tokens stay out of access logs and Referer headers
+    // Tokens go in the fragment — fragments are never sent to servers, so
+    // they stay out of access logs and Referer headers
     res.redirect(
       `${process.env.CLIENT_URL}/auth/callback#accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
   } catch (error) {
-    console.error("Error in githubCallback:", error);
-    res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication failed`);
+    logger.error("githubCallback failed", error);
+    res.redirect(failureUrl);
   }
 };
 
-// Logout controller
 export const logout = async (req, res) => {
   try {
-    const userId = req.user._id;
-
-    await User.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(req.user._id, {
       isOnline: false,
       lastSeen: new Date(),
       refreshToken: null,
     });
-
-    res.status(200).json({
-      success: true,
-      message: "Logged out successfully",
-    });
+    res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (error) {
-    console.error("Error in logout:", error);
-    res.status(500).json({
-      success: false,
-      message: "Logout failed",
-    });
+    logger.error("logout failed", error);
+    fail(res, 500, "Logout failed");
   }
 };
 
-// Refresh token controller
+// Exchange a refresh token for a new access token
 export const refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(401).json({
-        success: false,
-        message: "Refresh token required",
-      });
+    const presented = req.body.refreshToken;
+    if (!presented) {
+      return fail(res, 401, "Refresh token required");
     }
 
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-
+    const decoded = verifyRefreshToken(presented);
     const user = await User.findById(decoded.userId).select("+refreshToken");
-
-    if (!user || user.refreshToken !== refreshToken) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid refresh token",
-      });
+    if (!user || !refreshTokenMatches(user.refreshToken, presented)) {
+      return fail(res, 401, "Invalid refresh token");
     }
 
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    res.status(200).json({
-      success: true,
-      accessToken,
-    });
-  } catch (error) {
-    console.error("Error in refreshToken:", error);
-    res.status(401).json({
-      success: false,
-      message: "Invalid or expired refresh token",
-    });
+    res.status(200).json({ success: true, accessToken: signAccessToken(user._id) });
+  } catch {
+    fail(res, 401, "Invalid or expired refresh token");
   }
 };
 
-// Change password controller
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Both passwords are required" });
+      return fail(res, 400, "Both passwords are required");
     }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "New password must be at least 6 characters",
-      });
+    if (String(newPassword).length < MIN_PASSWORD_LENGTH) {
+      return fail(res, 400, "New password must be at least 6 characters");
     }
 
     const user = await User.findById(req.user._id).select("+password");
-
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return fail(res, 404, "User not found");
     }
-
     if (user.authProvider !== "LOCAL") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot change password for OAuth accounts",
-      });
+      return fail(res, 400, "Cannot change password for OAuth accounts");
     }
 
-    const isValid = await bcrypt.compare(currentPassword, user.password);
+    const isValid = await bcrypt.compare(String(currentPassword), user.password);
     if (!isValid) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Current password is incorrect" });
+      return fail(res, 401, "Current password is incorrect");
     }
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password = await bcrypt.hash(String(newPassword), BCRYPT_ROUNDS);
     await user.save();
 
-    res
-      .status(200)
-      .json({ success: true, message: "Password changed successfully" });
+    res.status(200).json({ success: true, message: "Password changed successfully" });
   } catch (error) {
-    console.error("Error in changePassword:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to change password" });
+    logger.error("changePassword failed", error);
+    fail(res, 500, "Failed to change password");
   }
 };
 
-// Resend OTP (optional - for better UX)
+// Email a fresh code for a pending registration
 export const resendOTP = async (req, res) => {
   try {
     const email = normalizeEmail(req.body.email);
-
     if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required",
-      });
+      return fail(res, 400, "Email is required");
     }
 
-    // Get stored data
-    const storedData = otpStore.get(email);
-
-    if (!storedData) {
-      return res.status(400).json({
-        success: false,
-        message: "No registration in progress for this email",
-      });
+    const pending = await getPendingRegistration(email);
+    if (!pending) {
+      return fail(res, 400, "No registration in progress for this email");
     }
 
-    // Generate new OTP
     const otp = generateOTP();
+    await savePendingRegistration(email, { ...pending, otp, attempts: 0 });
+    await sendOtpEmail(email, otp, pending.name);
+    logger.info(`New verification code sent to ${email}`);
 
-    // Update stored data with new OTP and expiry
-    otpStore.set(email, {
-      ...storedData,
-      otp,
-      attempts: 0,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-    });
-
-    // Send new OTP via email
-    await sendOTP(email, otp, storedData.name);
-
-    console.log(`New OTP sent to ${email}`);
-
-    res.status(200).json({
-      success: true,
-      message: "New OTP sent to your email",
-    });
+    res.status(200).json({ success: true, message: "New OTP sent to your email" });
   } catch (error) {
-    console.error("Error in resendOTP:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to resend OTP. Please try again.",
-    });
+    logger.error("resendOTP failed", error);
+    fail(res, 500, "Failed to resend the code. Please try again.");
   }
 };

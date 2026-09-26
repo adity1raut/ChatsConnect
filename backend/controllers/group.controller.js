@@ -1,6 +1,7 @@
 import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
 import { getIO } from "../socket/socket.js";
+import logger from "../utils/logger.js";
 
 // POST /api/groups — create a new group
 export const createGroup = async (req, res) => {
@@ -52,7 +53,7 @@ export const createGroup = async (req, res) => {
 
     res.status(201).json({ group: populated });
   } catch (err) {
-    console.error("createGroup error:", err);
+    logger.error("createGroup error:", err);
     res.status(500).json({ message: "Failed to create group" });
   }
 };
@@ -73,7 +74,7 @@ export const getMyGroups = async (req, res) => {
 
     res.status(200).json({ groups });
   } catch (err) {
-    console.error("getMyGroups error:", err);
+    logger.error("getMyGroups error:", err);
     res.status(500).json({ message: "Failed to fetch groups" });
   }
 };
@@ -99,7 +100,7 @@ export const getGroupDetails = async (req, res) => {
 
     res.status(200).json({ group });
   } catch (err) {
-    console.error("getGroupDetails error:", err);
+    logger.error("getGroupDetails error:", err);
     res.status(500).json({ message: "Failed to fetch group" });
   }
 };
@@ -173,7 +174,7 @@ export const addMembers = async (req, res) => {
 
     res.status(200).json({ group: updated, added });
   } catch (err) {
-    console.error("addMembers error:", err);
+    logger.error("addMembers error:", err);
     res.status(500).json({ message: "Failed to add members" });
   }
 };
@@ -215,7 +216,7 @@ export const removeMember = async (req, res) => {
 
     res.status(200).json({ message: "Member removed" });
   } catch (err) {
-    console.error("removeMember error:", err);
+    logger.error("removeMember error:", err);
     res.status(500).json({ message: "Failed to remove member" });
   }
 };
@@ -263,7 +264,7 @@ export const leaveGroup = async (req, res) => {
     await group.save();
     res.status(200).json({ message: "Left group" });
   } catch (err) {
-    console.error("leaveGroup error:", err);
+    logger.error("leaveGroup error:", err);
     res.status(500).json({ message: "Failed to leave group" });
   }
 };

@@ -9,6 +9,7 @@ import {
   cacheDelPattern,
   TTL,
 } from "../cache/redis.js";
+import logger from "../utils/logger.js";
 
 const MAX_PAGE_SIZE = 100;
 
@@ -64,7 +65,7 @@ export const getDMHistory = async (req, res) => {
     await cacheSet(cacheKey, payload, TTL.DM_HISTORY);
     res.status(200).json(payload);
   } catch (err) {
-    console.error("getDMHistory error:", err);
+    logger.error("getDMHistory error:", err);
     res.status(500).json({ message: "Failed to fetch messages" });
   }
 };
@@ -101,7 +102,7 @@ export const getGroupHistory = async (req, res) => {
     await cacheSet(cacheKey, payload, TTL.GROUP_HISTORY);
     res.status(200).json(payload);
   } catch (err) {
-    console.error("getGroupHistory error:", err);
+    logger.error("getGroupHistory error:", err);
     res.status(500).json({ message: "Failed to fetch group messages" });
   }
 };
@@ -138,7 +139,7 @@ export const getConversations = async (req, res) => {
     await cacheSet(cacheKey, payload, TTL.CONVERSATIONS);
     res.status(200).json(payload);
   } catch (err) {
-    console.error("getConversations error:", err);
+    logger.error("getConversations error:", err);
     res.status(500).json({ message: "Failed to fetch conversations" });
   }
 };
