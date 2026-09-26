@@ -12,18 +12,16 @@ import {
   changePassword,
 } from "../controllers/auth.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { authLimiter, otpLimiter } from "../middleware/rateLimit.js";
 
 const router = express.Router();
 
-// Local auth routes
-router.post("/request-otp", requestOTP);
-router.post("/resend-otp", resendOTP);
-router.post("/verify-otp", verifyOTPAndRegister);
-router.post("/login", login);
-router.post("/verify-2fa", verify2FA);
+// Local auth routes — rate limited against brute force and email spam
+router.post("/request-otp", otpLimiter, requestOTP);
+router.post("/resend-otp", otpLimiter, resendOTP);
+router.post("/verify-otp", authLimiter, verifyOTPAndRegister);
+router.post("/login", authLimiter, login);
+router.post("/verify-2fa", authLimiter, verify2FA);
 router.post("/logout", protect, logout);
 router.post("/refresh-token", refreshToken);
 router.put("/change-password", protect, changePassword);
@@ -37,7 +35,7 @@ router.get(
 router.get(
   "/github/callback",
   passport.authenticate("github", {
-    failureRedirect: `${process.env.CLIENT_URL}/login?error=Authentication failed`,
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=${encodeURIComponent("Authentication failed")}`,
     session: false,
   }),
   githubCallback,

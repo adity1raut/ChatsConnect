@@ -19,10 +19,32 @@ const messageSchema = new mongoose.Schema(
       ref: "Group",
       default: null,
     },
+    // Plain text; empty for end-to-end encrypted messages (see e2ee)
     content: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
+      required: function () {
+        return !this.encrypted;
+      },
+    },
+    encrypted: {
+      type: Boolean,
+      default: false,
+    },
+    // AES-GCM ciphertext for DMs; only the two participants hold the key
+    e2ee: {
+      type: new mongoose.Schema(
+        {
+          v: { type: Number, required: true }, // scheme version
+          iv: { type: String, required: true }, // base64, 12 bytes
+          ct: { type: String, required: true }, // base64 ciphertext + tag
+          sk: { type: String, required: true }, // sender key fingerprint
+          rk: { type: String, required: true }, // recipient key fingerprint
+        },
+        { _id: false },
+      ),
+      default: undefined,
     },
     messageType: {
       type: String,

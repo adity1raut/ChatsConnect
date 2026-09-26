@@ -6,8 +6,10 @@ import {
   useCallback,
   useEffect,
 } from "react";
+import { PhoneMissed } from "lucide-react";
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
+import { toast } from "../lib/toast";
 
 const CallContext = createContext(null);
 
@@ -190,11 +192,15 @@ export function CallProvider({ children }) {
   }, [incomingCall, getLocalStream, acceptCall, createPC, cleanup]);
 
   // ── Callee: reject incoming call ──────────────────────────────────
-  const handleRejectCall = useCallback(() => {
-    if (!incomingCall) return;
-    rejectCall(incomingCall.callerId);
-    setIncomingCall(null);
-  }, [incomingCall, rejectCall]);
+  // reason "timeout" when the ring was never answered (becomes a missed call)
+  const handleRejectCall = useCallback(
+    (reason) => {
+      if (!incomingCall) return;
+      rejectCall(incomingCall.callerId, reason === "timeout" ? "timeout" : undefined);
+      setIncomingCall(null);
+    },
+    [incomingCall, rejectCall],
+  );
 
   // ── Either side: end active call ──────────────────────────────────
   const handleEndCall = useCallback(() => {
@@ -248,6 +254,17 @@ export function CallProvider({ children }) {
     // Other side hung up
     const onCallEnded = () => {
       cleanup();
+    };
+
+    // Callee is offline — nothing will ring, so stop waiting
+    const onCallUnavailable = () => {
+      const name = activeCall?.peerName || "They";
+      cleanup();
+      toast({
+        title: `${name} is offline`,
+        description: "They'll see a missed call when they're back.",
+        icon: PhoneMissed,
+      });
     };
 
     // Received WebRTC offer (callee side)
@@ -308,6 +325,7 @@ export function CallProvider({ children }) {
     socket.on("callAccepted", onCallAccepted);
     socket.on("callRejected", onCallRejected);
     socket.on("callEnded", onCallEnded);
+    socket.on("callUnavailable", onCallUnavailable);
     socket.on("webrtcOffer", onWebrtcOffer);
     socket.on("webrtcAnswer", onWebrtcAnswer);
     socket.on("iceCandidate", onIceCandidate);
@@ -317,6 +335,7 @@ export function CallProvider({ children }) {
       socket.off("callAccepted", onCallAccepted);
       socket.off("callRejected", onCallRejected);
       socket.off("callEnded", onCallEnded);
+      socket.off("callUnavailable", onCallUnavailable);
       socket.off("webrtcOffer", onWebrtcOffer);
       socket.off("webrtcAnswer", onWebrtcAnswer);
       socket.off("iceCandidate", onIceCandidate);

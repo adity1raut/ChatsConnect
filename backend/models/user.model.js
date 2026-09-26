@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxlength: 300,
     },
+    // Short line shown under the name, e.g. "Out until Monday"
+    statusMessage: { type: String, maxlength: 100, default: "" },
+    location: { type: String, maxlength: 60, default: "" },
+    website: { type: String, maxlength: 200, default: "" },
+    privacy: {
+      // false = never show online / last seen to anyone
+      showActivity: { type: Boolean, default: true },
+    },
     isOnline: {
       type: Boolean,
       default: false,
@@ -64,6 +72,57 @@ const userSchema = new mongoose.Schema(
     aiEnabled: {
       type: Boolean,
       default: false,
+    },
+    // How this user's personal AI assistant looks and behaves
+    aiAssistant: {
+      name: { type: String, maxlength: 30 },
+      avatar: { type: String, maxlength: 16 },
+      tone: { type: String, enum: ["friendly", "professional", "casual", "witty", "teacher"] },
+      length: { type: String, enum: ["short", "medium", "long"] },
+      language: { type: String, maxlength: 40 },
+      instructions: { type: String, maxlength: 1500 },
+    },
+    // End-to-end encryption identity (public parts are shared with others)
+    e2ee: {
+      publicKey: {
+        kty: String,
+        crv: String,
+        x: String,
+        y: String,
+      },
+      fingerprint: String,
+      updatedAt: Date,
+      // Private key encrypted with the user's passphrase — only its owner reads it
+      backup: {
+        type: new mongoose.Schema(
+          {
+            v: Number,
+            ciphertext: String,
+            iv: String,
+            salt: String,
+            iterations: Number,
+          },
+          { _id: false },
+        ),
+        select: false,
+      },
+      // Earlier public keys, so older messages stay readable after a key change
+      history: [
+        {
+          _id: false,
+          publicKey: { kty: String, crv: String, x: String, y: String },
+          fingerprint: String,
+          retiredAt: Date,
+        },
+      ],
+    },
+    // Which events create notifications (missing = on, for existing users)
+    notificationPrefs: {
+      messages: { type: Boolean, default: true },
+      groupMessages: { type: Boolean, default: true },
+      friendRequests: { type: Boolean, default: true },
+      groups: { type: Boolean, default: true },
+      calls: { type: Boolean, default: true },
     },
   },
   { timestamps: true },

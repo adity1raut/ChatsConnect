@@ -1,6 +1,13 @@
+import mongoose from "mongoose";
 import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
-import { getIO } from "../socket/socket.js";
+import { getIO } from "../socket/io.js";
+import { notify } from "../service/notification.service.js";
+
+const room = (groupId) => `group:${groupId}`;
+const validIds = (ids) =>
+  [...new Set(ids.map(String))].filter((id) => mongoose.isValidObjectId(id));
+import logger from "../utils/logger.js";
 
 // POST /api/groups — create a new group
 export const createGroup = async (req, res) => {
@@ -16,8 +23,8 @@ export const createGroup = async (req, res) => {
     const members = [{ user: creatorId, role: "admin", joinedAt: new Date() }];
 
     if (Array.isArray(memberIds) && memberIds.length > 0) {
-      const uniqueIds = [...new Set(memberIds)].filter(
-        (id) => id.toString() !== creatorId.toString(),
+      const uniqueIds = validIds(memberIds).filter(
+        (id) => id !== creatorId.toString(),
       );
 
       for (const uid of uniqueIds) {
@@ -39,20 +46,25 @@ export const createGroup = async (req, res) => {
       .populate("members.user", "name username avatar isOnline")
       .populate("createdBy", "name username avatar");
 
-    // Notify all other members via socket so they see the group immediately
+    // Every member's open tabs join the room; others get told about the group
     const io = getIO();
-    if (io) {
-      populated.members.forEach((m) => {
-        const memberId = m.user._id.toString();
-        if (memberId !== creatorId.toString()) {
-          io.to(memberId).emit("groupCreated", { group: populated });
-        }
-      });
-    }
+    populated.members.forEach((m) => {
+      const memberId = m.user._id.toString();
+      io?.in(memberId).socketsJoin(room(group._id));
+      if (memberId !== creatorId.toString()) {
+        io?.to(memberId).emit("groupCreated", { group: populated });
+        notify({
+          recipient: memberId,
+          type: "group_added",
+          actor: creatorId,
+          groupId: group._id,
+        });
+      }
+    });
 
     res.status(201).json({ group: populated });
   } catch (err) {
-    console.error("createGroup error:", err);
+    logger.error("createGroup error:", err);
     res.status(500).json({ message: "Failed to create group" });
   }
 };
@@ -73,7 +85,7 @@ export const getMyGroups = async (req, res) => {
 
     res.status(200).json({ groups });
   } catch (err) {
-    console.error("getMyGroups error:", err);
+    logger.error("getMyGroups error:", err);
     res.status(500).json({ message: "Failed to fetch groups" });
   }
 };
@@ -99,7 +111,7 @@ export const getGroupDetails = async (req, res) => {
 
     res.status(200).json({ group });
   } catch (err) {
-    console.error("getGroupDetails error:", err);
+    logger.error("getGroupDetails error:", err);
     res.status(500).json({ message: "Failed to fetch group" });
   }
 };
@@ -135,8 +147,9 @@ export const addMembers = async (req, res) => {
     const existingIds = group.members.map((m) => m.user.toString());
     let added = 0;
 
-    for (const uid of memberIds) {
-      if (!existingIds.includes(uid.toString())) {
+    const addedIds = [];
+    for (const uid of validIds(memberIds)) {
+      if (!existingIds.includes(uid)) {
         const userExists = await User.exists({ _id: uid });
         if (userExists) {
           group.members.push({
@@ -144,6 +157,7 @@ export const addMembers = async (req, res) => {
             role: "member",
             joinedAt: new Date(),
           });
+          addedIds.push(uid);
           added++;
         }
       }
@@ -156,24 +170,17 @@ export const addMembers = async (req, res) => {
       "name username avatar isOnline",
     );
 
-    // Notify newly added members via socket
-    if (added > 0) {
-      const io = getIO();
-      if (io) {
-        const newMemberIds = memberIds.map((id) => id.toString());
-        updated.members.forEach((m) => {
-          if (newMemberIds.includes(m.user._id.toString())) {
-            io.to(m.user._id.toString()).emit("groupCreated", {
-              group: updated,
-            });
-          }
-        });
-      }
+    // New members join the room and hear about the group
+    const io = getIO();
+    for (const memberId of addedIds) {
+      io?.in(memberId).socketsJoin(room(groupId));
+      io?.to(memberId).emit("groupCreated", { group: updated });
+      notify({ recipient: memberId, type: "group_added", actor: myId, groupId });
     }
 
     res.status(200).json({ group: updated, added });
   } catch (err) {
-    console.error("addMembers error:", err);
+    logger.error("addMembers error:", err);
     res.status(500).json({ message: "Failed to add members" });
   }
 };
@@ -213,9 +220,14 @@ export const removeMember = async (req, res) => {
     );
     await group.save();
 
+    // Stop live delivery of this group's messages to the removed member
+    const io = getIO();
+    io?.in(userId.toString()).socketsLeave(room(groupId));
+    io?.to(userId.toString()).emit("removedFromGroup", { groupId });
+
     res.status(200).json({ message: "Member removed" });
   } catch (err) {
-    console.error("removeMember error:", err);
+    logger.error("removeMember error:", err);
     res.status(500).json({ message: "Failed to remove member" });
   }
 };
@@ -246,6 +258,7 @@ export const leaveGroup = async (req, res) => {
     group.members = group.members.filter(
       (m) => m.user.toString() !== myId.toString(),
     );
+    getIO()?.in(myId.toString()).socketsLeave(room(groupId));
 
     if (group.members.length === 0) {
       // Delete group if no members left
@@ -263,7 +276,7 @@ export const leaveGroup = async (req, res) => {
     await group.save();
     res.status(200).json({ message: "Left group" });
   } catch (err) {
-    console.error("leaveGroup error:", err);
+    logger.error("leaveGroup error:", err);
     res.status(500).json({ message: "Failed to leave group" });
   }
 };

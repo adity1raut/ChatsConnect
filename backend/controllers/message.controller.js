@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
@@ -8,14 +9,33 @@ import {
   cacheDelPattern,
   TTL,
 } from "../cache/redis.js";
+import logger from "../utils/logger.js";
+
+const MAX_PAGE_SIZE = 100;
+
+// Clamp ?page / ?limit to sane positive integers
+function parsePaging(query) {
+  const page = Math.max(1, parseInt(query.page, 10) || 1);
+  const limit = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, parseInt(query.limit, 10) || 50),
+  );
+  return { page, limit };
+}
+
+const dmCacheKeyPrefix = (a, b) =>
+  `dm:${[String(a), String(b)].sort().join(":")}`;
 
 // GET /api/messages/dm/:userId
 export const getDMHistory = async (req, res) => {
   const myId = req.user._id.toString();
   const { userId } = req.params;
-  const { page = 1, limit = 50 } = req.query;
+  if (!mongoose.isValidObjectId(userId)) {
+    return res.status(400).json({ message: "Invalid user id" });
+  }
+  const { page, limit } = parsePaging(req.query);
 
-  const cacheKey = `dm:${[myId, userId].sort().join(":")}:p${page}`;
+  const cacheKey = `${dmCacheKeyPrefix(myId, userId)}:p${page}:l${limit}`;
 
   try {
     const cached = await cacheGet(cacheKey);
@@ -33,7 +53,7 @@ export const getDMHistory = async (req, res) => {
     const messages = await Message.find({ conversationId: conversation._id })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit))
+      .limit(limit)
       .populate("senderId", "name username avatar")
       .lean();
 
@@ -45,7 +65,7 @@ export const getDMHistory = async (req, res) => {
     await cacheSet(cacheKey, payload, TTL.DM_HISTORY);
     res.status(200).json(payload);
   } catch (err) {
-    console.error("getDMHistory error:", err);
+    logger.error("getDMHistory error:", err);
     res.status(500).json({ message: "Failed to fetch messages" });
   }
 };
@@ -54,21 +74,27 @@ export const getDMHistory = async (req, res) => {
 export const getGroupHistory = async (req, res) => {
   const myId = req.user._id.toString();
   const { groupId } = req.params;
-  const { page = 1, limit = 50 } = req.query;
+  if (!mongoose.isValidObjectId(groupId)) {
+    return res.status(400).json({ message: "Invalid group id" });
+  }
+  const { page, limit } = parsePaging(req.query);
 
-  const cacheKey = `group_msgs:${groupId}:p${page}`;
+  const cacheKey = `group_msgs:${groupId}:p${page}:l${limit}`;
 
   try {
+    // Membership must be checked before serving anything — including cached pages
+    const isMember = await Group.exists({ _id: groupId, "members.user": myId });
+    if (!isMember) {
+      return res.status(403).json({ message: "Not a group member" });
+    }
+
     const cached = await cacheGet(cacheKey);
     if (cached) return res.status(200).json(cached);
-
-    const group = await Group.findOne({ _id: groupId, "members.user": myId });
-    if (!group) return res.status(403).json({ message: "Not a group member" });
 
     const messages = await Message.find({ groupId })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(Number(limit))
+      .limit(limit)
       .populate("senderId", "name username avatar")
       .lean();
 
@@ -76,7 +102,7 @@ export const getGroupHistory = async (req, res) => {
     await cacheSet(cacheKey, payload, TTL.GROUP_HISTORY);
     res.status(200).json(payload);
   } catch (err) {
-    console.error("getGroupHistory error:", err);
+    logger.error("getGroupHistory error:", err);
     res.status(500).json({ message: "Failed to fetch group messages" });
   }
 };
@@ -113,7 +139,7 @@ export const getConversations = async (req, res) => {
     await cacheSet(cacheKey, payload, TTL.CONVERSATIONS);
     res.status(200).json(payload);
   } catch (err) {
-    console.error("getConversations error:", err);
+    logger.error("getConversations error:", err);
     res.status(500).json({ message: "Failed to fetch conversations" });
   }
 };
@@ -125,12 +151,17 @@ export async function bustMessageCache(
   participantIds = [],
 ) {
   if (conversationId) {
-    await cacheDelPattern(`dm:*:p*`); // simple bust — keys include sorted IDs
+    // Only this pair's pages — not every DM cache in the system
+    const pattern =
+      participantIds.length === 2
+        ? `${dmCacheKeyPrefix(participantIds[0], participantIds[1])}:*`
+        : "dm:*";
+    await cacheDelPattern(pattern);
     for (const uid of participantIds) {
       await cacheDel(`conversations:${uid}`);
     }
   }
   if (groupId) {
-    await cacheDelPattern(`group_msgs:${groupId}:p*`);
+    await cacheDelPattern(`group_msgs:${groupId}:*`);
   }
 }

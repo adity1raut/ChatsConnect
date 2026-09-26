@@ -1,12 +1,3 @@
-import React from "react";
-import ProfilePage from "../components/profile/ProfilePage";
+import MyProfilePage from "../features/profile/MyProfilePage";
 
-function Profile() {
-  return (
-    <>
-      <ProfilePage />
-    </>
-  );
-}
-
-export default Profile;
+export default MyProfilePage;

@@ -5,6 +5,7 @@ import {
   updateProfile,
   updateEmail,
   updateOnlineStatus,
+  updateTwoFactor,
   deleteProfile,
   searchUsers,
   getAllUsers,
@@ -13,18 +14,18 @@ import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Public routes (specific paths before wildcard)
-router.get("/search", searchUsers);
-router.get("/all", getAllUsers);
-
-// Protected routes (must be before /:userId to avoid wildcard conflict)
+// All profile routes require login — user lists and profiles are not public.
+// Specific paths must come before the /:userId wildcard.
+router.get("/search", protect, searchUsers);
+router.get("/all", protect, getAllUsers);
 router.get("/me", protect, getCurrentUserProfile);
 router.put("/update", protect, updateProfile);
 router.put("/update-email", protect, updateEmail);
 router.put("/online-status", protect, updateOnlineStatus);
+router.put("/two-factor", protect, updateTwoFactor);
 router.delete("/delete", protect, deleteProfile);
 
 // Wildcard route last
-router.get("/:userId", getUserProfile);
+router.get("/:userId", protect, getUserProfile);
 
 export default router;

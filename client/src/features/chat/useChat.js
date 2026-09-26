@@ -1,0 +1,615 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { UserMinus } from "lucide-react";
+import axios from "../../config/axiosInstance.js";
+import { API_URL as API } from "../../config/api.js";
+import { useAuth } from "../../context/AuthContext";
+import { useSocket } from "../../context/SocketContext";
+import { useNotifications } from "../../context/NotificationContext";
+import { useAI } from "../../context/AIContext";
+import { UNDECRYPTABLE, useE2EE } from "../../context/E2EEContext";
+import { toast } from "../../lib/toast";
+import { exportChatAsMarkdown } from "./exportChat";
+import { MAX_MESSAGE_LENGTH, previewText, toViewMessage } from "./messages";
+
+const TYPING_IDLE_MS = 1500;
+const NO_MESSAGES = [];
+const ENCRYPTED_PREVIEW = "🔒 Encrypted message";
+
+const lastPreview = (message) =>
+  message?.encrypted ? ENCRYPTED_PREVIEW : previewText(message?.content);
+
+// Keep the thread in time order even when async decryption finishes out of order
+const insertInOrder = (list, message) => {
+  if (list.some((m) => m.id === message.id)) return list;
+  const next = [...list, message];
+  next.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  return next;
+};
+
+const dmContact = (c) => ({
+  id: c.contact._id,
+  conversationId: c.conversationId,
+  name: c.contact.name,
+  username: c.contact.username,
+  avatar: c.contact.avatar,
+  lastMessage: lastPreview(c.lastMessage),
+  lastMessageAt: c.lastMessageAt,
+  type: "user",
+});
+
+const groupContact = (g) => ({
+  id: g._id,
+  groupId: g._id,
+  name: g.name,
+  avatar: g.avatar || null,
+  memberCount: g.members.length,
+  members: g.members,
+  lastMessage: lastPreview(g.lastMessage),
+  lastMessageAt: g.lastMessageAt,
+  type: "group",
+});
+
+const byRecent = (a, b) =>
+  new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0);
+
+const sameChat = (a, b) =>
+  Boolean(a && b) &&
+  a.type === b.type &&
+  (a.type === "group" ? a.groupId === b.groupId : a.id === b.id);
+
+// Stable identity of a chat, independent of when it gains a conversationId
+const chatKeyOf = (chat) =>
+  chat ? (chat.type === "group" ? `group:${chat.groupId}` : `user:${chat.id}`) : null;
+
+/**
+ * All chat state and behaviour for the Messages page: contacts, the open
+ * chat, its messages, sending, typing, live updates, smart replies,
+ * translation and export. Components only render what this returns.
+ */
+export function useChat() {
+  const { user } = useAuth();
+  const myId = user?._id;
+  const location = useLocation();
+  const {
+    socket,
+    onlineUsers,
+    sendMessage,
+    sendGroupMessage,
+    emitTyping,
+    emitStopTyping,
+  } = useSocket();
+  const { setActiveChat, notifications } = useNotifications();
+  const e2ee = useE2EE();
+  const { decryptFrom, encryptFor, getPeerKeys, changedPeers } = e2ee;
+  const e2eeStatus = e2ee.status;
+  const {
+    aiEnabled,
+    setSmartReplies,
+    fetchSmartReplies,
+    clearSmartReplies,
+    autoTranslate,
+    preferredLanguage,
+    translateMessage,
+  } = useAI();
+
+  const [contacts, setContacts] = useState([]);
+  const [discover, setDiscover] = useState([]);
+  const [selectedChat, setSelectedChat] = useState(null);
+  // Messages are stored with the chat they belong to, so a slow response or a
+  // live message can never show up in a different chat
+  const [thread, setThread] = useState({ key: null, messages: [] });
+  const [typing, setTyping] = useState({ key: null, ids: new Set() });
+
+  const selectedKey = chatKeyOf(selectedChat);
+  const messages = thread.key === selectedKey ? thread.messages : NO_MESSAGES;
+  const loadingMessages = Boolean(selectedKey) && thread.key !== selectedKey;
+  const typingIds = typing.key === selectedKey ? typing.ids : null;
+
+  // Socket handlers read current state from refs instead of nesting setState calls
+  const selectedRef = useRef(null);
+  const contactsRef = useRef(contacts);
+  useEffect(() => {
+    selectedRef.current = selectedChat;
+    contactsRef.current = contacts;
+  }, [selectedChat, contacts]);
+
+  // One place that turns a server message into a view message, decrypting
+  // end-to-end encrypted DMs (`peerId` = the other person in the DM)
+  const decode = useCallback(
+    async (raw, peerId) => {
+      const view = toViewMessage(raw, myId);
+      if (!raw.encrypted) return view;
+      try {
+        return { ...view, text: await decryptFrom(raw, peerId), encrypted: true };
+      } catch (err) {
+        return {
+          ...view,
+          text: UNDECRYPTABLE[err.reason] ?? UNDECRYPTABLE.failed,
+          encrypted: true,
+          undecryptable: true,
+        };
+      }
+    },
+    [myId, decryptFrom],
+  );
+
+  // Auto-translate incoming text; never for encrypted messages (that would
+  // send them to the server — use the per-message Translate action instead)
+  const translateIncoming = useCallback(
+    async (msg) => {
+      if (!autoTranslate || msg.mine || msg.encrypted || !msg.text) return msg;
+      try {
+        const translated = await translateMessage(msg.text, preferredLanguage);
+        return translated && translated !== msg.text
+          ? { ...msg, text: translated, originalText: msg.text }
+          : msg;
+      } catch {
+        return msg;
+      }
+    },
+    [autoTranslate, preferredLanguage, translateMessage],
+  );
+
+  // ── Contacts + people to discover ─────────────────────────────────
+  const loadContacts = useCallback(async () => {
+    if (!myId) return;
+    try {
+      const [convRes, groupRes] = await Promise.all([
+        axios.get(`${API}/messages/conversations`),
+        axios.get(`${API}/groups/my`),
+      ]);
+      const dms = (convRes.data.conversations || [])
+        .filter((c) => c.contact) // the other person may have deleted their account
+        .map(dmContact);
+      const groups = (groupRes.data.groups || []).map(groupContact);
+      setContacts([...dms, ...groups].sort(byRecent));
+    } catch (err) {
+      console.error("loadContacts error:", err);
+    }
+  }, [myId]);
+
+  useEffect(() => {
+    if (!myId) return;
+    let cancelled = false;
+    loadContacts();
+    axios
+      .get(`${API}/profile/all`, { params: { limit: 50 } })
+      .then(({ data }) => {
+        if (!cancelled) setDiscover((data.users || []).filter((u) => u._id !== myId));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [myId, loadContacts]);
+
+  // ── Deep links: { openChat } / { openGroup } from other pages ─────
+  useEffect(() => {
+    const { openChat, openGroup } = location.state || {};
+    if (openChat) {
+      const existing = contacts.find((c) => c.type === "user" && c.id === openChat.id);
+      setSelectedChat(
+        existing || {
+          id: openChat.id,
+          name: openChat.name,
+          username: openChat.username,
+          avatar: openChat.avatar || null,
+          type: "user",
+        },
+      );
+      window.history.replaceState({}, "");
+    } else if (openGroup && contacts.length) {
+      const existing = contacts.find((c) => c.type === "group" && c.groupId === openGroup.groupId);
+      if (existing) {
+        setSelectedChat(existing);
+        window.history.replaceState({}, "");
+      }
+    }
+    // Run when contacts arrive or navigation state changes — not on every contact update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contacts.length, location.state]);
+
+  // ── Tell notifications which chat is open ─────────────────────────
+  const activeConversationId = selectedChat?.conversationId?.toString();
+  const activeGroupId = selectedChat?.type === "group" ? selectedChat.groupId : undefined;
+  const activePeerId = selectedChat?.type === "user" ? selectedChat.id : undefined;
+  useEffect(() => {
+    setActiveChat(
+      activeConversationId || activeGroupId || activePeerId
+        ? { conversationId: activeConversationId, groupId: activeGroupId, peerId: activePeerId }
+        : null,
+    );
+  }, [activeConversationId, activeGroupId, activePeerId, setActiveChat]);
+  useEffect(() => () => setActiveChat(null), [setActiveChat]);
+
+  // ── History for the open chat ─────────────────────────────────────
+  useEffect(() => {
+    const chat = selectedRef.current;
+    if (!selectedKey || !chat) return;
+    let cancelled = false;
+
+    const url =
+      chat.type === "group"
+        ? `${API}/messages/group/${chat.groupId}`
+        : `${API}/messages/dm/${chat.id}`;
+
+    axios
+      .get(url)
+      .then(async ({ data }) => {
+        if (cancelled) return;
+        if (data.conversationId && !chat.conversationId) {
+          setSelectedChat((prev) =>
+            sameChat(prev, chat) ? { ...prev, conversationId: data.conversationId } : prev,
+          );
+        }
+        const peerId = chat.type === "user" ? chat.id : null;
+        const decoded = await Promise.all((data.messages || []).map((m) => decode(m, peerId)));
+        const view = await Promise.all(decoded.map(translateIncoming));
+        if (cancelled) return;
+        setThread({ key: selectedKey, messages: view });
+
+        // Suggest replies when the other person spoke last — automatic only
+        // for unencrypted chats (encrypted ones use the explicit button)
+        const last = view.at(-1);
+        if (aiEnabled && last && !last.mine && !view.some((m) => m.encrypted)) {
+          fetchSmartReplies(
+            view.slice(-6).map((m) => ({ role: m.mine ? "user" : "assistant", content: m.text })),
+          );
+        }
+      })
+      .catch((err) => {
+        console.error("fetchHistory error:", err);
+        if (!cancelled) setThread({ key: selectedKey, messages: [] });
+      });
+
+    return () => {
+      cancelled = true;
+      clearSmartReplies();
+    };
+    // Re-run when a different chat opens, or encryption gets unlocked (to decrypt)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey, e2eeStatus]);
+
+  // ── Live messages ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!socket) return;
+
+    // Append to the thread only if it's the chat the message belongs to
+    const appendTo = (key, view) =>
+      setThread((prev) =>
+        prev.key !== key ? prev : { ...prev, messages: insertInOrder(prev.messages, view) },
+      );
+
+    const onDirect = async ({ message: raw, conversationId, receiver }) => {
+      const mine = raw.senderId?._id === myId;
+      const peer = mine ? receiver : raw.senderId;
+      if (!peer) return;
+
+      setSelectedChat((prev) =>
+        prev?.type === "user" && prev.id === peer._id && !prev.conversationId
+          ? { ...prev, conversationId }
+          : prev,
+      );
+
+      const view = await translateIncoming(await decode(raw, peer._id));
+      appendTo(`user:${peer._id}`, view);
+
+      setContacts((prev) => {
+        const preview = view.undecryptable ? ENCRYPTED_PREVIEW : previewText(view.text);
+        const existing = prev.find((c) => c.type === "user" && c.id === peer._id);
+        const updated = existing
+          ? { ...existing, conversationId, lastMessage: preview, lastMessageAt: raw.createdAt }
+          : {
+              id: peer._id,
+              conversationId,
+              name: peer.name,
+              username: peer.username,
+              avatar: peer.avatar,
+              lastMessage: preview,
+              lastMessageAt: raw.createdAt,
+              type: "user",
+            };
+        return [updated, ...prev.filter((c) => c !== existing)];
+      });
+    };
+
+    const onGroup = async ({ message: raw, groupId }) => {
+      appendTo(`group:${groupId}`, await translateIncoming(await decode(raw, null)));
+      setContacts((prev) => {
+        const existing = prev.find((c) => c.type === "group" && c.groupId === groupId);
+        if (!existing) return prev;
+        const updated = {
+          ...existing,
+          lastMessage: previewText(raw.content),
+          lastMessageAt: raw.createdAt,
+        };
+        return [updated, ...prev.filter((c) => c !== existing)];
+      });
+    };
+
+    const onGroupCreated = () => loadContacts();
+
+    const onRemovedFromGroup = ({ groupId }) => {
+      const removed = contactsRef.current.find((c) => c.groupId === groupId);
+      setContacts((prev) => prev.filter((c) => c.groupId !== groupId));
+      if (selectedRef.current?.groupId === groupId) setSelectedChat(null);
+      toast({
+        title: removed ? `You were removed from ${removed.name}` : "You were removed from a group",
+        icon: UserMinus,
+      });
+    };
+
+    // Typing events for the open chat only; stale ones are dropped on chat change
+    const typingKey = ({ senderId, groupId }) => (groupId ? `group:${groupId}` : `user:${senderId}`);
+    const onTyping = (e) => {
+      const key = typingKey(e);
+      setTyping((prev) => ({
+        key,
+        ids: new Set(prev.key === key ? prev.ids : []).add(e.senderId),
+      }));
+    };
+    const onStopTyping = (e) => {
+      const key = typingKey(e);
+      setTyping((prev) => {
+        if (prev.key !== key) return prev;
+        const ids = new Set(prev.ids);
+        ids.delete(e.senderId);
+        return { key, ids };
+      });
+    };
+
+    const onSmartReplies = ({ conversationId, groupId, replies }) => {
+      const chat = selectedRef.current;
+      const match =
+        (chat?.type === "user" && chat.conversationId?.toString() === conversationId?.toString()) ||
+        (chat?.type === "group" && chat.groupId === groupId);
+      if (match) setSmartReplies(replies);
+    };
+
+    socket.on("newMessage", onDirect);
+    socket.on("newGroupMessage", onGroup);
+    socket.on("groupCreated", onGroupCreated);
+    socket.on("removedFromGroup", onRemovedFromGroup);
+    socket.on("typing", onTyping);
+    socket.on("stopTyping", onStopTyping);
+    socket.on("aiSmartReplies", onSmartReplies);
+    return () => {
+      socket.off("newMessage", onDirect);
+      socket.off("newGroupMessage", onGroup);
+      socket.off("groupCreated", onGroupCreated);
+      socket.off("removedFromGroup", onRemovedFromGroup);
+      socket.off("typing", onTyping);
+      socket.off("stopTyping", onStopTyping);
+      socket.off("aiSmartReplies", onSmartReplies);
+    };
+  }, [socket, myId, decode, translateIncoming, loadContacts, setSmartReplies]);
+
+  // ── Sending + typing ──────────────────────────────────────────────
+  const typingTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(typingTimerRef.current), []);
+
+  const typingTarget = (chat) =>
+    chat.type === "group" ? [null, chat.groupId] : [chat.id, null];
+
+  const notifyTyping = useCallback(() => {
+    const chat = selectedRef.current;
+    if (!chat) return;
+    const [receiverId, groupId] = typingTarget(chat);
+    emitTyping(receiverId, groupId);
+    clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(
+      () => emitStopTyping(receiverId, groupId),
+      TYPING_IDLE_MS,
+    );
+  }, [emitTyping, emitStopTyping]);
+
+  const send = useCallback(
+    async (text) => {
+      const chat = selectedRef.current;
+      const content = text.trim();
+      if (!chat || !content) return false;
+      if (content.length > MAX_MESSAGE_LENGTH) {
+        toast({
+          title: "Message is too long",
+          description: `Keep it under ${MAX_MESSAGE_LENGTH.toLocaleString()} characters.`,
+          variant: "error",
+        });
+        return false;
+      }
+
+      if (chat.type === "group") {
+        sendGroupMessage(chat.groupId, content);
+      } else {
+        // Never silently downgrade: plaintext only when encryption is off on
+        // purpose (not set up) or the other person has no key yet
+        let envelope = null;
+        try {
+          envelope = await encryptFor(chat.id, content);
+        } catch {
+          toast({ title: "Couldn't encrypt your message", description: "Not sent. Check your connection and try again.", variant: "error" });
+          return false;
+        }
+        if (!envelope && !["none", "ready"].includes(e2eeStatus)) {
+          toast({
+            title: e2eeStatus === "locked" ? "Unlock encryption to send" : "Encryption isn't ready yet",
+            description: "Not sent, so it isn't delivered unencrypted by mistake.",
+            variant: "error",
+          });
+          return false;
+        }
+        sendMessage(chat.id, envelope ? null : content, envelope);
+      }
+
+      clearSmartReplies();
+      clearTimeout(typingTimerRef.current);
+      const [receiverId, groupId] = typingTarget(chat);
+      emitStopTyping(receiverId, groupId);
+      return true;
+    },
+    [sendMessage, sendGroupMessage, emitStopTyping, clearSmartReplies, encryptFor, e2eeStatus],
+  );
+
+  // ── Selection ─────────────────────────────────────────────────────
+  const selectChat = useCallback((chat) => setSelectedChat(chat), []);
+
+  const startChatWith = useCallback(
+    (profile) => {
+      const existing = contactsRef.current.find((c) => c.type === "user" && c.id === profile._id);
+      setSelectedChat(
+        existing || {
+          id: profile._id,
+          name: profile.name,
+          username: profile.username,
+          avatar: profile.avatar || null,
+          type: "user",
+        },
+      );
+    },
+    [],
+  );
+
+  const exportCurrentChat = useCallback(async () => {
+    const chat = selectedRef.current;
+    if (!chat) return;
+    try {
+      const peerId = chat.type === "user" ? chat.id : null;
+      const count = await exportChatAsMarkdown(chat, (raw) => decode(raw, peerId));
+      toast({ title: "Chat exported", description: `${count} messages saved as Markdown.` });
+    } catch (err) {
+      console.error("export failed:", err);
+      toast({ title: "Couldn't export this chat", variant: "error" });
+    }
+  }, [decode]);
+
+  // ── Opt-in AI for any chat (the only way AI sees encrypted messages) ──
+  const translateOne = useCallback(
+    async (messageId) => {
+      const key = chatKeyOf(selectedRef.current);
+      const msg = thread.messages.find((m) => m.id === messageId);
+      if (!msg || msg.originalText) return;
+      try {
+        const translated = await translateMessage(msg.text, preferredLanguage);
+        if (!translated) return;
+        setThread((prev) =>
+          prev.key !== key
+            ? prev
+            : {
+                ...prev,
+                messages: prev.messages.map((m) =>
+                  m.id === messageId ? { ...m, text: translated, originalText: m.text } : m,
+                ),
+              },
+        );
+      } catch {
+        toast({ title: "Couldn't translate that message", variant: "error" });
+      }
+    },
+    [thread.messages, translateMessage, preferredLanguage],
+  );
+
+  const suggestReplies = useCallback(() => {
+    const recent = messages.filter((m) => !m.undecryptable).slice(-6);
+    if (!recent.length) return;
+    fetchSmartReplies(
+      recent.map((m) => ({ role: m.mine ? "user" : "assistant", content: m.text })),
+    );
+  }, [messages, fetchSmartReplies]);
+
+  // ── Encryption state of the open DM ───────────────────────────────
+  const peerId = selectedChat?.type === "user" ? selectedChat.id : null;
+  const [peerKeyState, setPeerKeyState] = useState({ peerId: null, hasKey: null });
+  useEffect(() => {
+    if (!peerId || e2eeStatus !== "ready") return;
+    let cancelled = false;
+    getPeerKeys(peerId)
+      .then((k) => !cancelled && setPeerKeyState({ peerId, hasKey: k.hasKey }))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [peerId, e2eeStatus, getPeerKeys]);
+
+  const peerHasKey = peerKeyState.peerId === peerId ? peerKeyState.hasKey : null;
+  const encryption = !peerId
+    ? { encrypted: false, banner: null }
+    : e2eeStatus === "none"
+      ? { encrypted: false, banner: "setup" }
+      : e2eeStatus === "locked"
+        ? { encrypted: false, banner: "locked" }
+        : e2eeStatus !== "ready"
+          ? { encrypted: false, banner: null }
+          : changedPeers.has(peerId)
+            ? { encrypted: true, banner: "key-changed" }
+            : peerHasKey === false
+              ? { encrypted: false, banner: "peer-missing" }
+              : { encrypted: peerHasKey === true, banner: null };
+
+  // ── Derived ───────────────────────────────────────────────────────
+  // Unread counts come from the (collapsed) message notifications
+  const unreadByChat = useMemo(() => {
+    const map = new Map();
+    for (const n of notifications) {
+      if (n.read || !["message", "group_message"].includes(n.type)) continue;
+      const key = n.conversationId
+        ? `dm:${n.conversationId}`
+        : n.groupId?._id
+          ? `group:${n.groupId._id}`
+          : null;
+      if (key) map.set(key, (map.get(key) || 0) + (n.count || 1));
+    }
+    return map;
+  }, [notifications]);
+
+  const contactsView = useMemo(
+    () =>
+      contacts.map((c) => ({
+        ...c,
+        isOnline: c.type === "user" && onlineUsers.has(c.id),
+        unread:
+          unreadByChat.get(c.type === "group" ? `group:${c.groupId}` : `dm:${c.conversationId}`) ||
+          0,
+      })),
+    [contacts, onlineUsers, unreadByChat],
+  );
+
+  const contactIds = useMemo(
+    () => new Set(contacts.filter((c) => c.type === "user").map((c) => c.id)),
+    [contacts],
+  );
+  const discoverView = useMemo(
+    () =>
+      discover
+        .filter((u) => !contactIds.has(u._id))
+        .map((u) => ({ ...u, isOnline: onlineUsers.has(u._id) })),
+    [discover, contactIds, onlineUsers],
+  );
+
+  const typingNames = useMemo(() => {
+    if (!selectedChat || !typingIds?.size) return [];
+    if (selectedChat.type === "user") return [selectedChat.name];
+    return (selectedChat.members || [])
+      .filter((m) => typingIds.has(m.user?._id))
+      .map((m) => m.user.name);
+  }, [selectedChat, typingIds]);
+
+  return {
+    me: user,
+    contacts: contactsView,
+    discover: discoverView,
+    selectedChat,
+    selectChat,
+    startChatWith,
+    reloadContacts: loadContacts,
+    messages,
+    loadingMessages,
+    typingNames,
+    isPeerOnline: selectedChat?.type === "user" && onlineUsers.has(selectedChat.id),
+    send,
+    notifyTyping,
+    exportCurrentChat,
+    translateOne,
+    suggestReplies,
+    encryption,
+  };
+}

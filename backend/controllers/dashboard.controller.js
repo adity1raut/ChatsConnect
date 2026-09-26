@@ -1,7 +1,8 @@
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
-import { onlineUsers } from "../socket/socket.js";
+import { onlineUsers } from "../socket/io.js";
+import logger from "../utils/logger.js";
 
 // GET /api/dashboard/stats
 export const getDashboardStats = async (req, res) => {
@@ -36,18 +37,24 @@ export const getDashboardStats = async (req, res) => {
     })
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate("senderId", "name avatar")
+      .populate("senderId", "name username avatar")
       .populate("groupId", "name")
       .lean();
 
+    // Enough to open the right chat when an item is clicked
     const recentActivity = recentMessages.map((msg) => ({
-      user: msg.senderId?.name || "Unknown",
+      id: msg._id,
+      user: msg.senderId?.name || "Deleted account",
+      userId: msg.senderId?._id ?? null,
+      username: msg.senderId?.username,
       avatar: msg.senderId?.avatar || null,
       action: msg.groupId
         ? `sent a message in ${msg.groupId.name}`
         : "sent you a message",
       time: msg.createdAt,
       type: msg.groupId ? "group" : "dm",
+      groupId: msg.groupId?._id ?? null,
+      encrypted: Boolean(msg.encrypted),
     }));
 
     res.status(200).json({
@@ -60,7 +67,7 @@ export const getDashboardStats = async (req, res) => {
       recentActivity,
     });
   } catch (err) {
-    console.error("getDashboardStats error:", err);
+    logger.error("getDashboardStats error:", err);
     res.status(500).json({ message: "Failed to fetch dashboard stats" });
   }
 };

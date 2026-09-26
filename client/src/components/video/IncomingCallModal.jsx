@@ -32,7 +32,7 @@ function IncomingCallCard({ call, acceptCall, rejectCall }) {
 
   // Auto-reject once the countdown runs out
   useEffect(() => {
-    if (countdown === 0) rejectCall();
+    if (countdown === 0) rejectCall("timeout");
   }, [countdown, rejectCall]);
 
   const { callerName, callerAvatar, callType } = call;
@@ -119,7 +119,7 @@ function IncomingCallCard({ call, acceptCall, rejectCall }) {
         {/* Actions */}
         <div className="flex gap-3">
           <button
-            onClick={rejectCall}
+            onClick={() => rejectCall()}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
             style={{
               background: "linear-gradient(135deg, #ef4444, #dc2626)",
@@ -130,7 +130,7 @@ function IncomingCallCard({ call, acceptCall, rejectCall }) {
             Reject
           </button>
           <button
-            onClick={acceptCall}
+            onClick={() => acceptCall()}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-semibold text-sm text-white transition-all hover:scale-105 active:scale-95"
             style={{
               background: "linear-gradient(135deg, #10b981, #059669)",

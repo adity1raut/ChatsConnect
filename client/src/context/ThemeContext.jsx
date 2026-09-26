@@ -1,6 +1,32 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 const ThemeContext = createContext();
+
+const THEME_KEY = "themeMode";
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+const readStoredMode = () => {
+  try {
+    return localStorage.getItem(THEME_KEY) || "system";
+  } catch {
+    return "system";
+  }
+};
+
+// OS dark-mode preference as an external store, so it is correct on first render
+const subscribeToSystemTheme = (onChange) => {
+  const media = window.matchMedia(DARK_QUERY);
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+};
+const getSystemPrefersDark = () => window.matchMedia(DARK_QUERY).matches;
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
@@ -11,32 +37,29 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [themeMode, setThemeMode] = useState(() => {
-    return localStorage.getItem("themeMode") || "system";
-  });
-  const [isDark, setIsDark] = useState(false);
+  const [themeMode, setThemeModeState] = useState(readStoredMode);
+  const systemPrefersDark = useSyncExternalStore(
+    subscribeToSystemTheme,
+    getSystemPrefersDark,
+  );
+  const isDark =
+    themeMode === "dark" || (themeMode === "system" && systemPrefersDark);
 
+  // Drive Tailwind's `dark:` variant and native form controls from one place
   useEffect(() => {
-    const updateTheme = () => {
-      if (themeMode === "dark") {
-        setIsDark(true);
-      } else if (themeMode === "light") {
-        setIsDark(false);
-      } else {
-        setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-      }
-    };
+    const root = document.documentElement;
+    root.classList.toggle("dark", isDark);
+    root.style.colorScheme = isDark ? "dark" : "light";
+  }, [isDark]);
 
-    updateTheme();
-    localStorage.setItem("themeMode", themeMode);
-
-    if (themeMode === "system") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      const handler = () => updateTheme();
-      mediaQuery.addEventListener("change", handler);
-      return () => mediaQuery.removeEventListener("change", handler);
+  const setThemeMode = useCallback((mode) => {
+    try {
+      localStorage.setItem(THEME_KEY, mode);
+    } catch {
+      // Storage unavailable (private mode) — theme still applies for this session
     }
-  }, [themeMode]);
+    setThemeModeState(mode);
+  }, []);
 
   const value = {
     themeMode,

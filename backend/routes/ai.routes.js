@@ -1,5 +1,15 @@
 import { Router } from "express";
 import { protect } from "../middleware/auth.middleware.js";
+import { aiLimiter } from "../middleware/rateLimit.js";
+import { validate } from "../middleware/validate.js";
+import {
+  assistantSchema,
+  chatSchema,
+  sentimentSchema,
+  smartReplySchema,
+  summarizeSchema,
+  translateSchema,
+} from "../validators/ai.schemas.js";
 import {
   getAIStatus,
   toggleAI,
@@ -9,6 +19,10 @@ import {
   sentiment,
   chat,
   healthCheck,
+  getAssistant,
+  updateAssistant,
+  getChatHistory,
+  clearChatHistory,
 } from "../controllers/ai.controller.js";
 
 const router = Router();
@@ -19,11 +33,17 @@ router.get("/health", healthCheck);
 router.get("/status", protect, getAIStatus);
 router.put("/toggle", protect, toggleAI);
 
-// AI features (all require auth)
-router.post("/smart-reply", protect, smartReply);
-router.post("/summarize", protect, summarize);
-router.post("/translate", protect, translate);
-router.post("/sentiment", protect, sentiment);
-router.post("/chat", protect, chat);
+// Model calls: signed in, rate limited per user, input size capped
+router.post("/smart-reply", protect, aiLimiter, validate({ body: smartReplySchema }), smartReply);
+router.post("/summarize", protect, aiLimiter, validate({ body: summarizeSchema }), summarize);
+router.post("/translate", protect, aiLimiter, validate({ body: translateSchema }), translate);
+router.post("/sentiment", protect, aiLimiter, validate({ body: sentimentSchema }), sentiment);
+router.post("/chat", protect, aiLimiter, validate({ body: chatSchema }), chat);
+
+// Your personal assistant: settings and saved conversation
+router.get("/assistant", protect, getAssistant);
+router.put("/assistant", protect, validate({ body: assistantSchema }), updateAssistant);
+router.get("/chat/history", protect, getChatHistory);
+router.delete("/chat/history", protect, clearChatHistory);
 
 export default router;

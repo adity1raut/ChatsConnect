@@ -100,11 +100,23 @@ export function FriendProvider({ children }) {
       }));
     };
 
+    // The sender withdrew their request — drop it from our list
+    const handleFriendRequestCancelled = ({ requestId, senderId }) => {
+      setIncomingRequests((prev) => prev.filter((r) => r._id !== requestId));
+      setRelationships((prev) => {
+        const next = { ...prev };
+        delete next[senderId];
+        return next;
+      });
+    };
+
     socket.on("friendRequest", handleFriendRequest);
     socket.on("friendRequestAccepted", handleFriendRequestAccepted);
+    socket.on("friendRequestCancelled", handleFriendRequestCancelled);
     return () => {
       socket.off("friendRequest", handleFriendRequest);
       socket.off("friendRequestAccepted", handleFriendRequestAccepted);
+      socket.off("friendRequestCancelled", handleFriendRequestCancelled);
     };
   }, [socket, user]);
 

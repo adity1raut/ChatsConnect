@@ -1,7 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-
-dotenv.config();
+import logger from "../utils/logger.js";
 
 // Cloudinary configuration
 cloudinary.config({
@@ -28,10 +26,10 @@ const validateCloudinaryConfig = () => {
 const testCloudinaryConnection = async () => {
   try {
     await cloudinary.api.ping();
-    console.log("✅ Cloudinary connection successful");
+    logger.info("✅ Cloudinary connection successful");
     return true;
   } catch (error) {
-    console.error("❌ Cloudinary connection failed:", error.message);
+    logger.error("❌ Cloudinary connection failed:", error.message);
     return false;
   }
 };

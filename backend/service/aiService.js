@@ -1,8 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
+import mongoose from "mongoose";
 import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
+import logger from "../utils/logger.js";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -14,6 +16,43 @@ export const CHATCONNECT_SYSTEM =
   "You are ChatBot, an intelligent assistant built into ChatConnect — a real-time messaging platform. " +
   "You help users draft messages, answer questions, summarise conversations, and more. " +
   "Be concise, friendly, and helpful. Never make up information.";
+
+// Agent loop limits
+const MAX_AGENT_TURNS = 6; // model calls per chat request (tool round-trips + answer)
+const MAX_REPLY_TOKENS = 4096; // per-reply cost cap for a public app
+const MAX_HISTORY_MESSAGES = 20;
+const MAX_HISTORY_CHARS = 4000;
+const MAX_TOOL_HISTORY = 20;
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Model-supplied limits can be any type — clamp to 1..MAX_TOOL_HISTORY
+const clampToolLimit = (limit) =>
+  Math.min(MAX_TOOL_HISTORY, Math.max(1, parseInt(limit, 10) || 10));
+
+// Join all text blocks of a response (content[0] is not guaranteed to be text)
+export const responseText = (response) =>
+  response.content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+
+/**
+ * Client-supplied chat history is untrusted: keep only well-formed recent
+ * turns, cap their size, and make sure the conversation starts with a user turn.
+ */
+function sanitizeHistory(history) {
+  const cleaned = (Array.isArray(history) ? history : [])
+    .filter((m) => m && typeof m.content === "string" && m.content.trim())
+    .slice(-MAX_HISTORY_MESSAGES)
+    .map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content.slice(0, MAX_HISTORY_CHARS),
+    }));
+  while (cleaned.length && cleaned[0].role !== "user") cleaned.shift();
+  return cleaned;
+}
 
 /**
  * Generate 3 smart reply suggestions for a conversation context.
@@ -41,18 +80,26 @@ export async function generateSmartReplies(messages) {
     messages: [{ role: "user", content: prompt }],
   });
 
-  const raw = response.content[0].text.trim();
-  let replies;
+  const raw = responseText(response);
+  let replies = null;
   const match = raw.match(/\[[\s\S]*?\]/);
   if (match) {
-    replies = JSON.parse(match[0]);
-  } else {
+    try {
+      replies = JSON.parse(match[0]);
+    } catch {
+      replies = null; // fall through to line splitting
+    }
+  }
+  if (!Array.isArray(replies)) {
     replies = raw
       .split("\n")
       .map((l) => l.trim().replace(/^["']|["']$/g, ""))
       .filter(Boolean);
   }
-  replies = replies.filter(Boolean).slice(0, 3);
+  replies = replies
+    .filter((r) => typeof r === "string" && r.trim())
+    .map((r) => r.trim().slice(0, 120))
+    .slice(0, 3);
   while (replies.length < 3) replies.push("Sounds good!");
   return replies;
 }
@@ -149,31 +196,34 @@ function buildDBTools(requestingUserId) {
     }
 
     if (toolName === "word_count") {
-      const count = toolInput.text.trim().split(/\s+/).length;
+      const text = String(toolInput.text ?? "").trim();
+      const count = text ? text.split(/\s+/).length : 0;
       return `The text contains ${count} word(s).`;
     }
 
     if (toolName === "get_dm_history") {
-      const { other_user_id, limit = 10 } = toolInput;
+      const { other_user_id, limit } = toolInput;
+      if (!mongoose.isValidObjectId(other_user_id)) return "Invalid user id.";
       const conv = await Conversation.findOne({
         participants: { $all: [requestingUserId, other_user_id] },
       });
       if (!conv) return "No conversation found between these users.";
       const msgs = await Message.find({ conversationId: conv._id })
         .sort({ createdAt: -1 })
-        .limit(Math.min(limit, 20))
+        .limit(clampToolLimit(limit))
         .populate("senderId", "name username")
         .lean();
       if (!msgs.length) return "No messages found.";
       return msgs
         .reverse()
-        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.content}`)
+        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.encrypted ? "[end-to-end encrypted message]" : m.content}`)
         .join("\n");
     }
 
     if (toolName === "get_group_history") {
-      const { group_id, limit = 10 } = toolInput;
-      const isMember = await Group.findOne({
+      const { group_id, limit } = toolInput;
+      if (!mongoose.isValidObjectId(group_id)) return "Invalid group id.";
+      const isMember = await Group.exists({
         _id: group_id,
         "members.user": requestingUserId,
       });
@@ -181,17 +231,18 @@ function buildDBTools(requestingUserId) {
         return "Access denied: you are not a member of this group.";
       const msgs = await Message.find({ groupId: group_id })
         .sort({ createdAt: -1 })
-        .limit(Math.min(limit, 20))
+        .limit(clampToolLimit(limit))
         .populate("senderId", "name username")
         .lean();
       if (!msgs.length) return "No messages found.";
       return msgs
         .reverse()
-        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.content}`)
+        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.encrypted ? "[end-to-end encrypted message]" : m.content}`)
         .join("\n");
     }
 
     if (toolName === "get_user_profile") {
+      if (!mongoose.isValidObjectId(toolInput.user_id)) return "Invalid user id.";
       const user = await User.findById(toolInput.user_id)
         .select("name username bio isOnline")
         .lean();
@@ -205,7 +256,9 @@ function buildDBTools(requestingUserId) {
     }
 
     if (toolName === "search_users") {
-      const regex = new RegExp(toolInput.query, "i");
+      const query = String(toolInput.query ?? "").slice(0, 50);
+      if (!query.trim()) return "No users found.";
+      const regex = new RegExp(escapeRegex(query), "i");
       const users = await User.find({
         $or: [{ name: regex }, { username: regex }],
       })
@@ -230,6 +283,7 @@ function buildDBTools(requestingUserId) {
  * @param {Array<{role:string,content:string}>} history
  * @param {string} requestingUserId - MongoDB user ID (scopes DB tool access)
  * @param {string|null} systemPrompt
+ * @param {{maxTokens?: number}} [options]
  * @returns {Promise<{reply: string, history: Array}>}
  */
 export async function runAgentWithDBTools(
@@ -237,56 +291,66 @@ export async function runAgentWithDBTools(
   history = [],
   requestingUserId,
   systemPrompt = null,
+  { maxTokens = MAX_REPLY_TOKENS } = {},
 ) {
   const system = systemPrompt || CHATCONNECT_SYSTEM;
   const { toolDefs, executeTool } = buildDBTools(requestingUserId);
 
-  const loopMessages = [
-    ...history.map((m) => ({
-      role: m.role === "assistant" ? "assistant" : "user",
-      content: m.content,
-    })),
-    { role: "user", content: userMessage },
-  ];
+  const cleanHistory = sanitizeHistory(history);
+  const loopMessages = [...cleanHistory, { role: "user", content: userMessage }];
 
   let reply = "";
-  while (true) {
+  for (let turn = 0; turn < MAX_AGENT_TURNS; turn++) {
     const response = await client.messages.create({
       model: MAIN_MODEL,
-      max_tokens: 1024,
+      max_tokens: Math.min(maxTokens, MAX_REPLY_TOKENS),
       system,
       tools: toolDefs,
       messages: loopMessages,
     });
 
-    if (response.stop_reason === "tool_use") {
-      const toolUseBlock = response.content.find((b) => b.type === "tool_use");
-      const toolResult = await executeTool(
-        toolUseBlock.name,
-        toolUseBlock.input,
-      );
-      loopMessages.push({ role: "assistant", content: response.content });
-      loopMessages.push({
-        role: "user",
-        content: [
-          {
-            type: "tool_result",
-            tool_use_id: toolUseBlock.id,
-            content: String(toolResult),
-          },
-        ],
-      });
-    } else {
-      const textBlock = response.content.find((b) => b.type === "text");
-      reply = textBlock ? textBlock.text.trim() : "";
+    if (response.stop_reason !== "tool_use") {
+      reply = responseText(response);
       break;
     }
+
+    // Claude may call several tools in one turn — every call needs a result,
+    // and all results must go back together in a single user message.
+    const toolUseBlocks = response.content.filter((b) => b.type === "tool_use");
+    loopMessages.push({ role: "assistant", content: response.content });
+
+    const toolResults = await Promise.all(
+      toolUseBlocks.map(async (block) => {
+        try {
+          const result = await executeTool(block.name, block.input ?? {});
+          return {
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: String(result),
+          };
+        } catch (err) {
+          logger.error(`AI tool "${block.name}" failed:`, err);
+          return {
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: "The tool failed to run.",
+            is_error: true,
+          };
+        }
+      }),
+    );
+    loopMessages.push({ role: "user", content: toolResults });
+  }
+
+  if (!reply) {
+    reply =
+      "Sorry, I couldn't complete that request. Please try rephrasing it.";
   }
 
   return {
     reply,
     history: [
-      ...history,
+      ...cleanHistory,
       { role: "user", content: userMessage },
       { role: "assistant", content: reply },
     ],
@@ -307,10 +371,13 @@ export async function buildDMContext(conversationId, receiverId, limit = 8) {
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
-  return msgs.reverse().map((m) => ({
-    role: m.senderId.toString() === receiverId ? "user" : "assistant",
-    content: m.content,
-  }));
+  return msgs
+    .reverse()
+    .filter((m) => !m.encrypted)
+    .map((m) => ({
+      role: m.senderId.toString() === receiverId ? "user" : "assistant",
+      content: m.content,
+    }));
 }
 
 /**

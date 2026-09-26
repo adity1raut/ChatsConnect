@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../service/token.service.js";
 import User from "../models/user.model.js";
 
 export const protect = async (req, res, next) => {
@@ -16,7 +16,7 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({ message: "Not authorized, no token" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyAccessToken(token);
 
     req.user = await User.findById(decoded.userId).select(
       "-password -refreshToken",
