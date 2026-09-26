@@ -3,6 +3,7 @@ import { protect } from "../middleware/auth.middleware.js";
 import { aiLimiter } from "../middleware/rateLimit.js";
 import { validate } from "../middleware/validate.js";
 import {
+  assistantSchema,
   chatSchema,
   sentimentSchema,
   smartReplySchema,
@@ -18,6 +19,10 @@ import {
   sentiment,
   chat,
   healthCheck,
+  getAssistant,
+  updateAssistant,
+  getChatHistory,
+  clearChatHistory,
 } from "../controllers/ai.controller.js";
 
 const router = Router();
@@ -34,5 +39,11 @@ router.post("/summarize", protect, aiLimiter, validate({ body: summarizeSchema }
 router.post("/translate", protect, aiLimiter, validate({ body: translateSchema }), translate);
 router.post("/sentiment", protect, aiLimiter, validate({ body: sentimentSchema }), sentiment);
 router.post("/chat", protect, aiLimiter, validate({ body: chatSchema }), chat);
+
+// Your personal assistant: settings and saved conversation
+router.get("/assistant", protect, getAssistant);
+router.put("/assistant", protect, validate({ body: assistantSchema }), updateAssistant);
+router.get("/chat/history", protect, getChatHistory);
+router.delete("/chat/history", protect, clearChatHistory);
 
 export default router;

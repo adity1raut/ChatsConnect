@@ -283,6 +283,7 @@ function buildDBTools(requestingUserId) {
  * @param {Array<{role:string,content:string}>} history
  * @param {string} requestingUserId - MongoDB user ID (scopes DB tool access)
  * @param {string|null} systemPrompt
+ * @param {{maxTokens?: number}} [options]
  * @returns {Promise<{reply: string, history: Array}>}
  */
 export async function runAgentWithDBTools(
@@ -290,6 +291,7 @@ export async function runAgentWithDBTools(
   history = [],
   requestingUserId,
   systemPrompt = null,
+  { maxTokens = MAX_REPLY_TOKENS } = {},
 ) {
   const system = systemPrompt || CHATCONNECT_SYSTEM;
   const { toolDefs, executeTool } = buildDBTools(requestingUserId);
@@ -301,7 +303,7 @@ export async function runAgentWithDBTools(
   for (let turn = 0; turn < MAX_AGENT_TURNS; turn++) {
     const response = await client.messages.create({
       model: MAIN_MODEL,
-      max_tokens: MAX_REPLY_TOKENS,
+      max_tokens: Math.min(maxTokens, MAX_REPLY_TOKENS),
       system,
       tools: toolDefs,
       messages: loopMessages,

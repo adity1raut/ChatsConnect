@@ -73,6 +73,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // How this user's personal AI assistant looks and behaves
+    aiAssistant: {
+      name: { type: String, maxlength: 30 },
+      avatar: { type: String, maxlength: 16 },
+      tone: { type: String, enum: ["friendly", "professional", "casual", "witty", "teacher"] },
+      length: { type: String, enum: ["short", "medium", "long"] },
+      language: { type: String, maxlength: 40 },
+      instructions: { type: String, maxlength: 1500 },
+    },
     // End-to-end encryption identity (public parts are shared with others)
     e2ee: {
       publicKey: {

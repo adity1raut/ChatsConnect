@@ -9,8 +9,8 @@ import EncryptionBanner from "../e2ee/EncryptionBanner";
 import EncryptionModal from "../e2ee/EncryptionModal";
 import SecurityCodeModal from "../e2ee/SecurityCodeModal";
 import { Button, EmptyState } from "../../components/ui";
-import AIPanel from "../../components/ai/AIPanel";
-import SmartReply from "../../components/ai/SmartReply";
+import AssistantChat from "../ai/AssistantChat";
+import SmartReplies from "../ai/SmartReplies";
 import { cn } from "../../lib/cn";
 import ChatHeader from "./ChatHeader";
 import Composer from "./Composer";
@@ -99,7 +99,6 @@ export default function ChatPage() {
               chat={selected}
               typingNames={chat.typingNames}
               isPeerOnline={chat.isPeerOnline}
-              aiEnabled={aiEnabled}
               aiPanelOpen={aiPanelOpen}
               onBack={() => chat.selectChat(null)}
               onVoiceCall={() => startCall(selected, true)}
@@ -140,7 +139,7 @@ export default function ChatPage() {
                 </button>
               </div>
             )}
-            <SmartReply onSelect={setDraft} />
+            <SmartReplies onSelect={setDraft} />
             <Composer
               chatKey={key}
               value={draft}
@@ -170,9 +169,9 @@ export default function ChatPage() {
         )}
       </section>
 
-      {aiPanelOpen && aiEnabled && (
-        <div className="hidden h-full w-80 shrink-0 lg:flex">
-          <AIPanel onClose={() => setAiPanelOpen(false)} />
+      {aiPanelOpen && (
+        <div className="hidden h-full w-96 shrink-0 lg:flex">
+          <AssistantChat compact onClose={() => setAiPanelOpen(false)} />
         </div>
       )}
 

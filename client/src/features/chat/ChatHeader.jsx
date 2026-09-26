@@ -34,7 +34,6 @@ export default function ChatHeader({
   chat,
   typingNames,
   isPeerOnline,
-  aiEnabled,
   aiPanelOpen,
   onBack,
   onVoiceCall,
@@ -98,15 +97,13 @@ export default function ChatHeader({
             <IconButton icon={Video} label="Video call" onClick={onVideoCall} />
           </>
         )}
-        {aiEnabled && (
-          <IconButton
-            icon={Bot}
-            label={aiPanelOpen ? "Hide AI assistant" : "Show AI assistant"}
-            active={aiPanelOpen}
-            className="hidden lg:inline-flex"
-            onClick={onToggleAI}
-          />
-        )}
+        <IconButton
+          icon={Bot}
+          label={aiPanelOpen ? "Hide assistant" : "Ask your assistant"}
+          active={aiPanelOpen}
+          className="hidden lg:inline-flex"
+          onClick={onToggleAI}
+        />
         <Menu
           trigger={(props) => <IconButton icon={MoreVertical} label="More options" {...props} />}
           items={[

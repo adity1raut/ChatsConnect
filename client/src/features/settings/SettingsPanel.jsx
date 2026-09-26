@@ -23,6 +23,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { useE2EE } from "../../context/E2EEContext";
 import EncryptionModal from "../e2ee/EncryptionModal";
+import AssistantSettingsModal from "../ai/AssistantSettingsModal";
 import {
   Button,
   Input,
@@ -32,22 +33,8 @@ import {
   Toggle,
 } from "../../components/ui";
 import { cn } from "../../lib/cn";
+import { LANGUAGES } from "../../lib/languages";
 
-const LANGUAGES = [
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Portuguese",
-  "Italian",
-  "Dutch",
-  "Russian",
-  "Japanese",
-  "Korean",
-  "Chinese",
-  "Arabic",
-  "Hindi",
-];
 
 const THEME_OPTIONS = [
   { value: "light", label: "Light", icon: Sun },
@@ -178,7 +165,9 @@ function AppearanceSection() {
 }
 
 function AISection() {
+  const [customizing, setCustomizing] = useState(false);
   const {
+    assistant,
     aiEnabled,
     setAiEnabled,
     autoTranslate,
@@ -188,7 +177,17 @@ function AISection() {
   } = useAI();
 
   return (
-    <Section icon={Bot} title="AI assistant" description="Smart replies and translation">
+    <Section icon={Bot} title="AI assistant" description="Your assistant, smart replies and translation">
+      <Row
+        title={`${assistant?.avatar ?? "🤖"} ${assistant?.name ?? "Your assistant"}`}
+        description="Name, personality, tone, answer length and instructions"
+        control={
+          <Button size="sm" variant="secondary" onClick={() => setCustomizing(true)}>
+            Customize
+          </Button>
+        }
+      />
+      {customizing && <AssistantSettingsModal onClose={() => setCustomizing(false)} />}
       <Row
         title="AI suggestions"
         description="Show smart reply suggestions for incoming messages"

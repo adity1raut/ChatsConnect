@@ -27,8 +27,18 @@ export const sentimentSchema = z.object({
   text: z.string().trim().min(1, "Text is required").max(MAX_TEXT),
 });
 
+// History and system prompt now live on the server
 export const chatSchema = z.object({
   message: z.string().trim().min(1, "Message is required").max(4000),
-  history: z.array(chatTurn).max(MAX_MESSAGES).default([]),
-  system_prompt: z.string().max(2000).optional(),
 });
+
+export const assistantSchema = z
+  .object({
+    name: z.string().trim().min(1, "Give your assistant a name").max(30),
+    avatar: z.string().trim().min(1).max(16),
+    tone: z.enum(["friendly", "professional", "casual", "witty", "teacher"]),
+    length: z.enum(["short", "medium", "long"]),
+    language: z.string().trim().min(1).max(40),
+    instructions: z.string().max(1500),
+  })
+  .partial();

@@ -1,10 +1,11 @@
-import { Bell, Home, MessageSquare, Search, User } from "lucide-react";
+import { Bell, Bot, Home, MessageSquare, Search, User } from "lucide-react";
 
 // Primary destinations, shared by the desktop sidebar and the mobile bottom bar
 export const NAV_ITEMS = [
   { id: "home", label: "Home", shortLabel: "Home", icon: Home, path: "/dashboard" },
   { id: "search", label: "Search", shortLabel: "Search", icon: Search, path: "/search" },
   { id: "messages", label: "Messages", shortLabel: "Chats", icon: MessageSquare, path: "/chat" },
+  { id: "assistant", label: "Assistant", shortLabel: "AI", icon: Bot, path: "/assistant" },
   {
     id: "notifications",
     label: "Notifications",

@@ -25,6 +25,7 @@ import SearchPage from "./pages/Search.jsx";
 import About from "./pages/About.jsx";
 import AuthCallback from "./features/auth/AuthCallback.jsx";
 import Verify2FA from "./features/auth/Verify2FA.jsx";
+import AssistantPage from "./features/ai/AssistantPage.jsx";
 
 // Signed-in pages share the app shell (sidebar / mobile nav / settings modal)
 const signedIn = (page, { fullHeight = false } = {}) => (
@@ -69,6 +70,7 @@ function App() {
           <Route path="/dashboard" element={signedIn(<Dashboard />)} />
           <Route path="/notifications" element={signedIn(<Notification />)} />
           <Route path="/chat" element={signedIn(<ChatPage />, { fullHeight: true })} />
+          <Route path="/assistant" element={signedIn(<AssistantPage />, { fullHeight: true })} />
           <Route path="/profile" element={signedIn(<Profile />)} />
           <Route path="/profile/:userId" element={signedIn(<UserProfile />)} />
           <Route path="/search" element={signedIn(<SearchPage />)} />
