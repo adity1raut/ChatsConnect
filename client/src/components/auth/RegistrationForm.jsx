@@ -125,8 +125,11 @@ export default function RegistrationForm() {
       });
 
       if (response.data.success) {
-        login(response.data.user, response.data.accessToken);
-        localStorage.setItem("refreshToken", response.data.refreshToken);
+        login(
+          response.data.user,
+          response.data.accessToken,
+          response.data.refreshToken,
+        );
         setSuccess("Account created successfully! Redirecting...");
 
         setTimeout(() => {

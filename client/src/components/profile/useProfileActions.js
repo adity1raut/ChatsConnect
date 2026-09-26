@@ -8,6 +8,7 @@ export function useProfileActions({ updateUser, logout, navigate }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Runs an API action with loading/error/success feedback; resolves to true on success
   const withFeedback = async (fn, successMsg) => {
     setError("");
     setSuccess("");
@@ -15,17 +16,22 @@ export function useProfileActions({ updateUser, logout, navigate }) {
     try {
       await fn();
       setSuccess(successMsg);
+      return true;
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
   const updateProfile = ({ username, bio, avatarFile, name }) => {
-    if (!name) return setError("Name is required");
+    if (!name) {
+      setError("Name is required");
+      return Promise.resolve(false);
+    }
 
-    withFeedback(async () => {
+    return withFeedback(async () => {
       const { data } = await axios.put(`${API_URL}/profile/update`, {
         username,
         bio,

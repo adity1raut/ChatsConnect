@@ -10,7 +10,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
@@ -22,13 +22,17 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // OAuth / 2FA failures redirect here with ?error=...
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState(() => searchParams.get("error") || "");
+  const [notice, setNotice] = useState("");
   const { isDark } = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleEmailAuth = async () => {
     setError("");
+    setNotice("");
 
     if (!email || !password) {
       setError("Please fill in all fields");
@@ -43,14 +47,15 @@ export default function LoginForm() {
         password,
       });
 
-      if (response.data.success) {
-        // Use the login function from AuthContext
-        login(response.data.user, response.data.accessToken);
-
-        // Store refresh token separately if needed
-        localStorage.setItem("refreshToken", response.data.refreshToken);
-
-        // Navigate to dashboard
+      if (response.data.twoFactorRequired) {
+        // No tokens yet — the user must open the emailed verification link
+        setNotice(response.data.message);
+      } else if (response.data.success) {
+        login(
+          response.data.user,
+          response.data.accessToken,
+          response.data.refreshToken,
+        );
         navigate("/dashboard");
       }
     } catch (err) {
@@ -248,6 +253,18 @@ export default function LoginForm() {
             {error && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg animate-shake">
                 <p className="text-red-500 text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* 2FA notice — check your inbox */}
+            {notice && (
+              <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/50 rounded-lg flex items-start gap-2">
+                <Mail className="w-4 h-4 mt-0.5 shrink-0 text-emerald-500" />
+                <p
+                  className={`text-sm ${isDark ? "text-emerald-400" : "text-emerald-600"}`}
+                >
+                  {notice}
+                </p>
               </div>
             )}
 

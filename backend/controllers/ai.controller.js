@@ -5,6 +5,7 @@ import {
   FAST_MODEL,
   generateSmartReplies,
   runAgentWithDBTools,
+  responseText,
 } from "../service/aiService.js";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -65,7 +66,7 @@ export const summarize = async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
-    res.json({ summary: response.content[0].text.trim() });
+    res.json({ summary: responseText(response) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -93,7 +94,7 @@ export const translate = async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
-    const raw = response.content[0].text.trim();
+    const raw = responseText(response);
     let translated = raw;
     let detected = null;
     if (raw.includes("DETECTED:")) {
@@ -125,11 +126,15 @@ export const sentiment = async (req, res) => {
       messages: [{ role: "user", content: prompt }],
     });
 
-    const raw = response.content[0].text.trim();
+    const raw = responseText(response);
     const match = raw.match(/\{[\s\S]*?\}/);
     let data = { sentiment: "neutral", score: 0.5, emoji: "😐" };
     if (match) {
-      data = { ...data, ...JSON.parse(match[0]) };
+      try {
+        data = { ...data, ...JSON.parse(match[0]) };
+      } catch {
+        // Malformed model output — keep the neutral default
+      }
     }
 
     res.json({

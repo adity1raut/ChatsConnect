@@ -7,10 +7,16 @@ import transporter from "../service/Nodemailer.js";
 // Temporary store for OTPs (use Redis in production)
 const otpStore = new Map();
 
-// Generate 6-digit OTP
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
+// Wrong guesses allowed per OTP before it is invalidated (stops brute force)
+const MAX_OTP_ATTEMPTS = 5;
+
+// Generate 6-digit OTP with a cryptographically secure RNG
+const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
+
+// Emails and usernames are stored lowercase, so compare them that way too
+const normalizeEmail = (email) => String(email ?? "").toLowerCase().trim();
+const normalizeUsername = (username) =>
+  String(username ?? "").toLowerCase().trim();
 
 const sendOTP = async (email, otp, name) => {
   const mailOptions = {
@@ -72,7 +78,9 @@ const send2FAEmail = async (email, name, verificationUrl) => {
 // Step 1: Request OTP
 export const requestOTP = async (req, res) => {
   try {
-    const { email, username, password, name } = req.body;
+    const { password, name } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const username = normalizeUsername(req.body.username);
 
     // Validation
     if (!email || !username || !password || !name) {
@@ -170,7 +178,8 @@ export const requestOTP = async (req, res) => {
 // Step 2: Verify OTP and Create Account
 export const verifyOTPAndRegister = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { otp } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     // Validation
     if (!email || !otp) {
@@ -201,6 +210,14 @@ export const verifyOTPAndRegister = async (req, res) => {
 
     // Verify OTP
     if (storedData.otp !== otp.toString()) {
+      storedData.attempts = (storedData.attempts || 0) + 1;
+      if (storedData.attempts >= MAX_OTP_ATTEMPTS) {
+        otpStore.delete(email);
+        return res.status(429).json({
+          success: false,
+          message: "Too many incorrect attempts. Please request a new OTP.",
+        });
+      }
       return res.status(400).json({
         success: false,
         message: "Invalid OTP. Please try again.",
@@ -542,9 +559,10 @@ export const githubCallback = async (req, res) => {
     user.lastSeen = new Date();
     await user.save();
 
-    // Redirect to frontend with tokens
+    // Redirect to frontend with tokens in the fragment — fragments are never
+    // sent to servers, so tokens stay out of access logs and Referer headers
     res.redirect(
-      `${process.env.CLIENT_URL}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`,
+      `${process.env.CLIENT_URL}/auth/callback#accessToken=${accessToken}&refreshToken=${refreshToken}`,
     );
   } catch (error) {
     console.error("Error in githubCallback:", error);
@@ -673,7 +691,7 @@ export const changePassword = async (req, res) => {
 // Resend OTP (optional - for better UX)
 export const resendOTP = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = normalizeEmail(req.body.email);
 
     if (!email) {
       return res.status(400).json({
@@ -699,6 +717,7 @@ export const resendOTP = async (req, res) => {
     otpStore.set(email, {
       ...storedData,
       otp,
+      attempts: 0,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
 

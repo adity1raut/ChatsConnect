@@ -1,14 +1,43 @@
+import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { cloudinary } from "../config/cloudinary.js";
 
+// Fields any logged-in user may see about someone else. Never email,
+// auth provider, GitHub id or security settings.
+export const PUBLIC_PROFILE_FIELDS =
+  "name username avatar bio isOnline lastSeen createdAt";
+
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const AVATAR_DATA_URL_RE = /^data:image\/(png|jpe?g|gif|webp);base64,/;
+const NAME_MIN = 2;
+const NAME_MAX = 50;
+const BIO_MAX = 300;
+const MAX_LIST_LIMIT = 50;
+
+// Escape user input before using it inside a RegExp
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const clampLimit = (value, fallback) =>
+  Math.min(MAX_LIST_LIMIT, Math.max(1, parseInt(value, 10) || fallback));
+
+// Cloudinary URL → public id, e.g. ".../upload/v123/avatars/abc.jpg" → "avatars/abc"
+const cloudinaryPublicId = (url) => {
+  const match = /\/upload\/(?:v\d+\/)?(.+)\.[a-z0-9]+$/i.exec(url);
+  return match ? match[1] : null;
+};
+
 // @desc    Get user profile by ID
 // @route   GET /api/profile/:userId
-// @access  Public
+// @access  Private
 export const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    const user = await User.findById(userId).select("-refreshToken -password");
+    const user = await User.findById(userId).select(PUBLIC_PROFILE_FIELDS);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -16,7 +45,8 @@ export const getUserProfile = async (req, res) => {
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -35,7 +65,8 @@ export const getCurrentUserProfile = async (req, res) => {
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error fetching current profile:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -52,15 +83,56 @@ export const updateProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update avatar if provided
-    if (avatar) {
-      // Delete old avatar from Cloudinary if it exists
-      if (user.avatar && user.avatar.includes("cloudinary")) {
-        const publicId = user.avatar.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(`avatars/${publicId}`);
+    // ── Validate everything before touching Cloudinary or the DB ──
+    let nextName;
+    if (name !== undefined) {
+      nextName = String(name).trim();
+      if (nextName.length < NAME_MIN || nextName.length > NAME_MAX) {
+        return res.status(400).json({
+          message: `Name must be ${NAME_MIN}-${NAME_MAX} characters`,
+        });
       }
+    }
 
-      // Upload new avatar to Cloudinary
+    let nextUsername;
+    if (username !== undefined) {
+      nextUsername = String(username).toLowerCase().trim();
+      if (!USERNAME_RE.test(nextUsername)) {
+        return res.status(400).json({
+          message:
+            "Username must be 3-20 characters (letters, numbers, underscore only)",
+        });
+      }
+      if (nextUsername !== user.username) {
+        const taken = await User.exists({
+          username: nextUsername,
+          _id: { $ne: userId },
+        });
+        if (taken) {
+          return res.status(409).json({ message: "Username already taken" });
+        }
+      }
+    }
+
+    let nextBio;
+    if (bio !== undefined) {
+      nextBio = String(bio).trim();
+      if (nextBio.length > BIO_MAX) {
+        return res
+          .status(400)
+          .json({ message: `Bio must be at most ${BIO_MAX} characters` });
+      }
+    }
+
+    if (avatar && !AVATAR_DATA_URL_RE.test(avatar)) {
+      return res
+        .status(400)
+        .json({ message: "Avatar must be a PNG, JPEG, GIF or WebP image" });
+    }
+
+    // ── Avatar: upload the new one first so a failed upload keeps the old ──
+    if (avatar) {
+      const oldAvatar = user.avatar;
       const uploadResponse = await cloudinary.uploader.upload(avatar, {
         folder: "avatars",
         transformation: [
@@ -68,14 +140,21 @@ export const updateProfile = async (req, res) => {
           { quality: "auto" },
         ],
       });
-
       user.avatar = uploadResponse.secure_url;
+
+      const oldPublicId =
+        oldAvatar?.includes("res.cloudinary.com") &&
+        cloudinaryPublicId(oldAvatar);
+      if (oldPublicId) {
+        cloudinary.uploader.destroy(oldPublicId).catch((err) => {
+          console.warn("Failed to delete old avatar:", err.message);
+        });
+      }
     }
 
-    // Update other fields
-    if (name && name.trim().length >= 2) user.name = name.trim();
-    if (username) user.username = username;
-    if (bio !== undefined) user.bio = bio;
+    if (nextName !== undefined) user.name = nextName;
+    if (nextUsername !== undefined) user.username = nextUsername;
+    if (nextBio !== undefined) user.bio = nextBio;
 
     await user.save();
 
@@ -92,7 +171,7 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating profile:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -101,10 +180,17 @@ export const updateProfile = async (req, res) => {
 // @access  Private
 export const updateEmail = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = String(req.body.email ?? "")
+      .toLowerCase()
+      .trim();
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
+    }
+    if (!EMAIL_RE.test(email)) {
+      return res
+        .status(400)
+        .json({ message: "Please provide a valid email address" });
     }
 
     // Check if email is already taken
@@ -127,7 +213,8 @@ export const updateEmail = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Email updated successfully", user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error updating email:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -136,12 +223,11 @@ export const updateEmail = async (req, res) => {
 // @access  Private
 export const updateOnlineStatus = async (req, res) => {
   try {
-    const { isOnline } = req.body;
+    const isOnline = Boolean(req.body.isOnline);
 
-    const updateFields = {
-      isOnline,
-      lastSeen: isOnline ? undefined : new Date(),
-    };
+    const updateFields = isOnline
+      ? { isOnline }
+      : { isOnline, lastSeen: new Date() };
 
     const user = await User.findByIdAndUpdate(req.user._id, updateFields, {
       new: true,
@@ -149,7 +235,8 @@ export const updateOnlineStatus = async (req, res) => {
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error updating online status:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -164,47 +251,51 @@ export const deleteProfile = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Profile deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error deleting profile:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 // @desc    Search users by username or name
 // @route   GET /api/profile/search
-// @access  Public
+// @access  Private
 export const searchUsers = async (req, res) => {
   try {
-    const { query, limit = 10 } = req.query;
+    const query = String(req.query.query ?? "").trim();
 
     if (!query) {
       return res.status(400).json({ message: "Search query is required" });
     }
 
+    const pattern = escapeRegex(query.slice(0, 50));
     const users = await User.find({
       $or: [
-        { username: { $regex: query, $options: "i" } },
-        { name: { $regex: query, $options: "i" } },
+        { username: { $regex: pattern, $options: "i" } },
+        { name: { $regex: pattern, $options: "i" } },
       ],
     })
-      .select("-refreshToken -password")
-      .limit(parseInt(limit));
+      .select(PUBLIC_PROFILE_FIELDS)
+      .limit(clampLimit(req.query.limit, 10));
 
     res.status(200).json({ success: true, users });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 // @desc    Get all users
 // @route   GET /api/profile/all
-// @access  Public
+// @access  Private
 export const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = clampLimit(req.query.limit, 20);
 
     const users = await User.find()
-      .select("-refreshToken -password")
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit))
+      .select(PUBLIC_PROFILE_FIELDS)
+      .limit(limit)
+      .skip((page - 1) * limit)
       .sort({ createdAt: -1 });
 
     const total = await User.countDocuments();
@@ -214,11 +305,12 @@ export const getAllUsers = async (req, res) => {
       users,
       pagination: {
         total,
-        page: parseInt(page),
-        pages: Math.ceil(total / parseInt(limit)),
+        page,
+        pages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error listing users:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

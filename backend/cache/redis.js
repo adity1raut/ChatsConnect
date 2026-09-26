@@ -86,8 +86,10 @@ export async function cacheDelPattern(pattern) {
   const r = getRedis();
   if (!r) return;
   try {
-    const keys = await r.keys(pattern);
-    if (keys.length) await r.del(...keys);
+    // SCAN instead of KEYS — KEYS blocks Redis while it walks every key
+    for await (const keys of r.scanStream({ match: pattern, count: 100 })) {
+      if (keys.length) await r.del(...keys);
+    }
   } catch {
     // Redis is optional — ignore cache errors
   }

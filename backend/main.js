@@ -22,8 +22,9 @@ const httpServer = createServer(app);
 
 // Middleware
 app.use(passport.initialize());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Avatar uploads arrive as base64 data URLs (client caps files at 5 MB ≈ 6.7 MB encoded)
+app.use(express.json({ limit: "8mb" }));
+app.use(express.urlencoded({ extended: true, limit: "8mb" }));
 app.use(cookieParser());
 
 // CORS configuration — allow production frontend + localhost in dev

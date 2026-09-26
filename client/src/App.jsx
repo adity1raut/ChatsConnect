@@ -35,6 +35,8 @@ import Profile from "./pages/Profile.jsx";
 import UserProfile from "./pages/UserProfile.jsx";
 import SearchPage from "./pages/Search.jsx";
 import About from "./pages/About.jsx";
+import AuthCallback from "./features/auth/AuthCallback.jsx";
+import Verify2FA from "./features/auth/Verify2FA.jsx";
 import Sidebar from "./components/common/Sidebar.jsx";
 import ProtectedRoute from "./components/routes/ProtectedRoute.jsx";
 import PublicRoute from "./components/routes/PublicRoute.jsx";
@@ -245,6 +247,10 @@ function App() {
                         />
 
                         <Route path="/" element={<LandingPage />} />
+
+                        {/* Auth hand-offs: GitHub OAuth and emailed 2FA link */}
+                        <Route path="/auth/callback" element={<AuthCallback />} />
+                        <Route path="/auth/verify-2fa" element={<Verify2FA />} />
 
                         <Route
                           path="/dashboard"

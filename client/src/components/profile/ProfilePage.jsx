@@ -182,14 +182,16 @@ export default function ProfilePage() {
                   bio={bio}
                   setBio={setBio}
                   loading={loading}
-                  onSave={() =>
-                    updateProfile({
+                  onSave={async () => {
+                    const saved = await updateProfile({
                       name,
                       username: user?.username,
                       bio,
                       avatarFile,
-                    })
-                  }
+                    });
+                    // Uploaded — don't send the same image again on the next save
+                    if (saved) setAvatarFile(null);
+                  }}
                 />
               )}
               {activeTab === "settings" && (

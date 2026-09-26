@@ -18,14 +18,16 @@ const readStoredUser = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(readStoredUser);
 
-  const login = (userData, token) => {
+  const login = (userData, token, refreshToken) => {
     localStorage.setItem("authToken", token);
+    if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("userData", JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
     setUser(null);
   };

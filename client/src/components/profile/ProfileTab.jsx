@@ -71,7 +71,7 @@ export default function ProfileTab({
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
-            maxLength={200}
+            maxLength={300}
             placeholder="Tell us a little about yourself…"
             className={`w-full p-4 text-sm rounded-xl border outline-none transition-all duration-200 resize-none ${
               isDark
@@ -86,9 +86,9 @@ export default function ProfileTab({
               Supports plain text only
             </span>
             <span
-              className={`text-xs tabular-nums font-medium ${bio.length > 180 ? "text-orange-400" : isDark ? "text-gray-600" : "text-gray-400"}`}
+              className={`text-xs tabular-nums font-medium ${bio.length > 280 ? "text-orange-400" : isDark ? "text-gray-600" : "text-gray-400"}`}
             >
-              {bio.length} / 200
+              {bio.length} / 300
             </span>
           </div>
         </div>
