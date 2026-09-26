@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       maxlength: 300,
     },
+    // Short line shown under the name, e.g. "Out until Monday"
+    statusMessage: { type: String, maxlength: 100, default: "" },
+    location: { type: String, maxlength: 60, default: "" },
+    website: { type: String, maxlength: 200, default: "" },
+    privacy: {
+      // false = never show online / last seen to anyone
+      showActivity: { type: Boolean, default: true },
+    },
     isOnline: {
       type: Boolean,
       default: false,

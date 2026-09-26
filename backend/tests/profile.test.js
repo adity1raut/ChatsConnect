@@ -13,6 +13,37 @@ vi.mock("../models/user.model.js", () => ({
   },
 }));
 
+// Queries return chainable objects; each test overrides what it needs
+const chain = (value) => {
+  const q = {
+    select: vi.fn(() => q),
+    limit: vi.fn(() => q),
+    lean: vi.fn(() => Promise.resolve(value)),
+    then: (resolve, reject) => Promise.resolve(value).then(resolve, reject),
+  };
+  return q;
+};
+
+vi.mock("../models/friendRequest.model.js", () => ({
+  default: { find: vi.fn(() => chain([])), deleteMany: vi.fn().mockResolvedValue({}) },
+}));
+vi.mock("../models/group.model.js", () => ({
+  default: {
+    find: vi.fn(() => chain([])),
+    countDocuments: vi.fn().mockResolvedValue(0),
+    deleteOne: vi.fn().mockResolvedValue({}),
+  },
+}));
+vi.mock("../models/notification.model.js", () => ({
+  default: { deleteMany: vi.fn().mockResolvedValue({}) },
+}));
+vi.mock("../socket/io.js", () => ({
+  getIO: () => ({ in: () => ({ disconnectSockets: vi.fn() }) }),
+}));
+vi.mock("../service/presence.service.js", () => ({
+  setActivityVisibility: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("../config/cloudinary.js", () => ({
   cloudinary: {
     uploader: {
@@ -37,6 +68,9 @@ const {
 const bcrypt = (await import("bcryptjs")).default;
 
 const User = (await import("../models/user.model.js")).default;
+const FriendRequest = (await import("../models/friendRequest.model.js")).default;
+const Group = (await import("../models/group.model.js")).default;
+const { setActivityVisibility } = await import("../service/presence.service.js");
 const { cloudinary } = await import("../config/cloudinary.js");
 
 // Valid 24-hex ObjectId strings
@@ -56,27 +90,26 @@ describe("getUserProfile", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns 404 when user not found", async () => {
-    User.findById.mockReturnValueOnce({
-      select: vi.fn().mockResolvedValueOnce(null),
-    });
-    const { req, res } = mockReqRes({}, { userId: OTHER_ID });
+    User.findById.mockReturnValueOnce(chain(null));
+    const { req, res } = mockReqRes({}, { userId: OTHER_ID }, {}, { _id: USER_ID });
     await getUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
   });
 
   it("returns 404 (not 500) for a malformed id without querying the DB", async () => {
-    const { req, res } = mockReqRes({}, { userId: "not-an-object-id" });
+    const { req, res } = mockReqRes({}, { userId: "not-an-object-id" }, {}, { _id: USER_ID });
     await getUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(404);
     expect(User.findById).not.toHaveBeenCalled();
   });
 
   it("selects only public fields (no email or auth details)", async () => {
-    const select = vi.fn().mockResolvedValueOnce({ _id: OTHER_ID });
-    User.findById.mockReturnValueOnce({ select });
-    const { req, res } = mockReqRes({}, { userId: OTHER_ID });
+    const q = chain({ _id: OTHER_ID });
+    User.findById.mockReturnValueOnce(q);
+    User.find = vi.fn(() => chain([]));
+    const { req, res } = mockReqRes({}, { userId: OTHER_ID }, {}, { _id: USER_ID });
     await getUserProfile(req, res);
-    expect(select).toHaveBeenCalledWith(PUBLIC_PROFILE_FIELDS);
+    expect(q.select).toHaveBeenCalledWith(PUBLIC_PROFILE_FIELDS);
     for (const secret of ["email", "authProvider", "githubId", "twoFactor"]) {
       expect(PUBLIC_PROFILE_FIELDS).not.toContain(secret);
     }
@@ -88,15 +121,38 @@ describe("getUserProfile", () => {
       name: "Test User",
       username: "testuser",
     };
-    User.findById.mockReturnValueOnce({
-      select: vi.fn().mockResolvedValueOnce(mockUser),
-    });
-    const { req, res } = mockReqRes({}, { userId: OTHER_ID });
+    User.findById.mockReturnValueOnce(chain(mockUser));
+    User.find = vi.fn(() => chain([]));
+    const { req, res } = mockReqRes({}, { userId: OTHER_ID }, {}, { _id: USER_ID });
     await getUserProfile(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ success: true, user: mockUser }),
     );
+  });
+
+  it("returns friend count and mutual friends", async () => {
+    const THIRD = "64b000000000000000000003";
+    const FOURTH = "64b000000000000000000004";
+    User.findById.mockReturnValueOnce(chain({ _id: OTHER_ID }));
+    // Their friends: me? no — THIRD and FOURTH; my friends: THIRD
+    FriendRequest.find
+      .mockReturnValueOnce(
+        chain([
+          { sender: OTHER_ID, receiver: THIRD },
+          { sender: FOURTH, receiver: OTHER_ID },
+        ]),
+      )
+      .mockReturnValueOnce(chain([{ sender: USER_ID, receiver: THIRD }]));
+    User.find = vi.fn(() => chain([{ _id: THIRD, name: "Third" }]));
+    Group.countDocuments.mockResolvedValueOnce(2);
+    const { req, res } = mockReqRes({}, { userId: OTHER_ID }, {}, { _id: USER_ID });
+    await getUserProfile(req, res);
+    const body = res.json.mock.calls[0][0];
+    expect(body.friendCount).toBe(2);
+    expect(body.mutualFriends.count).toBe(1);
+    expect(User.find).toHaveBeenCalledWith({ _id: { $in: [THIRD] } });
+    expect(body.mutualGroups.count).toBe(2);
   });
 });
 
@@ -266,6 +322,40 @@ describe("updateProfile", () => {
     expect(mockUser.save).not.toHaveBeenCalled();
   });
 
+  it("normalizes websites and rejects non-http links", async () => {
+    const mockUser = { _id: USER_ID, username: "me", save: vi.fn(), set: vi.fn() };
+    User.findById.mockResolvedValueOnce(mockUser);
+    let { req, res } = mockReqRes({ website: "example.com" }, {}, {}, { _id: USER_ID });
+    await updateProfile(req, res);
+    expect(mockUser.website).toBe("https://example.com/");
+
+    User.findById.mockResolvedValueOnce({ ...mockUser, save: vi.fn() });
+    ({ req, res } = mockReqRes({ website: "javascript:alert(1)" }, {}, {}, { _id: USER_ID }));
+    await updateProfile(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it("hides activity status when privacy is turned off", async () => {
+    const mockUser = {
+      _id: USER_ID,
+      username: "me",
+      privacy: { showActivity: true },
+      save: vi.fn().mockResolvedValue(true),
+      set: vi.fn(),
+    };
+    User.findById.mockResolvedValueOnce(mockUser);
+    const { req, res } = mockReqRes(
+      { privacy: { showActivity: false } },
+      {},
+      {},
+      { _id: USER_ID },
+    );
+    await updateProfile(req, res);
+    expect(mockUser.set).toHaveBeenCalledWith("privacy.showActivity", false);
+    expect(setActivityVisibility).toHaveBeenCalledWith(USER_ID, false);
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
   it("rejects an invalid username format", async () => {
     User.findById.mockResolvedValueOnce({ _id: USER_ID, save: vi.fn() });
     const { req, res } = mockReqRes(
@@ -322,11 +412,42 @@ describe("updateEmail", () => {
 describe("deleteProfile", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("deletes user and returns 200", async () => {
-    User.findByIdAndDelete.mockResolvedValueOnce({});
-    const { req, res } = mockReqRes({}, {}, {}, { _id: USER_ID });
+  const account = async (overrides = {}) => ({
+    _id: USER_ID,
+    authProvider: "LOCAL",
+    password: await bcrypt.hash("secret-pass", 4),
+    avatar: "",
+    ...overrides,
+  });
+
+  it("refuses without the correct password", async () => {
+    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(await account()) });
+    User.deleteOne = vi.fn();
+    const { req, res } = mockReqRes({ password: "wrong" }, {}, {}, { _id: USER_ID });
     await deleteProfile(req, res);
-    expect(User.findByIdAndDelete).toHaveBeenCalledWith(USER_ID);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(User.deleteOne).not.toHaveBeenCalled();
+  });
+
+  it("deletes the user and cleans up requests and groups", async () => {
+    User.findById.mockReturnValueOnce({ select: vi.fn().mockResolvedValueOnce(await account()) });
+    User.deleteOne = vi.fn().mockResolvedValue({});
+    const soloGroup = { _id: "g1", members: [{ user: USER_ID, role: "admin" }] };
+    const sharedGroup = {
+      _id: "g2",
+      members: [
+        { user: USER_ID, role: "admin" },
+        { user: OTHER_ID, role: "member" },
+      ],
+      save: vi.fn().mockResolvedValue(true),
+    };
+    Group.find.mockReturnValueOnce(Promise.resolve([soloGroup, sharedGroup]));
+    const { req, res } = mockReqRes({ password: "secret-pass" }, {}, {}, { _id: USER_ID });
+    await deleteProfile(req, res);
+    expect(Group.deleteOne).toHaveBeenCalledWith({ _id: "g1" });
+    expect(sharedGroup.members).toEqual([{ user: OTHER_ID, role: "admin" }]);
+    expect(FriendRequest.deleteMany).toHaveBeenCalled();
+    expect(User.deleteOne).toHaveBeenCalledWith({ _id: USER_ID });
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });

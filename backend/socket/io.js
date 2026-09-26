@@ -12,3 +12,6 @@ export const getIO = () => io;
 export const onlineUsers = new Map();
 
 export const isOnline = (userId) => onlineUsers.has(String(userId));
+
+// Users who hide their activity: never reported as online to anyone
+export const hiddenPresence = new Set();

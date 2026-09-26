@@ -12,6 +12,12 @@ import {
 import { notify } from "../service/notification.service.js";
 import { bustMessageCache } from "../controllers/message.controller.js";
 import { redisAddOnline, redisRemoveOnline } from "../cache/redis.js";
+import {
+  loadPresenceVisibility,
+  markOffline,
+  markOnline,
+  visibleOnlineIds,
+} from "../service/presence.service.js";
 import { verifyAccessToken } from "../service/token.service.js";
 import { getIO, isOnline, onlineUsers, setIO } from "./io.js";
 import logger from "../utils/logger.js";
@@ -35,16 +41,6 @@ function recordMissedCall(callerId, calleeId) {
     actor: callerId,
     meta: { callType: pending.callType },
   });
-}
-
-async function setPresence(userId, online) {
-  const update = online
-    ? { isOnline: true }
-    : { isOnline: false, lastSeen: new Date() };
-  await User.updateOne({ _id: userId }, update).catch((err) =>
-    logger.warn(`Presence update failed for ${userId}: ${err.message}`),
-  );
-  return update;
 }
 
 export function initSocket(httpServer) {
@@ -89,11 +85,15 @@ export function initSocket(httpServer) {
     onlineUsers.set(userId, sockets);
     if (firstTab) {
       redisAddOnline(userId);
-      setPresence(userId, true);
-      socket.broadcast.emit("userOnline", { userId });
+      // Non-blocking: listeners below must be registered before any await
+      loadPresenceVisibility(userId)
+        .catch(() => true)
+        .then(() => markOnline(userId));
     }
-    // Snapshot so this client knows who was already online
-    socket.emit("onlineUsers", { userIds: [...onlineUsers.keys()] });
+    // Snapshot so this client knows who was already online (hidden users excluded)
+    socket.emit("onlineUsers", {
+      userIds: visibleOnlineIds([...onlineUsers.keys()]),
+    });
 
     // Join every group room, so group messages and typing arrive on any page
     Group.find({ "members.user": userId })
@@ -373,8 +373,7 @@ export function initSocket(httpServer) {
           io.to(calleeId).emit("callEnded", { byUserId: userId });
         }
       }
-      const { lastSeen } = await setPresence(userId, false);
-      socket.broadcast.emit("userOffline", { userId, lastSeen });
+      markOffline(userId);
     });
   });
 
