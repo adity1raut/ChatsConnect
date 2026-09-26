@@ -1,18 +1,21 @@
-import { Sparkles } from "lucide-react";
-import { cn } from "../../lib/cn";
+import { MessagesSquare } from "lucide-react";
+import { cn } from "../../lib/utils";
 
-export default function Brand({ subtitle, className }) {
+// Boxed glyph + italic wordmark, as in the reference's "IPSEC PRISM"
+export default function Brand({ subtitle, compact = false, className }) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-600 via-purple-500 to-pink-500 shadow-lg shadow-violet-500/25">
-        <Sparkles className="size-4 text-white" strokeWidth={2.5} aria-hidden="true" />
+      <span className="flex size-9 shrink-0 items-center justify-center border border-primary/50 bg-primary/10 text-primary shadow-[0_0_14px_var(--glow)]">
+        <MessagesSquare className="size-4" strokeWidth={2.25} aria-hidden="true" />
       </span>
-      <div className="min-w-0">
-        <p className="bg-linear-to-r from-violet-600 to-purple-500 bg-clip-text text-lg font-extrabold tracking-tight text-transparent dark:from-violet-400 dark:to-fuchsia-400">
-          ChatsConnect
-        </p>
-        {subtitle && <p className="-mt-0.5 text-[11px] font-medium text-subtle">{subtitle}</p>}
-      </div>
+      {!compact && (
+        <div className="min-w-0">
+          <p className="-skew-x-12 text-[15px] leading-none font-extrabold tracking-[0.16em] text-foreground uppercase italic">
+            ChatsConnect
+          </p>
+          {subtitle && <p className="eyebrow mt-1.5 text-faint">{subtitle}</p>}
+        </div>
+      )}
     </div>
   );
 }

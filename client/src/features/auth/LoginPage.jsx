@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Mail, MailCheck } from "lucide-react";
+import { AlertCircle, Mail, MailCheck } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { Button, Input, PasswordInput } from "../../components/ui";
+import { Alert, AlertDescription, Button, InputField, PasswordField } from "../../components/ui";
 import AuthLayout from "./AuthLayout";
 import GitHubButton, { OrDivider } from "./GitHubButton";
 
@@ -42,9 +42,11 @@ export default function LoginPage() {
   if (checkEmail) {
     return (
       <AuthLayout title="Check your email" subtitle="Two-step verification is on for this account.">
-        <div className="space-y-4 text-center">
-          <MailCheck className="mx-auto size-12 text-accent" aria-hidden="true" />
-          <p className="text-sm text-muted">{checkEmail}</p>
+        <div className="space-y-5 text-center">
+          <span className="mx-auto flex size-14 items-center justify-center border border-primary/40 bg-primary/10 text-primary">
+            <MailCheck className="size-6" aria-hidden="true" />
+          </span>
+          <p className="text-xs leading-relaxed text-muted-foreground">{checkEmail}</p>
           <Button variant="ghost" onClick={() => setCheckEmail("")}>
             Back to sign in
           </Button>
@@ -60,14 +62,14 @@ export default function LoginPage() {
       footer={
         <>
           New here?{" "}
-          <Link to="/registration" className="font-semibold text-accent-fg hover:underline">
+          <Link to="/registration" className="font-bold text-primary underline-offset-4 hover:underline">
             Create an account
           </Link>
         </>
       }
     >
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <Input
+        <InputField
           label="Email"
           type="email"
           icon={Mail}
@@ -77,7 +79,7 @@ export default function LoginPage() {
           placeholder="you@example.com"
           required
         />
-        <PasswordInput
+        <PasswordField
           label="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -85,9 +87,10 @@ export default function LoginPage() {
           required
         />
         {error && (
-          <p role="alert" className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-700 animate-shake dark:text-red-300">
-            {error}
-          </p>
+          <Alert variant="destructive" className="animate-shake">
+            <AlertCircle aria-hidden="true" />
+            <AlertDescription className="text-current">{error}</AlertDescription>
+          </Alert>
         )}
         <Button type="submit" fullWidth size="lg" loading={loading} disabled={!email || !password}>
           Sign in

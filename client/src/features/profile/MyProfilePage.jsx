@@ -5,7 +5,7 @@ import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
 import { useFriends } from "../../context/FriendContext";
 import { useSocket } from "../../context/SocketContext";
-import { Card, Spinner, Tabs } from "../../components/ui";
+import { Card, Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui";
 import { toast } from "../../lib/toast";
 import SettingsPanel from "../settings/SettingsPanel";
 import DeleteAccountSection from "./DeleteAccountSection";
@@ -73,7 +73,7 @@ export default function MyProfilePage() {
     user.privacy?.showActivity !== false && (isConnected || onlineUsers.has(user._id));
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8 sm:px-8 sm:py-10">
       <ProfileHeader
         user={user}
         avatarSrc={avatarPreview}
@@ -83,24 +83,32 @@ export default function MyProfilePage() {
         stats={[{ label: "Friends", value: friends.length }]}
       />
 
-      <Tabs tabs={TABS} value={tab} onChange={setTab} label="Profile sections" />
-
-      <div role="tabpanel">
-        {tab === "profile" &&
-          (loaded ? (
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList aria-label="Profile sections">
+          {TABS.map(({ value, label, icon: Icon }) => (
+            <TabsTrigger key={value} value={value}>
+              <Icon aria-hidden="true" /> {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="profile">
+          {loaded ? (
             <EditProfileForm />
           ) : (
-            <Card className="flex justify-center py-10">
+            <Card className="p-5 flex justify-center py-10">
               <Spinner label="Loading profile" />
             </Card>
-          ))}
-        {tab === "settings" && (
-          <Card>
+          )}
+        </TabsContent>
+        <TabsContent value="settings">
+          <Card className="p-5">
             <SettingsPanel />
           </Card>
-        )}
-        {tab === "account" && <DeleteAccountSection />}
-      </div>
+        </TabsContent>
+        <TabsContent value="account">
+          <DeleteAccountSection />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, AtSign, Check, Mail, User } from "lucide-react";
+import { AlertCircle, ArrowLeft, AtSign, Check, CheckCircle2, Mail, User } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
-import { Button, Input, PasswordInput } from "../../components/ui";
-import { cn } from "../../lib/cn";
+import { Alert, AlertDescription, Button, InputField, PasswordField } from "../../components/ui";
+import { cn } from "../../lib/utils";
 import AuthLayout from "./AuthLayout";
 import GitHubButton, { OrDivider } from "./GitHubButton";
 
@@ -16,25 +16,24 @@ const STEPS = ["Your details", "Password", "Verify email"];
 
 function StepIndicator({ step }) {
   return (
-    <ol className="mb-6 flex items-center gap-2" aria-label="Sign-up progress">
+    <ol className="mb-7 grid grid-cols-3 border border-border" aria-label="Sign-up progress">
       {STEPS.map((label, i) => {
         const n = i + 1;
         const done = step > n;
         const current = step === n;
         return (
-          <li key={label} className="flex flex-1 items-center gap-2" aria-current={current ? "step" : undefined}>
-            <span
-              className={cn(
-                "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold",
-                done && "bg-emerald-500 text-white",
-                current && "bg-accent text-white",
-                !done && !current && "bg-surface-2 text-subtle",
-              )}
-            >
-              {done ? <Check className="size-4" aria-hidden="true" /> : n}
+          <li
+            key={label}
+            aria-current={current ? "step" : undefined}
+            className={cn(
+              "flex items-center gap-2 border-r border-border px-2.5 py-2 last:border-r-0",
+              current && "bg-primary/10 shadow-[inset_0_-2px_0_var(--primary)]",
+            )}
+          >
+            <span className={cn("text-[10px] font-bold tabular-nums", done || current ? "text-primary" : "text-faint")}>
+              {done ? <Check className="size-3.5" aria-hidden="true" /> : String(n).padStart(2, "0")}
             </span>
-            <span className={cn("hidden text-xs font-medium sm:block", current ? "text-fg" : "text-subtle")}>{label}</span>
-            {n < STEPS.length && <span className={cn("h-0.5 flex-1 rounded-full", done ? "bg-emerald-500" : "bg-line")} />}
+            <span className={cn("eyebrow truncate", current ? "text-foreground" : "text-faint")}>{label}</span>
           </li>
         );
       })}
@@ -123,11 +122,17 @@ export default function RegisterPage() {
 
   const messages = (
     <>
-      {notice && <p className="rounded-xl bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">{notice}</p>}
+      {notice && (
+        <Alert variant="success" role="status">
+          <CheckCircle2 aria-hidden="true" />
+          <AlertDescription className="text-current">{notice}</AlertDescription>
+        </Alert>
+      )}
       {error && (
-        <p role="alert" className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-700 animate-shake dark:text-red-300">
-          {error}
-        </p>
+        <Alert variant="destructive" className="animate-shake">
+          <AlertCircle aria-hidden="true" />
+          <AlertDescription className="text-current">{error}</AlertDescription>
+        </Alert>
       )}
     </>
   );
@@ -139,7 +144,7 @@ export default function RegisterPage() {
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-accent-fg hover:underline">
+          <Link to="/login" className="font-bold text-primary underline-offset-4 hover:underline">
             Sign in
           </Link>
         </>
@@ -150,8 +155,8 @@ export default function RegisterPage() {
       {step === 1 && (
         <>
           <form onSubmit={submitDetails} className="space-y-4" noValidate>
-            <Input label="Name" icon={User} value={form.name} onChange={set("name")} autoComplete="name" placeholder="Your name" required />
-            <Input
+            <InputField label="Name" icon={User} value={form.name} onChange={set("name")} autoComplete="name" placeholder="Your name" required />
+            <InputField
               label="Username"
               icon={AtSign}
               value={form.username}
@@ -161,7 +166,7 @@ export default function RegisterPage() {
               hint="3–20 letters, numbers or underscores"
               required
             />
-            <Input label="Email" type="email" icon={Mail} value={form.email} onChange={set("email")} autoComplete="email" placeholder="you@example.com" required />
+            <InputField label="Email" type="email" icon={Mail} value={form.email} onChange={set("email")} autoComplete="email" placeholder="you@example.com" required />
             {messages}
             <Button type="submit" fullWidth size="lg">
               Continue
@@ -174,8 +179,8 @@ export default function RegisterPage() {
 
       {step === 2 && (
         <form onSubmit={submitPassword} className="space-y-4" noValidate>
-          <PasswordInput label="Password" value={form.password} onChange={set("password")} autoComplete="new-password" hint="At least 6 characters" required />
-          <PasswordInput label="Confirm password" value={form.confirm} onChange={set("confirm")} autoComplete="new-password" required />
+          <PasswordField label="Password" value={form.password} onChange={set("password")} autoComplete="new-password" hint="At least 6 characters" required />
+          <PasswordField label="Confirm password" value={form.confirm} onChange={set("confirm")} autoComplete="new-password" required />
           {messages}
           <div className="flex gap-2">
             <Button variant="ghost" icon={ArrowLeft} onClick={back}>
@@ -190,14 +195,14 @@ export default function RegisterPage() {
 
       {step === 3 && (
         <form onSubmit={submitCode} className="space-y-4" noValidate>
-          <Input
+          <InputField
             label="Verification code"
             value={form.otp}
             onChange={(e) => setForm((f) => ({ ...f, otp: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
             inputMode="numeric"
             autoComplete="one-time-code"
             placeholder="000000"
-            className="text-center font-mono text-xl tracking-[0.5em]"
+            className="text-center text-xl tracking-[0.5em]"
             data-autofocus
             required
           />
@@ -206,14 +211,14 @@ export default function RegisterPage() {
             Create account
           </Button>
           <div className="flex items-center justify-between text-sm">
-            <button type="button" onClick={back} className="font-medium text-muted hover:text-fg">
+            <button type="button" onClick={back} className="text-xs font-bold tracking-[0.1em] text-muted-foreground uppercase hover:text-foreground">
               Change details
             </button>
             <button
               type="button"
               onClick={resend}
               disabled={cooldown > 0 || loading}
-              className="font-semibold text-accent-fg hover:underline disabled:text-subtle disabled:no-underline"
+              className="text-xs font-bold tracking-[0.1em] text-primary uppercase hover:underline disabled:text-faint disabled:no-underline"
             >
               {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
             </button>

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/jetbrains-mono";
 
 /* `dark:` utilities follow the .dark class on <html> (set by ThemeContext and
    the pre-paint script in index.html), not only the OS preference. */
@@ -8,20 +10,21 @@
   /* Custom xs breakpoint (480px) for very small screens between base and sm (640px) */
   --breakpoint-xs: 480px;
 
+  /* Terminal look: one monospace family for the whole UI */
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --default-font-family: var(--font-mono);
+
   --animate-fade-in: fade-in 0.25s ease-out both;
-  --animate-fade-in-left: fade-in-left 0.4s ease-out both;
-  --animate-fade-in-right: fade-in-right 0.4s ease-out both;
+  --animate-fade-in-right: fade-in-right 0.3s ease-out both;
   --animate-slide-up: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-shake: shake 0.4s ease-in-out;
+  --animate-blink: blink 1.1s steps(2, start) infinite;
+  --animate-scan: scan 2.4s ease-in-out infinite;
 
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
-  }
-  @keyframes fade-in-left {
-    from { opacity: 0; transform: translateX(-16px); }
-    to { opacity: 1; transform: translateX(0); }
   }
   @keyframes fade-in-right {
     from { opacity: 0; transform: translateX(16px); }
@@ -31,85 +34,159 @@
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.96); }
-    to { opacity: 1; transform: scale(1); }
-  }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-4px); }
     75% { transform: translateX(4px); }
   }
+  @keyframes blink {
+    to { visibility: hidden; }
+  }
+  @keyframes scan {
+    0%, 100% { transform: scaleY(0.35); }
+    50% { transform: scaleY(1); }
+  }
 }
 
-/* ── Semantic color tokens ──────────────────────────────────────────────
-   Components use bg-bg, bg-surface, border-line, text-fg, text-muted,
-   bg-accent … instead of `isDark ? … : …` ternaries. */
+/* ── Theme tokens ───────────────────────────────────────────────────────
+   shadcn/ui names (bg-background, bg-card, text-muted-foreground,
+   bg-primary …) so components added with `npx shadcn add` match the theme.
+   Extras: faint text, border-strong, info / success / warning, overlay, grid.
+   Dark is the default; light follows the same palette at daylight contrast. */
 :root {
-  --app-bg: #f4f5ff;
-  --app-surface: #ffffff;
-  --app-surface-2: #f5f5fb;
-  --app-elevated: #ffffff;
-  --app-line: #e5e6f0;
-  --app-line-strong: #d2d3e0;
-  --app-fg: #13131f;
-  --app-muted: #585b6b;
-  --app-subtle: #767989;
-  --app-accent: #7c3aed;
-  --app-accent-hover: #6d28d9;
-  --app-accent-soft: #ede9fe;
-  --app-accent-fg: #6d28d9;
-  --app-overlay: rgb(15 15 30 / 0.45);
+  --radius: 0px;
+
+  --background: #f8fafc;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: #167a5c;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #172033;
+  --muted: #f1f5f9;
+  --muted-foreground: #5b6679;
+  --accent: #ecf2f7;
+  --accent-foreground: #172033;
+  --destructive: #c2414b;
+  --border: #dbe4ef;
+  --border-strong: #b6c3d4;
+  --input: #cbd5e1;
+  --ring: #167a5c;
+
+  --faint: #6f7b8e;
+  --info: #0369a1;
+  --success: #167a5c;
+  --warning: #b45309;
+  --overlay: rgb(15 23 42 / 0.45);
+  --grid: rgb(23 32 51 / 0.05);
+  --sidebar: #f1f5f9;
+  --glow: rgb(22 122 92 / 0.18);
+  --panel-shadow: 0 24px 60px rgb(15 23 42 / 0.1);
+  --float-shadow: 0 10px 28px rgb(15 23 42 / 0.08);
 }
 
 .dark {
-  --app-bg: #0a0a14;
-  --app-surface: #11111c;
-  --app-surface-2: #181826;
-  --app-elevated: #1d1d2d;
-  --app-line: rgb(255 255 255 / 0.08);
-  --app-line-strong: rgb(255 255 255 / 0.15);
-  --app-fg: #ececf3;
-  --app-muted: #a3a6b8;
-  --app-subtle: #7d8094;
-  --app-accent: #8b5cf6;
-  --app-accent-hover: #7c3aed;
-  --app-accent-soft: rgb(139 92 246 / 0.16);
-  --app-accent-fg: #c4b5fd;
-  --app-overlay: rgb(0 0 0 / 0.6);
+  --background: #0a0f17;
+  --foreground: #e9edf5;
+  --card: #0e141e;
+  --card-foreground: #e9edf5;
+  --popover: #111827;
+  --popover-foreground: #e9edf5;
+  --primary: #5eead4;
+  --primary-foreground: #03201a;
+  --secondary: #162033;
+  --secondary-foreground: #e9edf5;
+  --muted: #141c2a;
+  --muted-foreground: #8e98aa;
+  --accent: #152031;
+  --accent-foreground: #e9edf5;
+  --destructive: #ff6978;
+  --border: #27303e;
+  --border-strong: #3a4658;
+  --input: #2f3a4b;
+  --ring: #5eead4;
+
+  --faint: #6f798b;
+  --info: #71d8ff;
+  --success: #5eead4;
+  --warning: #ffb36a;
+  --overlay: rgb(0 0 0 / 0.72);
+  --grid: rgb(148 163 184 / 0.045);
+  --sidebar: #070b12;
+  --glow: rgb(94 234 212 / 0.18);
+  --panel-shadow: 0 30px 80px rgb(0 0 0 / 0.45);
+  --float-shadow: 0 10px 28px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {
-  --color-bg: var(--app-bg);
-  --color-surface: var(--app-surface);
-  --color-surface-2: var(--app-surface-2);
-  --color-elevated: var(--app-elevated);
-  --color-line: var(--app-line);
-  --color-line-strong: var(--app-line-strong);
-  --color-fg: var(--app-fg);
-  --color-muted: var(--app-muted);
-  --color-subtle: var(--app-subtle);
-  --color-accent: var(--app-accent);
-  --color-accent-hover: var(--app-accent-hover);
-  --color-accent-soft: var(--app-accent-soft);
-  --color-accent-fg: var(--app-accent-fg);
-  --color-overlay: var(--app-overlay);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-faint: var(--faint);
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-overlay: var(--overlay);
+  --color-sidebar: var(--sidebar);
+
+  /* Elevation: big soft drop for dialogs and hero panels, smaller for floating bars/menus */
+  --shadow-panel: var(--panel-shadow);
+  --shadow-float: var(--float-shadow);
+
+  /* Square corners everywhere; rounded-full stays for dots and pills */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
 }
 
 @layer base {
+  * {
+    border-color: var(--border);
+  }
+
   html,
   body {
-    background-color: var(--app-bg);
-    color: var(--app-fg);
+    background-color: var(--background);
+    color: var(--foreground);
   }
 
   body {
+    font-size: 0.875rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "calt" 0; /* no ligatures: "=>" stays two characters */
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 28%, transparent);
   }
 
   :focus-visible {
-    outline: 2px solid var(--app-accent);
+    outline: 1px solid var(--ring);
     outline-offset: 2px;
   }
 
@@ -130,6 +207,28 @@
   }
 }
 
+/* Small uppercase, letter-spaced label: "ANALYSIS RESULTS" */
+@utility eyebrow {
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Faint blueprint grid behind hero areas and the app canvas */
+@utility bg-grid {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Teal halo for the primary call to action */
+@utility glow {
+  box-shadow: 0 0 22px var(--glow);
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -139,7 +238,7 @@
 
 @utility scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--app-line-strong) transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 /* Room for the fixed mobile bottom nav (3.5rem + iPhone home-indicator inset) */

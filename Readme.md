@@ -45,7 +45,7 @@ The project demonstrates industry-level system design using Node.js, React, Sock
 
 | Layer | Technology |
 |---|---|
-| Frontend | React, Vite, Tailwind CSS, Axios, React Router |
+| Frontend | React 19, Vite, Tailwind CSS 4, shadcn/ui (Radix primitives), Axios, React Router |
 | Backend | Node.js (ESM), Express 5, Mongoose, Socket.IO |
 | AI Microservice | Python, FastAPI, Groq (LLaMA 3.3 70B) |
 | Database | MongoDB Atlas |
@@ -116,7 +116,7 @@ Browser (React + Vite)
 | `AIContext` | AI feature enabled/disabled toggles |
 | `CallContext` / `GroupCallContext` | WebRTC signaling for video calls |
 | `FriendContext` | Friend request state |
-| `ThemeContext` | Dark/light mode |
+| `ThemeContext` | Theme: dark (default), light or follow the system |
 
 ---
 

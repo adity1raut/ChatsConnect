@@ -11,7 +11,7 @@ import SecurityCodeModal from "../e2ee/SecurityCodeModal";
 import { Button, EmptyState } from "../../components/ui";
 import AssistantChat from "../ai/AssistantChat";
 import SmartReplies from "../ai/SmartReplies";
-import { cn } from "../../lib/cn";
+import { cn } from "../../lib/utils";
 import ChatHeader from "./ChatHeader";
 import Composer from "./Composer";
 import ConversationList from "./ConversationList";
@@ -90,7 +90,7 @@ export default function ChatPage() {
       />
 
       <section
-        className={cn("min-w-0 flex-1 flex-col bg-bg", selected ? "flex" : "hidden md:flex")}
+        className={cn("min-w-0 flex-1 flex-col bg-background", selected ? "flex" : "hidden md:flex")}
         aria-label={selected ? `Chat with ${selected.name}` : "Chat"}
       >
         {selected ? (
@@ -132,7 +132,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={chat.suggestReplies}
                   title="Sends the last few messages of this encrypted chat to the AI"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted hover:border-accent hover:text-accent-fg"
+                  className="inline-flex h-7 items-center gap-1.5 border border-border bg-card px-2.5 text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase hover:border-primary/50 hover:text-primary"
                 >
                   <Sparkles className="size-3.5" aria-hidden="true" />
                   Suggest replies
@@ -154,13 +154,13 @@ export default function ChatPage() {
             icon={MessageSquare}
             title="Your messages"
             description="Pick a conversation, or start a new one."
-            className="h-full"
+            className="h-full bg-grid"
             action={
               <div className="flex flex-wrap justify-center gap-2">
                 <Button icon={SquarePen} onClick={() => setModal("newDM")}>
                   New message
                 </Button>
-                <Button variant="secondary" icon={UsersRound} onClick={() => setModal("newGroup")}>
+                <Button variant="outline" icon={UsersRound} onClick={() => setModal("newGroup")}>
                   New group
                 </Button>
               </div>
@@ -170,7 +170,7 @@ export default function ChatPage() {
       </section>
 
       {aiPanelOpen && (
-        <div className="hidden h-full w-96 shrink-0 lg:flex">
+        <div className="hidden h-full w-96 shrink-0 border-l border-border lg:flex">
           <AssistantChat compact onClose={() => setAiPanelOpen(false)} />
         </div>
       )}

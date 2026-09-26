@@ -1,142 +1,292 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Lock, Moon, Sun } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
-import { Card, IconButton } from "../../components/ui";
-import Brand from "../../components/layout/Brand";
+import { Badge, Button, Corners, Eyebrow, StatusDot } from "../../components/ui";
+import SiteFooter from "../../components/layout/SiteFooter";
+import SiteHeader from "../../components/layout/SiteHeader";
 import { FEATURES } from "./features";
 
-function ChatPreview() {
-  const bubbles = [
-    { mine: false, text: "Are we still on for **Friday**? 🎉" },
-    { mine: true, text: "Yes! I'll bring the slides." },
-    { mine: false, text: "Perfect — see you then" },
-  ];
+const HANDSHAKE = [
+  ["handshake", "ECDH P-256", "OK"],
+  ["cipher", "AES-256-GCM", "OK"],
+  ["safety no.", "48213 90217", "VERIFIED"],
+];
+
+const PREVIEW = [
+  { mine: false, text: "Are we still on for **Friday**?" },
+  { mine: true, text: "Yes — I'll bring the slides." },
+  { mine: false, text: "Perfect. See you then" },
+];
+
+const bold = (text) => text.split("**").map((part, i) => (i % 2 ? <strong key={i} className="text-foreground">{part}</strong> : part));
+
+// Hero visual: a secure-channel console instead of the reference's 3D mascot
+function ChannelConsole() {
   return (
-    <Card className="relative mx-auto w-full max-w-sm space-y-3 p-5 shadow-2xl" aria-hidden="true">
-      <div className="flex items-center gap-3 border-b border-line pb-3">
-        <span className="flex size-9 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white">
-          AP
+    <div className="relative w-full max-w-md justify-self-center border border-border-strong bg-card/90 shadow-panel lg:justify-self-end" aria-hidden="true">
+      <Corners />
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <span className="eyebrow text-muted-foreground">
+          Session <span className="text-faint">//</span> maya.chen
         </span>
+        <span className="eyebrow flex items-center gap-2 text-primary">
+          <StatusDot pulse /> Live
+        </span>
+      </div>
+
+      <dl className="space-y-1.5 border-b border-dashed border-border px-4 py-3 text-[11px]">
+        {HANDSHAKE.map(([step, value, result]) => (
+          <div key={step} className="flex items-center gap-2">
+            <dt className="text-faint">&gt; {step}</dt>
+            <span className="min-w-0 flex-1 overflow-hidden text-faint/50 whitespace-nowrap">{".".repeat(40)}</span>
+            <dd className="text-muted-foreground">{value}</dd>
+            <dd className="w-16 text-right font-bold text-primary">[{result}]</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="space-y-3 px-4 py-4">
+        {PREVIEW.map((m, i) => (
+          <div key={i} className={m.mine ? "flex justify-end" : "flex"}>
+            <p
+              className={
+                m.mine
+                  ? "max-w-[80%] border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-foreground"
+                  : "max-w-[80%] border border-border bg-muted px-3 py-2 text-xs text-muted-foreground"
+              }
+            >
+              {bold(m.text)}
+              {i === PREVIEW.length - 1 && <span className="ml-0.5 inline-block h-3 w-1.5 translate-y-0.5 bg-primary animate-blink" />}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[10px] font-bold tracking-[0.14em] text-faint uppercase">
+        <span className="flex items-center gap-1.5">
+          <Lock className="size-3 text-primary" /> End-to-end encrypted
+        </span>
+        <span>Frame: ∞</span>
+      </div>
+    </div>
+  );
+}
+
+function Hero({ signedIn }) {
+  return (
+    <section className="relative border-b border-border bg-grid">
+      <div className="mx-auto grid min-h-[calc(100dvh-3rem)] max-w-6xl grid-cols-1 items-center gap-14 px-4 pt-28 pb-16 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pt-24">
         <div>
-          <p className="flex items-center gap-1.5 text-sm font-bold">
-            Alice Park <Lock className="size-3 text-emerald-500" />
+          <Eyebrow index="001" rule className="max-w-xl">
+            Secure chat protocol
+          </Eyebrow>
+
+          <h1 className="mt-7 border-l border-dotted border-border-strong pl-4 text-[2rem] leading-[1.08] font-extrabold tracking-[0.08em] uppercase sm:pl-6 sm:text-5xl lg:text-[3.25rem]">
+            <span className="block text-foreground">Messages for</span>
+            <span className="block text-primary [text-shadow:0_0_28px_var(--glow)]">your people</span>
+            <span className="mt-2 block text-muted-foreground">Not the server</span>
+          </h1>
+
+          <div aria-hidden="true" className="mt-7 w-72 max-w-full border-t-2 border-dotted border-border-strong" />
+
+          <p className="mt-7 max-w-xl border-l border-border-strong pl-4 text-sm leading-7 text-muted-foreground sm:text-[15px]">
+            Real-time chat, calls and an assistant you configure yourself — with direct messages encrypted on
+            your device, so only you and your contacts can read them.
           </p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400">Online</p>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            {["E2EE", "WebRTC", "Markdown"].map((tag) => (
+              <Badge key={tag} variant="secondary">
+                {tag}
+              </Badge>
+            ))}
+            <Badge>AI opt-in</Badge>
+          </div>
+
+          <div className="mt-9 flex flex-wrap gap-3">
+            <Button asChild size="lg" className="glow">
+              <Link to={signedIn ? "/dashboard" : "/registration"}>
+                {signedIn ? "Open workspace" : "Start chatting"} <ArrowRight />
+              </Link>
+            </Button>
+            {!signedIn && (
+              <Button asChild size="lg" variant="outline">
+                <Link to="/login">Sign in</Link>
+              </Button>
+            )}
+          </div>
+
+          <div className="mt-12 flex max-w-xl items-center gap-3 text-[10px] tracking-[0.14em] text-faint uppercase">
+            <span>∞</span>
+            <span className="h-px flex-1 bg-border-strong" />
+            <span>ChatsConnect sentinel</span>
+          </div>
+        </div>
+
+        <ChannelConsole />
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  return (
+    <section id="features" className="scroll-mt-20 border-b border-border py-20 sm:py-24" aria-labelledby="features-title">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid grid-cols-1 items-end gap-8 lg:grid-cols-[1.4fr_1fr]">
+          <h2 id="features-title" className="text-3xl leading-tight font-extrabold tracking-[0.02em] sm:text-4xl lg:text-5xl">
+            Every conversation keeps its keys on your device.
+          </h2>
+          <p className="text-sm leading-7 text-muted-foreground">
+            One workspace for messages, calls, groups and your assistant — each doing one job, with privacy
+            settings you can read in plain words.
+          </p>
+        </div>
+
+        <ul className="mt-14 grid border-t border-l border-border sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, title, tag, desc }, i) => (
+            <li key={title} className="group relative min-h-64 border-r border-b border-border bg-card/40 p-6 transition-colors hover:bg-card">
+              <span aria-hidden="true" className="absolute top-5 right-5 size-8 border-t border-r border-border-strong transition-colors group-hover:border-primary/60" />
+              <p className="text-[10px] text-faint tabular-nums">{String(i + 1).padStart(2, "0")}</p>
+              <Icon className="mt-8 size-5 text-primary" aria-hidden="true" />
+              <h3 className="mt-4 text-sm font-bold tracking-[0.14em] uppercase">{title}</h3>
+              <p className="mt-3 text-xs leading-6 text-muted-foreground">{desc}</p>
+              <p className="eyebrow mt-5 text-faint">{tag}</p>
+              <span aria-hidden="true" className="absolute right-5 bottom-5 size-1.5 rounded-full bg-primary/70 shadow-[0_0_8px_var(--glow)]" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+const GUARANTEES = [
+  { label: "Encrypted", tone: "text-info", text: "Direct messages are sealed with AES-256-GCM before they leave your browser." },
+  { label: "Verified", tone: "text-primary", text: "Compare a safety number with your contact to rule out anyone in the middle." },
+  { label: "Opt-in AI", tone: "text-warning", text: "The assistant only sees what you send it. Encrypted chats stay out of reach." },
+  { label: "Device-bound", tone: "text-muted-foreground", text: "Your private key lives on this device, backed up only under your passphrase." },
+];
+
+function Security() {
+  return (
+    <section id="security" className="scroll-mt-20 border-b border-border bg-grid py-20 sm:py-24" aria-labelledby="security-title">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.3fr]">
+        <div>
+          <p className="eyebrow text-info">What the protocol protects</p>
+          <h2 id="security-title" className="mt-4 text-3xl leading-tight font-extrabold sm:text-4xl lg:text-5xl">
+            No server-side reading.
+          </h2>
+          <div aria-hidden="true" className="mt-6 h-px w-44 bg-linear-to-r from-primary to-transparent" />
+          <p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground">
+            The server relays ciphertext it cannot open. Group chats and your assistant are clearly marked as
+            not end-to-end encrypted, so you always know which is which.
+          </p>
+        </div>
+        <ul className="grid border-t border-l border-border sm:grid-cols-2">
+          {GUARANTEES.map(({ label, tone, text }) => (
+            <li key={label} className="relative border-r border-b border-border bg-background/70 p-6">
+              <span aria-hidden="true" className="absolute top-5 right-5 size-6 border-t border-r border-border-strong" />
+              <p className={`eyebrow ${tone}`}>{label}</p>
+              <p className="mt-4 text-sm leading-7 text-muted-foreground">{text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+const CONFIG = [
+  ["name", '"Nova"'],
+  ["avatar", '"🦊"'],
+  ["tone", '"friendly"'],
+  ["length", '"concise"'],
+  ["language", '"auto"'],
+  ["instructions", '"Keep replies short. I\'m a night owl."'],
+];
+
+function Assistant() {
+  return (
+    <section id="assistant" className="scroll-mt-20 border-b border-border py-20 sm:py-24" aria-labelledby="assistant-title">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-2">
+        <div>
+          <Eyebrow index="003">Personal assistant</Eyebrow>
+          <h2 id="assistant-title" className="mt-5 text-3xl leading-tight font-extrabold sm:text-4xl">
+            An assistant you configure — not one that configures you.
+          </h2>
+          <p className="mt-6 max-w-lg text-sm leading-7 text-muted-foreground">
+            Name it, pick its tone and answer length, set the language and give it standing instructions. It
+            drafts messages, summarizes chats and answers in Markdown, powered by Claude.
+          </p>
+        </div>
+        <figure className="relative border border-border-strong bg-card">
+          <Corners />
+          <figcaption className="flex items-center justify-between border-b border-border px-4 py-2.5">
+            <span className="eyebrow text-muted-foreground">assistant.config</span>
+            <span className="eyebrow text-faint">JSON</span>
+          </figcaption>
+          <pre className="overflow-x-auto p-5 text-xs leading-7 scrollbar-thin">
+            <span className="text-faint">{"{"}</span>
+            {"\n"}
+            {CONFIG.map(([key, value], i) => (
+              <span key={key}>
+                {"  "}
+                <span className="text-info">{key}</span>
+                <span className="text-faint">: </span>
+                <span className="text-primary">{value}</span>
+                <span className="text-faint">{i < CONFIG.length - 1 ? "," : ""}</span>
+                {"\n"}
+              </span>
+            ))}
+            <span className="text-faint">{"}"}</span>
+          </pre>
+        </figure>
+      </div>
+    </section>
+  );
+}
+
+function CallToAction({ signedIn }) {
+  return (
+    <section className="bg-grid py-24" aria-labelledby="cta-title">
+      <div className="mx-auto max-w-6xl px-4 text-center sm:px-6">
+        <p className="eyebrow text-faint">004 / Get started</p>
+        <h2 id="cta-title" className="mt-5 text-3xl font-extrabold tracking-[0.08em] uppercase sm:text-5xl">
+          Open a <span className="text-primary">secure</span> channel.
+        </h2>
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <Button asChild size="lg" className="glow">
+            <Link to={signedIn ? "/dashboard" : "/registration"}>
+              {signedIn ? "Open workspace" : "Create a free account"} <ArrowRight />
+            </Link>
+          </Button>
+          {!signedIn && (
+            <Button asChild size="lg" variant="outline">
+              <Link to="/login">I have an account</Link>
+            </Button>
+          )}
         </div>
       </div>
-      {bubbles.map((b, i) => (
-        <div key={i} className={b.mine ? "flex justify-end" : "flex"}>
-          <span
-            className={
-              b.mine
-                ? "rounded-2xl rounded-br-md bg-linear-to-br from-violet-600 to-purple-600 px-3.5 py-2 text-sm text-white"
-                : "rounded-2xl rounded-bl-md border border-line bg-surface-2 px-3.5 py-2 text-sm"
-            }
-          >
-            {b.text.split("**").map((part, j) => (j % 2 ? <strong key={j}>{part}</strong> : part))}
-          </span>
-        </div>
-      ))}
-      <p className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-subtle">
-        <Lock className="size-3" /> End-to-end encrypted
-      </p>
-    </Card>
+    </section>
   );
 }
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
-  const { isDark, setThemeMode } = useTheme();
   const signedIn = isAuthenticated();
 
   return (
-    <div className="min-h-dvh bg-bg text-fg">
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Brand />
-          <nav className="flex items-center gap-2">
-            <IconButton
-              icon={isDark ? Sun : Moon}
-              label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-              onClick={() => setThemeMode(isDark ? "light" : "dark")}
-            />
-            {!signedIn && (
-              <Link to="/login" className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-muted hover:text-fg sm:inline-flex">
-                Sign in
-              </Link>
-            )}
-            <Link
-              to={signedIn ? "/dashboard" : "/registration"}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-accent px-4 text-sm font-semibold text-white hover:bg-accent-hover"
-            >
-              {signedIn ? "Open app" : "Get started"}
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </nav>
-        </div>
-      </header>
-
+    <div className="min-h-dvh bg-background text-foreground">
+      <SiteHeader />
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24">
-          <div className="space-y-6">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold text-accent-fg">
-              <Lock className="size-3.5" aria-hidden="true" /> End-to-end encrypted direct messages
-            </span>
-            <h1 className="text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl">
-              Chat privately.{" "}
-              <span className="bg-linear-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-violet-400 dark:to-fuchsia-400">
-                With a little help from your own AI.
-              </span>
-            </h1>
-            <p className="max-w-xl text-lg text-muted">
-              ChatsConnect brings real-time messaging, voice and video calls, and a personal assistant
-              you shape yourself — with direct messages only you and your contacts can read.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to={signedIn ? "/dashboard" : "/registration"}
-                className="inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-hover"
-              >
-                {signedIn ? "Go to your dashboard" : "Create a free account"}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              {!signedIn && (
-                <Link
-                  to="/login"
-                  className="inline-flex h-12 items-center rounded-xl border border-line bg-surface px-6 text-sm font-semibold hover:bg-surface-2"
-                >
-                  Sign in
-                </Link>
-              )}
-            </div>
-          </div>
-          <ChatPreview />
-        </section>
-
-        <section className="border-t border-line bg-surface/50 py-16 sm:py-20" aria-labelledby="features-title">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <h2 id="features-title" className="text-center text-3xl font-extrabold tracking-tight">
-              Everything you need to stay in touch
-            </h2>
-            <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, desc }) => (
-                <li key={title}>
-                  <Card className="h-full space-y-3">
-                    <span className="flex size-11 items-center justify-center rounded-xl bg-accent-soft text-accent-fg">
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
-                    <h3 className="font-bold">{title}</h3>
-                    <p className="text-sm text-muted">{desc}</p>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+        <Hero signedIn={signedIn} />
+        <Features />
+        <Security />
+        <Assistant />
+        <CallToAction signedIn={signedIn} />
       </main>
-
-      <footer className="border-t border-line py-6 text-center text-xs text-subtle">ChatsConnect · Mini Project</footer>
+      <SiteFooter />
     </div>
   );
 }

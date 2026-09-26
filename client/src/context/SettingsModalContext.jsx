@@ -1,6 +1,8 @@
-import { createContext, useContext, useMemo, useState } from "react";
-import { Modal } from "../components/ui";
-import SettingsPanel from "../features/settings/SettingsPanel";
+import { Suspense, createContext, lazy, useContext, useMemo, useState } from "react";
+import { Modal, Spinner } from "../components/ui";
+
+// Loaded on first open: the panel pulls in forms, Select and the encryption dialogs
+const SettingsPanel = lazy(() => import("../features/settings/SettingsPanel"));
 
 const SettingsModalContext = createContext(null);
 
@@ -25,7 +27,17 @@ export function SettingsModalProvider({ children }) {
         description="Appearance, AI and account security"
         size="lg"
       >
-        <SettingsPanel onNavigate={controls.closeSettings} />
+        {open && (
+          <Suspense
+            fallback={
+              <div className="flex justify-center py-12">
+                <Spinner label="Loading settings" />
+              </div>
+            }
+          >
+            <SettingsPanel onNavigate={controls.closeSettings} />
+          </Suspense>
+        )}
       </Modal>
     </SettingsModalContext.Provider>
   );

@@ -12,14 +12,7 @@ import { API_URL } from "../../config/api.js";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { useCall } from "../../context/CallContext";
-import {
-  Avatar,
-  Button,
-  Card,
-  EmptyState,
-  IconButton,
-  Spinner,
-} from "../../components/ui";
+import { Button, Card, EmptyState, IconButton, Skeleton, UserAvatar } from "../../components/ui";
 import ProfileHeader from "./ProfileHeader";
 import FriendAction from "./FriendAction";
 
@@ -27,10 +20,11 @@ function MutualList({ title, count, children }) {
   if (!count) return null;
   return (
     <Card>
-      <h2 className="mb-3 text-sm font-bold">
-        {title} <span className="font-normal text-muted">({count})</span>
+      <h2 className="eyebrow flex items-center justify-between border-b border-border px-5 py-3 text-primary">
+        {title}
+        <span className="text-faint tabular-nums">[{String(count).padStart(2, "0")}]</span>
       </h2>
-      {children}
+      <div className="p-2">{children}</div>
     </Card>
   );
 }
@@ -58,8 +52,9 @@ export default function UserProfilePage() {
 
   if (state.status === "loading") {
     return (
-      <div className="flex h-full min-h-[60dvh] items-center justify-center">
-        <Spinner label="Loading profile" className="size-8" />
+      <div className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8 sm:px-8 sm:py-10" aria-busy="true">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-80 w-full" />
       </div>
     );
   }
@@ -71,7 +66,7 @@ export default function UserProfilePage() {
         title="User not found"
         description="This account may have been deleted."
         action={
-          <Button variant="secondary" icon={ArrowLeft} onClick={() => navigate(-1)}>
+          <Button variant="outline" icon={ArrowLeft} onClick={() => navigate(-1)}>
             Go back
           </Button>
         }
@@ -89,7 +84,7 @@ export default function UserProfilePage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8 sm:px-8 sm:py-10">
       <Button variant="ghost" size="sm" icon={ArrowLeft} onClick={() => navigate(-1)}>
         Back
       </Button>
@@ -116,13 +111,13 @@ export default function UserProfilePage() {
               <IconButton
                 icon={Phone}
                 label={`Voice call ${user.name}`}
-                variant="soft"
+                variant="secondary"
                 onClick={() => startCall(chat, true)}
               />
               <IconButton
                 icon={Video}
                 label={`Video call ${user.name}`}
-                variant="soft"
+                variant="secondary"
                 onClick={() => startCall(chat, false)}
               />
             </div>
@@ -130,19 +125,19 @@ export default function UserProfilePage() {
         }
       />
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <MutualList title="Mutual friends" count={mutualFriends.count}>
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {mutualFriends.users.map((f) => (
               <li key={f._id}>
                 <Link
                   to={`/profile/${f._id}`}
-                  className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-surface-2"
+                  className="flex items-center gap-3 border border-transparent p-2 hover:border-border hover:bg-accent"
                 >
-                  <Avatar src={f.avatar} name={f.name} size="sm" />
+                  <UserAvatar src={f.avatar} name={f.name} size="sm" />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{f.name}</span>
-                    <span className="block truncate text-xs text-muted">@{f.username}</span>
+                    <span className="block truncate text-xs font-bold">{f.name}</span>
+                    <span className="block truncate text-[11px] text-muted-foreground">@{f.username}</span>
                   </span>
                 </Link>
               </li>
@@ -150,16 +145,16 @@ export default function UserProfilePage() {
           </ul>
         </MutualList>
         <MutualList title="Groups in common" count={mutualGroups.count}>
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {mutualGroups.groups.map((g) => (
               <li key={g._id}>
                 <Link
                   to="/chat"
                   state={{ openGroup: { groupId: g._id } }}
-                  className="flex items-center gap-3 rounded-xl p-1.5 hover:bg-surface-2"
+                  className="flex items-center gap-3 border border-transparent p-2 hover:border-border hover:bg-accent"
                 >
-                  <Avatar src={g.avatar} name={g.name} size="sm" shape="square" />
-                  <span className="truncate text-sm font-semibold">{g.name}</span>
+                  <UserAvatar src={g.avatar} name={g.name} size="sm" />
+                  <span className="truncate text-xs font-bold">{g.name}</span>
                 </Link>
               </li>
             ))}

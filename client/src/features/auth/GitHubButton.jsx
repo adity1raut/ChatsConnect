@@ -7,7 +7,7 @@ export default function GitHubButton({ label = "Continue with GitHub" }) {
   const [redirecting, setRedirecting] = useState(false);
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       icon={Github}
       fullWidth
       loading={redirecting}
@@ -23,10 +23,10 @@ export default function GitHubButton({ label = "Continue with GitHub" }) {
 
 export function OrDivider() {
   return (
-    <div className="my-5 flex items-center gap-3 text-xs text-subtle" role="separator">
-      <span className="h-px flex-1 bg-line" />
+    <div className="eyebrow my-6 flex items-center gap-3 text-faint" role="separator">
+      <span className="h-px flex-1 border-t border-dashed border-border-strong" />
       or
-      <span className="h-px flex-1 bg-line" />
+      <span className="h-px flex-1 border-t border-dashed border-border-strong" />
     </div>
   );
 }

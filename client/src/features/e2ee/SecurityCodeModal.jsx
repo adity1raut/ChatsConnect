@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 import { useE2EE } from "../../context/E2EEContext";
-import { Button, Modal, Spinner } from "../../components/ui";
+import { Alert, AlertDescription, Button, Corners, Modal, Spinner } from "../../components/ui";
 import { safetyNumber } from "./crypto";
 
 // Compare this code with the other person (in person or on a call). If it
@@ -53,28 +53,32 @@ export default function SecurityCodeModal({ open, onClose, peer }) {
           <Spinner label="Computing security code" />
         </div>
       ) : code === "unavailable" ? (
-        <p className="text-sm text-muted">
+        <p className="text-xs leading-relaxed text-muted-foreground">
           A security code is available once both of you have turned on encryption.
         </p>
       ) : (
         <div className="space-y-4">
           <p
-            className="grid grid-cols-4 gap-x-4 gap-y-2 rounded-xl bg-surface-2 p-4 text-center font-mono text-lg font-semibold tracking-wider"
+            className="relative grid grid-cols-4 gap-x-4 gap-y-2 border border-primary/35 bg-primary/[0.05] p-4 text-center text-base font-bold tracking-[0.12em] text-primary tabular-nums"
             aria-label={`Security code ${code}`}
           >
+            <Corners />
             {code.split(" ").map((group, i) => (
               <span key={i}>{group}</span>
             ))}
           </p>
-          <p className="text-sm text-muted">
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Ask {peer.name} to open this screen and compare the numbers — in person or on a call.
             If they match, your messages are end-to-end encrypted with nobody in between.
           </p>
           {changed && (
-            <p className="rounded-xl bg-amber-500/15 p-3 text-sm text-amber-800 dark:text-amber-200">
-              {peer.name}&apos;s security code changed recently. That's normal if they reset their
-              keys or changed devices — confirm the new code with them.
-            </p>
+            <Alert variant="warning" role="status">
+              <AlertTriangle aria-hidden="true" />
+              <AlertDescription className="text-current">
+                {peer.name}&apos;s security code changed recently. That&apos;s normal if they reset their keys or
+                changed devices — confirm the new code with them.
+              </AlertDescription>
+            </Alert>
           )}
         </div>
       )}
