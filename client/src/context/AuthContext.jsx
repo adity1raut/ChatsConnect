@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext } from "react";
+import { clearDeviceKeys } from "../features/e2ee/keyStore";
 
 const AuthContext = createContext(null);
 
@@ -29,6 +30,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("userData");
+    // The next person on this browser must not be able to read encrypted chats
+    clearDeviceKeys();
     setUser(null);
   };
 

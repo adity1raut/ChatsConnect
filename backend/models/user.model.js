@@ -73,6 +73,40 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // End-to-end encryption identity (public parts are shared with others)
+    e2ee: {
+      publicKey: {
+        kty: String,
+        crv: String,
+        x: String,
+        y: String,
+      },
+      fingerprint: String,
+      updatedAt: Date,
+      // Private key encrypted with the user's passphrase — only its owner reads it
+      backup: {
+        type: new mongoose.Schema(
+          {
+            v: Number,
+            ciphertext: String,
+            iv: String,
+            salt: String,
+            iterations: Number,
+          },
+          { _id: false },
+        ),
+        select: false,
+      },
+      // Earlier public keys, so older messages stay readable after a key change
+      history: [
+        {
+          _id: false,
+          publicKey: { kty: String, crv: String, x: String, y: String },
+          fingerprint: String,
+          retiredAt: Date,
+        },
+      ],
+    },
     // Which events create notifications (missing = on, for existing users)
     notificationPrefs: {
       messages: { type: Boolean, default: true },

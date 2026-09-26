@@ -2,9 +2,11 @@ import {
   ArrowLeft,
   Bot,
   Download,
+  Lock,
   MoreVertical,
   Phone,
   Settings2,
+  ShieldCheck,
   UserRound,
   Video,
 } from "lucide-react";
@@ -42,6 +44,8 @@ export default function ChatHeader({
   onViewProfile,
   onManageGroup,
   onExport,
+  encrypted,
+  onVerify,
 }) {
   const isGroup = chat.type === "group";
   const status = statusLine(chat, { typingNames, isPeerOnline });
@@ -63,7 +67,15 @@ export default function ChatHeader({
           online={!isGroup && isPeerOnline}
         />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-bold">{chat.name}</span>
+          <span className="flex items-center gap-1.5 truncate text-sm font-bold">
+            <span className="truncate">{chat.name}</span>
+            {encrypted && (
+              <Lock
+                className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
+                aria-label="End-to-end encrypted"
+              />
+            )}
+          </span>
           <span
             className={cn(
               "block truncate text-xs",
@@ -101,6 +113,7 @@ export default function ChatHeader({
             isGroup
               ? { label: "Manage group", icon: Settings2, onSelect: onManageGroup }
               : { label: "View profile", icon: UserRound, onSelect: onViewProfile },
+            encrypted && { label: "Verify security code", icon: ShieldCheck, onSelect: onVerify },
             { label: "Export chat (.md)", icon: Download, onSelect: onExport },
           ]}
         />

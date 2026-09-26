@@ -32,6 +32,11 @@ export default defineConfig([
     },
   },
   {
+    // Unit tests run in Node (node --test)
+    files: ["**/*.test.js"],
+    languageOptions: { globals: globals.node },
+  },
+  {
     // Context modules intentionally export a Provider alongside its use* hook.
     files: ["src/context/**/*.{js,jsx}"],
     rules: {

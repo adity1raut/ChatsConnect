@@ -1,6 +1,7 @@
 import { ThemeProvider } from "../context/ThemeContext";
 import { AuthProvider } from "../context/AuthContext";
 import { SocketProvider } from "../context/SocketContext";
+import { E2EEProvider } from "../context/E2EEContext";
 import { AIProvider } from "../context/AIContext";
 import { CallProvider } from "../context/CallContext";
 import { GroupCallProvider } from "../context/GroupCallContext";
@@ -12,6 +13,7 @@ const PROVIDERS = [
   ThemeProvider,
   AuthProvider,
   SocketProvider,
+  E2EEProvider,
   AIProvider,
   CallProvider,
   GroupCallProvider,

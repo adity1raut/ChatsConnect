@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MessageSquare, SquarePen, UsersRound } from "lucide-react";
+import { MessageSquare, Sparkles, SquarePen, UsersRound } from "lucide-react";
 import { useCall } from "../../context/CallContext";
 import { useGroupCall } from "../../context/GroupCallContext";
 import { useAI } from "../../context/AIContext";
+import { useE2EE } from "../../context/E2EEContext";
+import EncryptionBanner from "../e2ee/EncryptionBanner";
+import EncryptionModal from "../e2ee/EncryptionModal";
+import SecurityCodeModal from "../e2ee/SecurityCodeModal";
 import { Button, EmptyState } from "../../components/ui";
 import AIPanel from "../../components/ai/AIPanel";
 import SmartReply from "../../components/ai/SmartReply";
@@ -26,7 +30,8 @@ export default function ChatPage() {
   const location = useLocation();
   const { startCall } = useCall();
   const { startGroupCall } = useGroupCall();
-  const { aiEnabled } = useAI();
+  const { aiEnabled, smartReplies } = useAI();
+  const e2ee = useE2EE();
 
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   // Unsent text is kept per chat, so switching conversations doesn't lose it
@@ -36,10 +41,40 @@ export default function ChatPage() {
     location.state?.newGroup ? "newGroup" : location.state?.newChat ? "newDM" : null,
   );
 
+  // Encryption dialogs: opened on demand, or once per session if encryption
+  // isn't set up / unlocked on this device yet
+  const [e2eeModal, setE2eeModal] = useState(null);
+  const [securityOpen, setSecurityOpen] = useState(false);
+  const [promptDismissed, setPromptDismissed] = useState(
+    () => sessionStorage.getItem("e2eePrompted") === "1",
+  );
+  const autoPrompt = promptDismissed
+    ? null
+    : e2ee.status === "none"
+      ? "setup"
+      : e2ee.status === "locked"
+        ? "unlock"
+        : null;
+  const shownE2eeModal = e2eeModal ?? autoPrompt;
+  const closeE2eeModal = () => {
+    setE2eeModal(null);
+    setPromptDismissed(true);
+    sessionStorage.setItem("e2eePrompted", "1");
+  };
+
   const selected = chat.selectedChat;
   const key = chatKeyOf(selected);
   const draft = drafts[key] ?? "";
   const setDraft = (text) => setDrafts((d) => ({ ...d, [key]: text }));
+
+  // A locked device must unlock before sending DMs (never a silent plaintext fallback)
+  const onSend = async (text) => {
+    if (selected?.type === "user" && e2ee.status === "locked") {
+      setE2eeModal("unlock");
+      return false;
+    }
+    return chat.send(text);
+  };
 
   return (
     <div className="flex h-full min-h-0">
@@ -74,6 +109,15 @@ export default function ChatPage() {
               onViewProfile={() => navigate(`/profile/${selected.id}`)}
               onManageGroup={() => setModal("manageGroup")}
               onExport={chat.exportCurrentChat}
+              encrypted={chat.encryption.encrypted}
+              onVerify={() => setSecurityOpen(true)}
+            />
+            <EncryptionBanner
+              state={chat.encryption.banner}
+              peerName={selected.name.split(" ")[0]}
+              onSetup={() => setE2eeModal("setup")}
+              onUnlock={() => setE2eeModal("unlock")}
+              onVerify={() => setSecurityOpen(true)}
             />
             <MessageList
               chatKey={key}
@@ -81,13 +125,27 @@ export default function ChatPage() {
               loading={chat.loadingMessages}
               isGroup={selected.type === "group"}
               typingNames={chat.typingNames}
+              onTranslate={aiEnabled ? chat.translateOne : undefined}
             />
+            {aiEnabled && chat.encryption.encrypted && !smartReplies.length && chat.messages.length > 0 && (
+              <div className="shrink-0 px-4 pt-2">
+                <button
+                  type="button"
+                  onClick={chat.suggestReplies}
+                  title="Sends the last few messages of this encrypted chat to the AI"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted hover:border-accent hover:text-accent-fg"
+                >
+                  <Sparkles className="size-3.5" aria-hidden="true" />
+                  Suggest replies
+                </button>
+              </div>
+            )}
             <SmartReply onSelect={setDraft} />
             <Composer
               chatKey={key}
               value={draft}
               onChange={setDraft}
-              onSend={chat.send}
+              onSend={onSend}
               onTyping={chat.notifyTyping}
               placeholder={`Message ${selected.type === "group" ? selected.name : selected.name.split(" ")[0]}…`}
             />
@@ -116,6 +174,18 @@ export default function ChatPage() {
         <div className="hidden h-full w-80 shrink-0 lg:flex">
           <AIPanel onClose={() => setAiPanelOpen(false)} />
         </div>
+      )}
+
+      {shownE2eeModal && (
+        <EncryptionModal
+          key={shownE2eeModal}
+          open
+          mode={shownE2eeModal}
+          onClose={closeE2eeModal}
+        />
+      )}
+      {securityOpen && selected?.type === "user" && (
+        <SecurityCodeModal open peer={selected} onClose={() => setSecurityOpen(false)} />
       )}
 
       {modal === "newGroup" && (

@@ -19,6 +19,7 @@ import {
   visibleOnlineIds,
 } from "../service/presence.service.js";
 import { verifyAccessToken } from "../service/token.service.js";
+import { parseEncryptedPayload } from "../service/e2ee.service.js";
 import { getIO, isOnline, onlineUsers, setIO } from "./io.js";
 import logger from "../utils/logger.js";
 
@@ -114,9 +115,14 @@ export function initSocket(httpServer) {
     });
 
     // ── Direct Message ──────────────────────────────────────────────
-    socket.on("sendMessage", async ({ receiverId, content } = {}) => {
-      const text = typeof content === "string" ? content.trim() : "";
-      if (!isId(receiverId) || !text || receiverId === userId) return;
+    // content: plain text, or e2ee: an encrypted envelope the server can't read
+    socket.on("sendMessage", async ({ receiverId, content, e2ee } = {}) => {
+      const envelope = e2ee == null ? null : parseEncryptedPayload(e2ee);
+      if (e2ee != null && !envelope) {
+        return socket.emit("error", { message: "Malformed encrypted message" });
+      }
+      const text = envelope ? "" : typeof content === "string" ? content.trim() : "";
+      if (!isId(receiverId) || receiverId === userId || (!envelope && !text)) return;
       if (text.length > MAX_MESSAGE_LENGTH) {
         return socket.emit("error", { message: "Message is too long" });
       }
@@ -142,6 +148,8 @@ export function initSocket(httpServer) {
           senderId: userId,
           conversationId: conversation._id,
           content: text,
+          encrypted: Boolean(envelope),
+          e2ee: envelope ?? undefined,
           messageType: "text",
           readBy: [userId],
         });
@@ -177,11 +185,13 @@ export function initSocket(httpServer) {
           type: "message",
           actor: userId,
           conversationId: conversation._id,
-          body: text,
+          // Encrypted messages have no server-readable preview
+          body: envelope ? null : text,
+          meta: envelope ? { encrypted: true } : undefined,
         });
 
-        // ── Real-time AI smart replies for the receiver ──────────────
-        if (receiver.aiEnabled) {
+        // ── Real-time AI smart replies (never for encrypted messages) ─
+        if (receiver.aiEnabled && !envelope) {
           buildDMContext(conversation._id, receiverId, 8)
             .then((ctx) => generateSmartReplies(ctx))
             .then((replies) =>

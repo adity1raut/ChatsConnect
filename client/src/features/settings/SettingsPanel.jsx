@@ -6,6 +6,7 @@ import {
   Bot,
   ChevronDown,
   Info,
+  KeyRound,
   Lock,
   Mail,
   Monitor,
@@ -20,6 +21,8 @@ import { useAuth } from "../../context/AuthContext";
 import { useAI } from "../../context/AIContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useNotifications } from "../../context/NotificationContext";
+import { useE2EE } from "../../context/E2EEContext";
+import EncryptionModal from "../e2ee/EncryptionModal";
 import {
   Button,
   Input,
@@ -274,6 +277,59 @@ function NotificationsSection() {
           />
         }
       />
+    </Section>
+  );
+}
+
+const groupFingerprint = (fp) => fp?.match(/.{1,4}/g)?.join(" ") ?? "";
+
+function EncryptionSection() {
+  const { status, fingerprint } = useE2EE();
+  const [modal, setModal] = useState(null);
+
+  const summary = {
+    none: "Off — direct messages aren't end-to-end encrypted yet.",
+    locked: "On, but locked on this device. Unlock with your passphrase to read encrypted messages here.",
+    ready: "On — direct messages are readable only by you and the other person.",
+    error: "Couldn't load your encryption status. Try again later.",
+  }[status] ?? "Checking…";
+
+  return (
+    <Section icon={KeyRound} title="End-to-end encryption" description="Direct messages only; group chats aren't encrypted">
+      <p className="text-sm text-muted">{summary}</p>
+      {status === "ready" && fingerprint && (
+        <p className="rounded-xl bg-surface-2 px-3 py-2 font-mono text-xs text-muted">
+          Your key: {groupFingerprint(fingerprint)}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2 pt-1">
+        {status === "none" && (
+          <Button size="sm" icon={Lock} onClick={() => setModal("setup")}>
+            Turn on encryption
+          </Button>
+        )}
+        {status === "locked" && (
+          <>
+            <Button size="sm" icon={KeyRound} onClick={() => setModal("unlock")}>
+              Unlock
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setModal("reset")}>
+              Forgot passphrase
+            </Button>
+          </>
+        )}
+        {status === "ready" && (
+          <>
+            <Button size="sm" variant="secondary" onClick={() => setModal("change")}>
+              Change passphrase
+            </Button>
+            <Button size="sm" variant="danger-soft" onClick={() => setModal("reset")}>
+              Reset keys
+            </Button>
+          </>
+        )}
+      </div>
+      {modal && <EncryptionModal key={modal} open mode={modal} onClose={() => setModal(null)} />}
     </Section>
   );
 }
@@ -543,6 +599,7 @@ export default function SettingsPanel({ onNavigate }) {
       <AppearanceSection />
       <AISection />
       <NotificationsSection />
+      <EncryptionSection />
       <SecuritySection />
       <Section icon={Info} title="About" description="Version, stack and credits">
         <Link

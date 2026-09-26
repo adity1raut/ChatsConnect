@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SendHorizontal } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { MAX_MESSAGE_LENGTH } from "./messages";
@@ -26,8 +26,15 @@ export default function Composer({ value, onChange, onSend, onTyping, placeholde
     if (prefersEnterToSend()) ref.current?.focus();
   }, [chatKey]);
 
-  const send = () => {
-    if (value.trim() && onSend(value)) onChange("");
+  const [sending, setSending] = useState(false);
+  const send = async () => {
+    if (!value.trim() || sending) return;
+    setSending(true);
+    try {
+      if (await onSend(value)) onChange("");
+    } finally {
+      setSending(false);
+    }
   };
 
   const onKeyDown = (e) => {
@@ -64,7 +71,7 @@ export default function Composer({ value, onChange, onSend, onTyping, placeholde
         <button
           type="button"
           onClick={send}
-          disabled={!value.trim() || tooLong}
+          disabled={!value.trim() || tooLong || sending}
           aria-label="Send message"
           className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition-colors hover:bg-accent-hover disabled:opacity-40"
         >

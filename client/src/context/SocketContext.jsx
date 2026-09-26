@@ -102,8 +102,9 @@ export function SocketProvider({ children }) {
     socketRef.current?.emit("leaveGroup", { groupId });
   };
 
-  const sendMessage = (receiverId, content) => {
-    socketRef.current?.emit("sendMessage", { receiverId, content });
+  // e2ee: encrypted envelope (content is then null — the server never sees the text)
+  const sendMessage = (receiverId, content, e2ee) => {
+    socketRef.current?.emit("sendMessage", { receiverId, content, e2ee });
   };
 
   const sendGroupMessage = (groupId, content) => {

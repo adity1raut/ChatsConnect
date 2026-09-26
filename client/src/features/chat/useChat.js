@@ -7,11 +7,25 @@ import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { useNotifications } from "../../context/NotificationContext";
 import { useAI } from "../../context/AIContext";
+import { UNDECRYPTABLE, useE2EE } from "../../context/E2EEContext";
 import { toast } from "../../lib/toast";
 import { exportChatAsMarkdown } from "./exportChat";
 import { MAX_MESSAGE_LENGTH, previewText, toViewMessage } from "./messages";
 
 const TYPING_IDLE_MS = 1500;
+const NO_MESSAGES = [];
+const ENCRYPTED_PREVIEW = "🔒 Encrypted message";
+
+const lastPreview = (message) =>
+  message?.encrypted ? ENCRYPTED_PREVIEW : previewText(message?.content);
+
+// Keep the thread in time order even when async decryption finishes out of order
+const insertInOrder = (list, message) => {
+  if (list.some((m) => m.id === message.id)) return list;
+  const next = [...list, message];
+  next.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  return next;
+};
 
 const dmContact = (c) => ({
   id: c.contact._id,
@@ -19,7 +33,7 @@ const dmContact = (c) => ({
   name: c.contact.name,
   username: c.contact.username,
   avatar: c.contact.avatar,
-  lastMessage: previewText(c.lastMessage?.content),
+  lastMessage: lastPreview(c.lastMessage),
   lastMessageAt: c.lastMessageAt,
   type: "user",
 });
@@ -31,7 +45,7 @@ const groupContact = (g) => ({
   avatar: g.avatar || null,
   memberCount: g.members.length,
   members: g.members,
-  lastMessage: previewText(g.lastMessage?.content),
+  lastMessage: lastPreview(g.lastMessage),
   lastMessageAt: g.lastMessageAt,
   type: "group",
 });
@@ -66,6 +80,9 @@ export function useChat() {
     emitStopTyping,
   } = useSocket();
   const { setActiveChat, notifications } = useNotifications();
+  const e2ee = useE2EE();
+  const { decryptFrom, encryptFor, getPeerKeys, changedPeers } = e2ee;
+  const e2eeStatus = e2ee.status;
   const {
     aiEnabled,
     setSmartReplies,
@@ -85,7 +102,7 @@ export function useChat() {
   const [typing, setTyping] = useState({ key: null, ids: new Set() });
 
   const selectedKey = chatKeyOf(selectedChat);
-  const messages = thread.key === selectedKey ? thread.messages : [];
+  const messages = thread.key === selectedKey ? thread.messages : NO_MESSAGES;
   const loadingMessages = Boolean(selectedKey) && thread.key !== selectedKey;
   const typingIds = typing.key === selectedKey ? typing.ids : null;
 
@@ -97,14 +114,31 @@ export function useChat() {
     contactsRef.current = contacts;
   }, [selectedChat, contacts]);
 
-  // One place that turns a server message into a view message.
-  // (End-to-end decryption plugs in here.)
-  const decode = useCallback((raw) => toViewMessage(raw, myId), [myId]);
+  // One place that turns a server message into a view message, decrypting
+  // end-to-end encrypted DMs (`peerId` = the other person in the DM)
+  const decode = useCallback(
+    async (raw, peerId) => {
+      const view = toViewMessage(raw, myId);
+      if (!raw.encrypted) return view;
+      try {
+        return { ...view, text: await decryptFrom(raw, peerId), encrypted: true };
+      } catch (err) {
+        return {
+          ...view,
+          text: UNDECRYPTABLE[err.reason] ?? UNDECRYPTABLE.failed,
+          encrypted: true,
+          undecryptable: true,
+        };
+      }
+    },
+    [myId, decryptFrom],
+  );
 
-  // Translate incoming text when auto-translate is on; originals stay visible
+  // Auto-translate incoming text; never for encrypted messages (that would
+  // send them to the server — use the per-message Translate action instead)
   const translateIncoming = useCallback(
     async (msg) => {
-      if (!autoTranslate || msg.mine || !msg.text) return msg;
+      if (!autoTranslate || msg.mine || msg.encrypted || !msg.text) return msg;
       try {
         const translated = await translateMessage(msg.text, preferredLanguage);
         return translated && translated !== msg.text
@@ -209,14 +243,16 @@ export function useChat() {
             sameChat(prev, chat) ? { ...prev, conversationId: data.conversationId } : prev,
           );
         }
-        const decoded = await Promise.all((data.messages || []).map(decode));
+        const peerId = chat.type === "user" ? chat.id : null;
+        const decoded = await Promise.all((data.messages || []).map((m) => decode(m, peerId)));
         const view = await Promise.all(decoded.map(translateIncoming));
         if (cancelled) return;
         setThread({ key: selectedKey, messages: view });
 
-        // Suggest replies when the other person spoke last
+        // Suggest replies when the other person spoke last — automatic only
+        // for unencrypted chats (encrypted ones use the explicit button)
         const last = view.at(-1);
-        if (aiEnabled && last && !last.mine) {
+        if (aiEnabled && last && !last.mine && !view.some((m) => m.encrypted)) {
           fetchSmartReplies(
             view.slice(-6).map((m) => ({ role: m.mine ? "user" : "assistant", content: m.text })),
           );
@@ -231,38 +267,36 @@ export function useChat() {
       cancelled = true;
       clearSmartReplies();
     };
-    // Re-run only when a different chat is opened
+    // Re-run when a different chat opens, or encryption gets unlocked (to decrypt)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKey]);
+  }, [selectedKey, e2eeStatus]);
 
   // ── Live messages ─────────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
 
     // Append to the thread only if it's the chat the message belongs to
-    const appendTo = async (key, raw) => {
-      const view = await translateIncoming(await decode(raw));
+    const appendTo = (key, view) =>
       setThread((prev) =>
-        prev.key !== key || prev.messages.some((m) => m.id === view.id)
-          ? prev
-          : { ...prev, messages: [...prev.messages, view] },
+        prev.key !== key ? prev : { ...prev, messages: insertInOrder(prev.messages, view) },
       );
-    };
 
-    const onDirect = ({ message: raw, conversationId, receiver }) => {
+    const onDirect = async ({ message: raw, conversationId, receiver }) => {
       const mine = raw.senderId?._id === myId;
       const peer = mine ? receiver : raw.senderId;
       if (!peer) return;
 
-      appendTo(`user:${peer._id}`, raw);
       setSelectedChat((prev) =>
         prev?.type === "user" && prev.id === peer._id && !prev.conversationId
           ? { ...prev, conversationId }
           : prev,
       );
 
+      const view = await translateIncoming(await decode(raw, peer._id));
+      appendTo(`user:${peer._id}`, view);
+
       setContacts((prev) => {
-        const preview = previewText(raw.content);
+        const preview = view.undecryptable ? ENCRYPTED_PREVIEW : previewText(view.text);
         const existing = prev.find((c) => c.type === "user" && c.id === peer._id);
         const updated = existing
           ? { ...existing, conversationId, lastMessage: preview, lastMessageAt: raw.createdAt }
@@ -280,8 +314,8 @@ export function useChat() {
       });
     };
 
-    const onGroup = ({ message: raw, groupId }) => {
-      appendTo(`group:${groupId}`, raw);
+    const onGroup = async ({ message: raw, groupId }) => {
+      appendTo(`group:${groupId}`, await translateIncoming(await decode(raw, null)));
       setContacts((prev) => {
         const existing = prev.find((c) => c.type === "group" && c.groupId === groupId);
         if (!existing) return prev;
@@ -371,7 +405,7 @@ export function useChat() {
   }, [emitTyping, emitStopTyping]);
 
   const send = useCallback(
-    (text) => {
+    async (text) => {
       const chat = selectedRef.current;
       const content = text.trim();
       if (!chat || !content) return false;
@@ -383,8 +417,29 @@ export function useChat() {
         });
         return false;
       }
-      if (chat.type === "group") sendGroupMessage(chat.groupId, content);
-      else sendMessage(chat.id, content);
+
+      if (chat.type === "group") {
+        sendGroupMessage(chat.groupId, content);
+      } else {
+        // Never silently downgrade: plaintext only when encryption is off on
+        // purpose (not set up) or the other person has no key yet
+        let envelope = null;
+        try {
+          envelope = await encryptFor(chat.id, content);
+        } catch {
+          toast({ title: "Couldn't encrypt your message", description: "Not sent. Check your connection and try again.", variant: "error" });
+          return false;
+        }
+        if (!envelope && !["none", "ready"].includes(e2eeStatus)) {
+          toast({
+            title: e2eeStatus === "locked" ? "Unlock encryption to send" : "Encryption isn't ready yet",
+            description: "Not sent, so it isn't delivered unencrypted by mistake.",
+            variant: "error",
+          });
+          return false;
+        }
+        sendMessage(chat.id, envelope ? null : content, envelope);
+      }
 
       clearSmartReplies();
       clearTimeout(typingTimerRef.current);
@@ -392,7 +447,7 @@ export function useChat() {
       emitStopTyping(receiverId, groupId);
       return true;
     },
-    [sendMessage, sendGroupMessage, emitStopTyping, clearSmartReplies],
+    [sendMessage, sendGroupMessage, emitStopTyping, clearSmartReplies, encryptFor, e2eeStatus],
   );
 
   // ── Selection ─────────────────────────────────────────────────────
@@ -418,13 +473,77 @@ export function useChat() {
     const chat = selectedRef.current;
     if (!chat) return;
     try {
-      const count = await exportChatAsMarkdown(chat, decode);
+      const peerId = chat.type === "user" ? chat.id : null;
+      const count = await exportChatAsMarkdown(chat, (raw) => decode(raw, peerId));
       toast({ title: "Chat exported", description: `${count} messages saved as Markdown.` });
     } catch (err) {
       console.error("export failed:", err);
       toast({ title: "Couldn't export this chat", variant: "error" });
     }
   }, [decode]);
+
+  // ── Opt-in AI for any chat (the only way AI sees encrypted messages) ──
+  const translateOne = useCallback(
+    async (messageId) => {
+      const key = chatKeyOf(selectedRef.current);
+      const msg = thread.messages.find((m) => m.id === messageId);
+      if (!msg || msg.originalText) return;
+      try {
+        const translated = await translateMessage(msg.text, preferredLanguage);
+        if (!translated) return;
+        setThread((prev) =>
+          prev.key !== key
+            ? prev
+            : {
+                ...prev,
+                messages: prev.messages.map((m) =>
+                  m.id === messageId ? { ...m, text: translated, originalText: m.text } : m,
+                ),
+              },
+        );
+      } catch {
+        toast({ title: "Couldn't translate that message", variant: "error" });
+      }
+    },
+    [thread.messages, translateMessage, preferredLanguage],
+  );
+
+  const suggestReplies = useCallback(() => {
+    const recent = messages.filter((m) => !m.undecryptable).slice(-6);
+    if (!recent.length) return;
+    fetchSmartReplies(
+      recent.map((m) => ({ role: m.mine ? "user" : "assistant", content: m.text })),
+    );
+  }, [messages, fetchSmartReplies]);
+
+  // ── Encryption state of the open DM ───────────────────────────────
+  const peerId = selectedChat?.type === "user" ? selectedChat.id : null;
+  const [peerKeyState, setPeerKeyState] = useState({ peerId: null, hasKey: null });
+  useEffect(() => {
+    if (!peerId || e2eeStatus !== "ready") return;
+    let cancelled = false;
+    getPeerKeys(peerId)
+      .then((k) => !cancelled && setPeerKeyState({ peerId, hasKey: k.hasKey }))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [peerId, e2eeStatus, getPeerKeys]);
+
+  const peerHasKey = peerKeyState.peerId === peerId ? peerKeyState.hasKey : null;
+  const encryption = !peerId
+    ? { encrypted: false, banner: null }
+    : e2eeStatus === "none"
+      ? { encrypted: false, banner: "setup" }
+      : e2eeStatus === "locked"
+        ? { encrypted: false, banner: "locked" }
+        : e2eeStatus !== "ready"
+          ? { encrypted: false, banner: null }
+          : changedPeers.has(peerId)
+            ? { encrypted: true, banner: "key-changed" }
+            : peerHasKey === false
+              ? { encrypted: false, banner: "peer-missing" }
+              : { encrypted: peerHasKey === true, banner: null };
 
   // ── Derived ───────────────────────────────────────────────────────
   // Unread counts come from the (collapsed) message notifications
@@ -489,5 +608,8 @@ export function useChat() {
     send,
     notifyTyping,
     exportCurrentChat,
+    translateOne,
+    suggestReplies,
+    encryption,
   };
 }

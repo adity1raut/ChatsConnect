@@ -71,7 +71,7 @@ export default function Toaster() {
   return createPortal(
     <div
       aria-live="polite"
-      className="pointer-events-none fixed top-4 right-4 left-4 z-[150] flex flex-col items-end gap-2 sm:left-auto sm:w-96"
+      className="pointer-events-none fixed top-4 right-4 left-4 z-[150] flex flex-col items-end gap-2 sm:top-20 sm:left-auto sm:w-96"
     >
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} />

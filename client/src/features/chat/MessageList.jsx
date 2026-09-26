@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, Check, Copy, Languages, MessageSquare } from "lucide-react";
+import { ArrowDown, Check, Copy, Languages, Lock, MessageSquare } from "lucide-react";
 import { Avatar, EmptyState, Markdown, Spinner } from "../../components/ui";
 import { cn } from "../../lib/cn";
 import { formatTime, groupByDay } from "./messages";
 
 const NEAR_BOTTOM_PX = 120;
 
-function MessageBubble({ message, showSender }) {
+function MessageBubble({ message, showSender, onTranslate }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [copied, setCopied] = useState(false);
   const { mine, continued } = message;
@@ -53,7 +53,13 @@ function MessageBubble({ message, showSender }) {
                 : "rounded-bl-md border border-line bg-surface text-fg",
             )}
           >
-            <Markdown inverted={mine}>{text}</Markdown>
+            {message.undecryptable ? (
+              <p className={cn("flex items-center gap-1.5 text-sm italic", mine ? "text-white/80" : "text-muted")}>
+                {text}
+              </p>
+            ) : (
+              <Markdown inverted={mine}>{text}</Markdown>
+            )}
             <span
               className={cn(
                 "mt-0.5 flex items-center justify-end gap-1.5 text-[10px]",
@@ -69,6 +75,20 @@ function MessageBubble({ message, showSender }) {
                   <Languages className="size-3" aria-hidden="true" />
                   {showOriginal ? "Show translation" : "Translated · show original"}
                 </button>
+              )}
+              {onTranslate && !mine && !message.originalText && !message.undecryptable && (
+                <button
+                  type="button"
+                  onClick={() => onTranslate(message.id)}
+                  title={message.encrypted ? "Sends this message to the AI to translate it" : undefined}
+                  className="inline-flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 hover:underline focus-visible:opacity-100"
+                >
+                  <Languages className="size-3" aria-hidden="true" />
+                  Translate
+                </button>
+              )}
+              {message.encrypted && !message.undecryptable && (
+                <Lock className="size-2.5" aria-label="End-to-end encrypted" />
               )}
               <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
             </span>
@@ -107,7 +127,7 @@ function TypingBubble({ names }) {
   );
 }
 
-export default function MessageList({ chatKey, messages, loading, isGroup, typingNames }) {
+export default function MessageList({ chatKey, messages, loading, isGroup, typingNames, onTranslate }) {
   const scrollRef = useRef(null);
   const nearBottomRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
@@ -174,7 +194,7 @@ export default function MessageList({ chatKey, messages, loading, isGroup, typin
               </div>
               <ul>
                 {section.items.map((m) => (
-                  <MessageBubble key={m.id} message={m} showSender={isGroup} />
+                  <MessageBubble key={m.id} message={m} showSender={isGroup} onTranslate={onTranslate} />
                 ))}
               </ul>
             </section>

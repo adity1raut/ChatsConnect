@@ -216,7 +216,7 @@ function buildDBTools(requestingUserId) {
       if (!msgs.length) return "No messages found.";
       return msgs
         .reverse()
-        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.content}`)
+        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.encrypted ? "[end-to-end encrypted message]" : m.content}`)
         .join("\n");
     }
 
@@ -237,7 +237,7 @@ function buildDBTools(requestingUserId) {
       if (!msgs.length) return "No messages found.";
       return msgs
         .reverse()
-        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.content}`)
+        .map((m) => `${m.senderId?.name ?? "Unknown"}: ${m.encrypted ? "[end-to-end encrypted message]" : m.content}`)
         .join("\n");
     }
 
@@ -369,10 +369,13 @@ export async function buildDMContext(conversationId, receiverId, limit = 8) {
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
-  return msgs.reverse().map((m) => ({
-    role: m.senderId.toString() === receiverId ? "user" : "assistant",
-    content: m.content,
-  }));
+  return msgs
+    .reverse()
+    .filter((m) => !m.encrypted)
+    .map((m) => ({
+      role: m.senderId.toString() === receiverId ? "user" : "assistant",
+      content: m.content,
+    }));
 }
 
 /**
