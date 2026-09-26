@@ -269,7 +269,7 @@ export function NotificationProvider({ children }) {
         ) {
           const desktop = new Notification(title, {
             body,
-            icon: n.actor?.avatar || "/chatsconnect.png",
+            icon: n.actor?.avatar || "/logo-192.png",
             tag: n._id,
           });
           desktop.onclick = () => {

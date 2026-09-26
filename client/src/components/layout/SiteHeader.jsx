@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
   IconButton,
 } from "../ui";
+import LogoMark from "./LogoMark";
 
 const SITE_LINKS = [
   { label: "Features", href: "/#features" },
@@ -27,11 +28,11 @@ export default function SiteHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-2 pt-2 sm:px-4">
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-3 border border-primary/25 bg-background/90 pr-2 pl-4 shadow-float backdrop-blur-sm sm:pl-7">
-        <Link
-          to="/"
-          className="-skew-x-12 text-[13px] font-extrabold tracking-[0.2em] text-foreground uppercase italic sm:text-sm"
-        >
-          ChatsConnect
+        <Link to="/" className="flex items-center gap-2.5">
+          <LogoMark className="size-6 shrink-0 text-primary" />
+          <span className="-skew-x-12 text-[13px] font-extrabold tracking-[0.2em] text-foreground uppercase italic sm:text-sm">
+            ChatsConnect
+          </span>
         </Link>
 
         <nav aria-label="Site" className="hidden items-center gap-1 lg:flex">
