@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>ChatsConnect</title>
+  <rect width="64" height="64" fill="#0a0f17"/>
+  <path d="M3 17V3h14M61 47v14H47" fill="none" stroke="#5eead4" stroke-width="4"/>
+  <path d="M13 15h38v27H31l-11 9v-9h-7z" fill="#5eead4" fill-opacity=".1" stroke="#5eead4" stroke-width="4" stroke-linejoin="miter"/>
+  <path d="M21 23l6 5.5-6 5.5" fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="square"/>
+  <rect x="31" y="31" width="11" height="4" fill="#5eead4"/>
+</svg>
